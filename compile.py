@@ -259,6 +259,14 @@ class Compiler:
         tid = self.e.reg("r")
         e.emit(f"mov.u32 {tid}, %tid.x;")
         self.tid = tid
+        # lane/warp are read across statement kinds (Cond guards, TreeHalve),
+        # so define them once, before any divergent branch
+        lane = self.e.reg("r")
+        e.emit(f"and.b32 {lane}, {tid}, 31;")
+        self.env["lane"] = (lane, "r")
+        warp = self.e.reg("r")
+        e.emit(f"shr.u32 {warp}, {tid}, 5;")
+        self.env["warp"] = (warp, "r")
         # shared-memory base addresses
         for name, (kind, off) in self.smem_base.items():
             r = self.e.reg("r")
@@ -392,13 +400,15 @@ class Compiler:
         self.env[st.name] = (d, "f")
 
     def visit_accum(self, st):
+        # Accumulators are loop-carried state: unlike plain SSA values they
+        # update their register in place across iterations. The register was
+        # created by the identity seed (enter_loop) or an Init statement.
         op = op_name(st.op)
+        if st.name not in self.env:
+            raise CompileError(f"accumulator {st.name} used before seeded")
         value = self.env[st.value]
-        if st.base is not None:
-            lhs = self.env[st.base]
-        else:
-            lhs = self.env[st.name]
-        d = self.e.reg("f")
+        lhs = self.env[st.base] if st.base is not None else self.env[st.name]
+        d = self.env[st.name][0]
         if op in BINARY_OPS:
             self.e.emit(f"{BINARY_OPS[op]} {d}, {lhs[0]}, {value[0]};")
         else:
