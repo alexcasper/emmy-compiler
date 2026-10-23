@@ -314,18 +314,19 @@ class Compiler:
         e.emit(f"setp.ge.u32 {pred}, {gid}, {n};")
         e.emit(f"@{pred} bra {skip};")
 
-        # per-axis decode: a_i = gid / s_i % e_i (s_i = product of inner extents)
+        # per-axis decode: a_i = gid / s_i % e_i (s_i = product of inner extents).
+        # Only the outermost axis may skip the modulo — the guard already bounds
+        # it. Every inner axis needs it, including extent-1 axes, or the value
+        # leaks the raw quotient (which corrupts every index it feeds).
         for i, (axis, extent) in enumerate(zip(tile.axes, extents)):
             inner = math.prod(extents[i + 1:])
             r = self.e.reg("r")
-            if inner == 1:
+            outermost = i == 0
+            if inner == 1 and outermost:
                 e.emit(f"mov.u32 {r}, {gid};")
-                if extent > 1 and len(extents) > 1:
-                    e.emit(f"rem.u32 {r}, {r}, {extent};")
             else:
                 e.emit(f"div.u32 {r}, {gid}, {inner};")
-                if extent > 1:
-                    e.emit(f"rem.u32 {r}, {r}, {extent};")
+                e.emit(f"rem.u32 {r}, {r}, {extent};")
             self.env[axis.name] = (r, "r")
 
         # cooperative axes conventionally end in _co; both spellings decode the same
@@ -452,7 +453,7 @@ class Compiler:
             self.e.emit(f"bar.sync {st.barrier_id};")
 
     def visit_stridedloop(self, st):
-        self.enter_loop(st.axis.name, st)
+        self.enter_loop(st)
         start = self.expr(st.start)[0]
         ivar = self.e.reg("r")
         self.e.emit(f"mov.u32 {ivar}, {start};")
@@ -472,7 +473,7 @@ class Compiler:
         self.exit_loop()
 
     def visit_loop(self, st):
-        self.enter_loop(st.axis.name, st)
+        self.enter_loop(st)
         ivar = self.e.reg("r")
         self.e.emit(f"mov.u32 {ivar}, 0;")
         end = dim_int(st.axis.extent)
@@ -489,21 +490,32 @@ class Compiler:
         self.e.label(bottom)
         self.exit_loop()
 
-    def enter_loop(self, axis_name, st):
-        """Seed the accumulators that fold over this axis (seed=True loops own
-        their accumulators: the identity is written just before iterating)."""
+    def enter_loop(self, st):
+        """Seed the accumulators this loop owns. A seed=True loop owns the
+        accumulators that (a) are defined inside its own body subtree — so
+        sibling loops over the same axis don't clobber each other's state —
+        and (b) fold over this loop's axis. The identity is written just
+        before iterating, so re-entry (outer-loop iterations) re-seeds."""
+        axis_name = st.axis.name
         self.loop_axis_stack = getattr(self, "loop_axis_stack", [])
         self.loop_axis_stack.append(axis_name)
         if not getattr(st, "seed", True):
             return
-        for name, acc in self.accum_defs.items():
-            if axis_name in acc.axes and name not in self.init_names:
-                identity = ACCUM_IDENTITY.get(op_name(acc.op))
-                if identity is None:
-                    raise CompileError(f"no identity for accumulator op {op_name(acc.op)}")
-                d = self.e.reg("f")
-                self.e.emit(f"mov.f32 {d}, {f32_hex(identity)};")
-                self.env[name] = (d, "f")
+        owned = {a.name for a in self.iter_accums(st.body)
+                 if axis_name in a.axes and a.name not in self.init_names}
+        for name in owned:
+            acc = self.accum_defs[name]
+            identity = ACCUM_IDENTITY.get(op_name(acc.op))
+            if identity is None:
+                raise CompileError(f"no identity for accumulator op {op_name(acc.op)}")
+            d = self.e.reg("f")
+            self.e.emit(f"mov.f32 {d}, {f32_hex(identity)};")
+            self.env[name] = (d, "f")
+
+    def iter_accums(self, body):
+        for st in body.iter():
+            if type(st).__name__ == "Accum":
+                yield st
 
     def exit_loop(self):
         self.loop_axis_stack.pop()
