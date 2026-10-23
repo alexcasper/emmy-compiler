@@ -45,8 +45,13 @@ STATIC_SMEM_LIMIT = 48 * 1024
 
 
 def f32_hex(value: float) -> str:
-    """PTX hex literal for an f32 constant, e.g. 0f3FB8AA3B."""
-    return "0f" + struct.pack("<f", float(value)).hex().upper()
+    """PTX hex literal for an f32 constant, e.g. 0f3F800000 (1.0).
+
+    PTX float bit patterns are most-significant byte first, hence '>f'.
+    A little-endian pack here silently turns 1.0 into a 1e-41 denormal —
+    the constant assembles fine and the kernel just computes nonsense.
+    """
+    return "0f" + struct.pack(">f", float(value)).hex().upper()
 
 
 def dim_int(dim) -> int:
