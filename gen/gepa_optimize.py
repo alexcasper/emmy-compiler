@@ -1,14 +1,25 @@
-"""GEPA-optimized generator for candidate IR->PTX compilers (branch `gepa`).
+"""GEPA optimizer for OUR kernels' PTX lowering knobs (branch `gepa`).
 
-GEPA evolves the instructions of a DSPy codegen module whose output — a complete
-compile.py — is executed for real and scored by the shared bench harness:
+The compiler (compile.py at repo root) exposes a small tuning surface via the
+EMMY_TUNING env var: read-only loads through the `.nc` path, and approx vs
+correctly-rounded div/sqrt/rcp. GEPA evolves the instructions of a DSPy module
+that PROPOSES a tuning config; every proposal is executed for real through the
+shared bench harness on the remote runner:
 
-    metric(candidate) = 0                          if rule check or any problem fails
-                      = 1e6 / geomean_runtime_us    otherwise (all 15 must PASS)
+    score(config) = 0                        if any subset problem fails the gate
+                  = 1e6 / geomean(subset us)  otherwise
 
-Candidates must not call emmy's renderer, `emmy compile`, nvcc, ptxas, nvrtc, or any
-other compiler. `Graph.from_dict` from emmy-ml is the only permitted emmy usage.
-The remote runner (submit.py's) is used to TEST; it never builds the candidate.
+Subset: r02 (memory-bound loads), r03 (divide), m01 (matmul, cp.async),
+f02 (exp/div), f03 (sqrt/rcp), a01 (attention) — every knob's blast radius.
+The winning config is then validated on ALL 15 problems before we keep it.
+
+Hard rule (AGENTS.md): emmy/nvcc may only TEST or BENCHMARK. Nothing here or in
+the candidate path calls any compiler; the runner's /compile step is upstream's
+own harness (the same one task/submit.py uses for every submission).
+
+Usage:
+    export GEPA_LM_BASE_URL=... GEPA_LM_MODEL=...   # OpenAI-compatible
+    ../.venv/bin/python gen/gepa_optimize.py --budget 8
 """
 import argparse
 import importlib.util
@@ -18,140 +29,183 @@ import os
 import re
 import sys
 
-_harness = os.path.join(os.path.dirname(__file__), "..", "bench", "eval.py")
-_spec = importlib.util.spec_from_file_location("bench_eval", _harness)
-assert _spec and _spec.loader
-bench = importlib.util.module_from_spec(_spec)
-_spec.loader.exec_module(bench)
+HERE = os.path.dirname(os.path.abspath(__file__))
+ROOT = os.path.abspath(os.path.join(HERE, ".."))
+
+
+def _load(name, relpath):
+    spec = importlib.util.spec_from_file_location(name, os.path.join(ROOT, relpath))
+    assert spec and spec.loader, f"cannot load {relpath}"
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
+
+
+bench = _load("bench_eval", "bench/eval.py")       # run_problem, rule_check, PROBLEMS
+emmy_compile = _load("emmy_compile", "compile.py")  # DEFAULT_TUNING, clamp_tuning
 
 import dspy  # noqa: E402
 
-RULES = """Write a complete, self-contained Python 3 file: a translator from the Emmy
-Kernel IR json (argv[1]) to PTX text on stdout. Constraints:
-- Start PTX with .version 8.0 / .target sm_89 / .address_size 64; pure ASCII.
-- Entry name = the kernel's "name" in the IR. Params = arg_order from meta.json,
-  .u64 pointers for buffers.
-- You MAY `from emmy.compiler.graph import Graph` and call Graph.from_dict to load
-  the IR. You may NOT call emmy's renderer, `emmy compile`, nvcc, ptxas, nvrtc,
-  clang, or any subprocess that compiles. Violations are an automatic zero.
-- Guard threads with N from the Tile; the guard is not in the IR.
-- Fresh virtual registers; declare counts as highest index + 1.
-- f32 hex literals like 0f3F800000 are big-endian (struct.pack(">f", x)).
-- Static shapes only. Correctness is a hard gate; speed ranks the survivors.
-Write only the file contents, no markdown fences, no commentary."""
+SUBSET = ["r02_big_sum", "r03_mean", "m01_matmul_512",
+          "f02_row_softmax", "f03_l2norm", "a01_attention"]
+CANDIDATE = os.path.join(ROOT, "compile.py")
+TRIALS = os.path.join(HERE, "out", "gepa_trials.jsonl")
+
+KNOB_DOC = """Emmy IR->PTX compiler tuning knobs (compile.py, env EMMY_TUNING, JSON):
+- nc_loads (bool, default false): route loads of buffers the kernel never writes
+  through `ld.global.nc` (read-only/L1 path) instead of `ld.global`.
+- div ("rn"|"approx"|"approx.ftz", default "rn"): div.rn.f32 is IEEE-correct;
+  approx variants are faster, a few ulp off. Only matters where rtol allows.
+- sqrt ("rn"|"approx", default "rn"): sqrt.rn.f32 vs sqrt.approx.f32.
+- rcp ("rn"|"approx", default "rn"): rcp.rn.f32 vs rcp.approx.f32 (reciprocal op).
+Baseline (all-default) subset runtimes in microseconds come from the bench sweep.
+Correctness is a hard gate: a config that fails ANY problem scores 0, so
+approximations must respect each problem's rtol/atol.
+Total space: 24 configs. m01 reads only via cp.async, so nc_loads and the op
+knobs do not affect it — do not spend budget re-proposing for it.
+"""
 
 
-class GenerateCompiler(dspy.Signature):
-    """Write an improved compile.py given the IR reference and prior feedback."""
-    ir_reference: str = dspy.InputField(
-        desc="Structure notes of the Emmy IR and this target's IR/meta dump."
+class ProposeTuning(dspy.Signature):
+    """Propose the next EMMY_TUNING config to test, given feedback so far."""
+    context: str = dspy.InputField(desc="Knob documentation and baseline runtimes.")
+    previous: str = dspy.InputField(desc="Configs already measured and their scores.")
+    tuning_json: str = dspy.OutputField(
+        desc='A single JSON object with keys nc_loads, div, sqrt, rcp. Nothing else.'
     )
-    previous: str = dspy.InputField(
-        desc="Prior candidate's real execution result: score or failure tails."
-    )
-    compiler_code: str = dspy.OutputField(desc="The complete Python file, nothing else.")
 
 
-class CandidateGen(dspy.Module):
-    """The program whose instructions GEPA evolves."""
+class TuningGen(dspy.Module):
+    """GEPA evolves these instructions; the output is a tuning config."""
 
     def __init__(self):
-        self.gen = dspy.Predict(GenerateCompiler)
+        self.gen = dspy.Predict(ProposeTuning)
 
-    def forward(self, ir_reference, previous):
-        return self.gen(ir_reference=ir_reference, previous=previous)
-
-
-def build_ir_reference(problem: str) -> str:
-    root = os.path.join(os.path.dirname(__file__), "..", "task", "problems", problem)
-    ir_txt = next(f for f in os.listdir(root) if f.endswith(".ir.txt"))
-    meta = open(os.path.join(root, "meta.json")).read()
-    return open(os.path.join(root, ir_txt), errors="ignore").read()[:4000] + "\n\n" + meta
+    def forward(self, context, previous):
+        return self.gen(context=context, previous=previous)
 
 
-def score_candidate(path: str) -> float:
-    """The GEPA metric: execution-based, hard correctness gate, speed above it."""
-    if bench.rule_check(path):
-        return 0.0
-    smoke = bench.run_problem(path, "p00_scalar_add")
-    if not smoke["ok"]:
-        return 0.0
-    results = [smoke] + [bench.run_problem(path, p) for p in bench.PROBLEMS[1:]]
-    if any(not r["ok"] for r in results):
-        return 0.0
-    gm = math.exp(sum(math.log(r["us"]) for r in results) / len(results))
-    return 1e6 / gm
+_score_cache: dict[str, float] = {}
+
+
+def canonical(cfg: dict) -> str:
+    return json.dumps({k: cfg[k] for k in ("nc_loads", "div", "sqrt", "rcp")},
+                      sort_keys=True)
+
+
+def score_config(cfg: dict, problems=SUBSET, log=True) -> float:
+    key = canonical(cfg) + "|" + ",".join(problems)
+    if key in _score_cache:
+        return _score_cache[key]
+    extra = {"EMMY_TUNING": json.dumps(cfg)}
+    results = [bench.run_problem(CANDIDATE, p, extra_env=extra) for p in problems]
+    score = 0.0
+    if all(r["ok"] for r in results):
+        gm = math.exp(sum(math.log(r["us"]) for r in results) / len(results))
+        score = 1e6 / gm
+    _score_cache[key] = score
+    if log:
+        os.makedirs(os.path.dirname(TRIALS), exist_ok=True)
+        with open(TRIALS, "a") as f:
+            f.write(json.dumps({
+                "config": json.loads(canonical(cfg)),
+                "problems": problems,
+                "score": score,
+                "results": [{k: r.get(k) for k in ("problem", "ok", "us", "reason")}
+                            for r in results],
+            }) + "\n")
+    return score
+
+
+def parse_config(text: str) -> dict | None:
+    """Defensively extract a JSON config; clamp via the compiler's own loader."""
+    m = re.search(r"\{[^{}]*\}", text or "", re.S)
+    if not m:
+        return None
+    try:
+        raw = json.loads(m.group(0))
+    except ValueError:
+        return None
+    if not isinstance(raw, dict):
+        return None
+    merged = dict(emmy_compile.DEFAULT_TUNING)
+    for k in emmy_compile.DEFAULT_TUNING:
+        if k in raw:
+            merged[k] = raw[k]
+    return emmy_compile.clamp_tuning(merged)
 
 
 def metric(gold, pred, trace=None, pred_name=None, pred_trace=None):
-    """GEPA metric (5-arg form required by dspy 3.4): execution-based, hard
-    correctness gate, speed above it."""
-    code = (pred.compiler_code or "").strip()
-    m = re.match(r"^```(?:python)?\s*(.*?)\s*```$", code, re.S)
-    if m:
-        code = m.group(1)
-    if len(code) < 200 or ("def main" not in code and "sys.argv" not in code):
-        return 0.0  # not a plausible translator; don't burn a runner slot on it
-    outdir = os.path.join(os.path.dirname(__file__), "out")
-    os.makedirs(outdir, exist_ok=True)
-    path = os.path.join(outdir, "gepa_candidate_last.py")
-    open(path, "w").write(code)
-    return score_candidate(path)
+    """GEPA metric (5-arg form required by dspy 3.4). Execution-based."""
+    cfg = parse_config(getattr(pred, "tuning_json", ""))
+    if cfg is None:
+        return 0.0  # unparseable proposal: no runner time wasted
+    return score_config(cfg)
 
 
-def connect_lm():
-    base = os.environ.get("GEPA_LM_BASE_URL")
-    model = os.environ.get("GEPA_LM_MODEL")
+def lm_from_env(tag):
+    base = os.environ.get(f"{tag}_LM_BASE_URL")
+    model = os.environ.get(f"{tag}_LM_MODEL")
     if not (base and model):
-        sys.exit(
-            "No LM endpoint configured. Set GEPA_LM_BASE_URL and GEPA_LM_MODEL "
-            "(OpenAI-compatible), then re-run. Nothing was optimized."
-        )
-    lm = dspy.LM(
+        sys.exit(f"No LM endpoint configured. Set {tag}_LM_BASE_URL and {tag}_LM_MODEL.")
+    return dspy.LM(
         f"openai/{model}",
         api_base=base,
-        api_key=os.environ.get("GEPA_LM_API_KEY", "dummy"),
+        api_key=os.environ.get(f"{tag}_LM_API_KEY", "dummy"),
         temperature=0.2,
-        max_tokens=8000,
+        max_tokens=12000,
     )
-    dspy.configure(lm=lm)
-    return lm
 
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--budget", type=int, default=30, help="GEPA optimization budget")
+    ap.add_argument("--budget", type=int, default=8)
     args = ap.parse_args()
 
-    connect_lm()
+    lm = lm_from_env("GEPA")
+    dspy.configure(lm=lm)
+    reflection = lm_from_env("GEPA")
+    reflection.kwargs["temperature"] = 1.0
+
+    baseline = dict(emmy_compile.DEFAULT_TUNING)
+    base_score = score_config(baseline, log=True)
+    print(f"[baseline] {canonical(baseline)} subset score {base_score:.1f}", flush=True)
+
     trainset = [
-        dspy.Example(ir_reference=build_ir_reference(p), previous="none yet").with_inputs(
-            "ir_reference", "previous"
-        )
-        for p in ("p00_scalar_add", "r01_array_sum", "m01_matmul_512", "f01_rmsnorm")
+        dspy.Example(context=KNOB_DOC + f"\nBaseline subset score: {base_score:.1f}.",
+                     previous="none yet").with_inputs("context", "previous"),
+        dspy.Example(context=KNOB_DOC + "\nRemember: failing ANY problem scores 0.",
+                     previous="none yet").with_inputs("context", "previous"),
     ]
-    # dspy 3.4 requires an explicit reflection LM (same local model here).
-    reflection = dspy.LM(
-        f"openai/{os.environ['GEPA_LM_MODEL']}",
-        api_base=os.environ["GEPA_LM_BASE_URL"],
-        api_key=os.environ.get("GEPA_LM_API_KEY", "dummy"),
-        temperature=1.0,
-        max_tokens=16000,
-    )
-    gepa_opt = dspy.GEPA(metric=metric, auto="light", reflection_lm=reflection)
-    optimized = gepa_opt.compile(CandidateGen(), trainset=trainset)
-    out = os.path.join(os.path.dirname(__file__), "out")
-    os.makedirs(out, exist_ok=True)
-    last = os.path.join(out, "gepa_candidate_last.py")
-    if os.path.exists(last):
-        print("Best surviving candidate:", last)
-        print("Score it: ../.venv/bin/python bench/eval.py", last)
-    json.dump(
-        {"instructions": getattr(optimized, "instructions", "")},
-        open(os.path.join(out, "gepa_best_instructions.json"), "w"),
-        indent=1,
-    )
-    print("GEPA run complete.")
+    # dspy 3.4: exactly one of auto / max_full_evals / max_metric_calls — we
+    # drive the budget explicitly (auto="light" just picks a small one).
+    gepa_opt = dspy.GEPA(metric=metric, reflection_lm=reflection,
+                        max_full_evals=args.budget)
+    optimized = gepa_opt.compile(TuningGen(), trainset=trainset, valset=trainset)
+
+    # pick the best measured config from the trial log, then full-gate it
+    best_cfg, best_score = baseline, base_score
+    if os.path.exists(TRIALS):
+        for line in open(TRIALS):
+            t = json.loads(line)
+            if t["score"] > best_score:
+                best_cfg, best_score = t["config"], t["score"]
+    full = [bench.run_problem(CANDIDATE, p, extra_env={"EMMY_TUNING": json.dumps(best_cfg)})
+            for p in bench.PROBLEMS]
+    failed = [r for r in full if not r["ok"]]
+    gm = math.exp(sum(math.log(r["us"]) for r in full) / len(full)) if not failed else None
+    report = {
+        "best_config": best_cfg,
+        "subset_score": best_score,
+        "full_gate": "PASS" if not failed else [r["reason"] for r in failed],
+        "full_geomean_us": round(gm, 3) if gm else None,
+        "baseline_geomean_us": 26.808,
+    }
+    os.makedirs(os.path.join(HERE, "out"), exist_ok=True)
+    json.dump(report, open(os.path.join(HERE, "out", "gepa_best.json"), "w"), indent=1)
+    json.dump({"instructions": getattr(optimized, "instructions", "")},
+              open(os.path.join(HERE, "out", "gepa_best_instructions.json"), "w"), indent=1)
+    print(json.dumps(report, indent=1), flush=True)
 
 
 if __name__ == "__main__":

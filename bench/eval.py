@@ -54,8 +54,10 @@ def rule_check(path):
 PASS_RE = re.compile(r"PASS\b.*\(([\d.]+)\s*us\)")
 
 
-def run_problem(candidate, problem):
+def run_problem(candidate, problem, extra_env=None):
     env = {k: v for k, v in os.environ.items() if k != "PYTHONPATH"}
+    if extra_env:
+        env.update(extra_env)
     try:
         r = subprocess.run(
             [PYTHON, "submit.py", problem, "--compiler", candidate],

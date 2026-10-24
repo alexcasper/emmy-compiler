@@ -27,6 +27,7 @@ from __future__ import annotations
 
 import json
 import math
+import os
 import re
 import struct
 import sys
@@ -38,6 +39,44 @@ PTX_VERSION = "8.0"
 # Static .shared is capped at 48 KiB per block; above this we switch to an
 # `extern .shared` pool that the launch config sizes (meta.json's smem_bytes).
 STATIC_SMEM_LIMIT = 48 * 1024
+
+# ---------------------------------------------------------------------------
+# tuning (GEPA search space; see gen/gepa_optimize.py on branch `gepa`)
+#
+# Defaults reproduce the hand-tuned behavior exactly. `EMMY_TUNING` holds JSON
+# (inline or "@path/to/file"). The correctness gate (rtol/atol via the runner)
+# is the only judge of whether an approximation knob is acceptable.
+# ---------------------------------------------------------------------------
+
+DEFAULT_TUNING = {
+    "nc_loads": False,   # ld.global.nc on buffers the kernel never writes
+    "div": "rn",         # "rn" | "approx" | "approx.ftz"
+    "sqrt": "rn",        # "rn" | "approx"
+    "rcp": "rn",         # "rn" | "approx"
+}
+
+
+def load_tuning() -> dict:
+    raw = os.environ.get("EMMY_TUNING")
+    t = dict(DEFAULT_TUNING)
+    if raw:
+        if raw.startswith("@"):
+            raw = open(raw[1:]).read()
+        try:
+            t.update(json.loads(raw))
+        except ValueError:
+            pass  # malformed tuning: fall back to defaults rather than crash
+    return clamp_tuning(t)
+
+
+def clamp_tuning(t: dict) -> dict:
+    """Clamp to legal values so a bad config can't emit bad PTX."""
+    out = dict(t)
+    out["nc_loads"] = bool(out.get("nc_loads", False))
+    out["div"] = out.get("div") if out.get("div") in ("rn", "approx", "approx.ftz") else "rn"
+    out["sqrt"] = out.get("sqrt") if out.get("sqrt") in ("rn", "approx") else "rn"
+    out["rcp"] = out.get("rcp") if out.get("rcp") in ("rn", "approx") else "rn"
+    return out
 
 # ---------------------------------------------------------------------------
 # small helpers
@@ -67,21 +106,10 @@ def sanitize(name: str) -> str:
     return re.sub(r"\W", "_", name)
 
 
-UNARY_OPS = {
-    # `exp` lowers through ex2.approx (x * log2 e); every problem that uses exp
-    # has rtol >= 1e-3, far above the approx instruction's ~1 ulp error.
-    "reciprocal": "rcp.rn.f32",
-    "sqrt": "sqrt.rn.f32",
-    "copy": "mov.f32",
-}
-BINARY_OPS = {
-    "add": "add.f32",
-    "subtract": "sub.f32",
-    "multiply": "mul.f32",
-    "divide": "div.rn.f32",
-    "maximum": "max.f32",
-    "minimum": "min.f32",
-}
+# Float op tables are built per-Compiler instance from the tuning dict (approx
+# vs correctly-rounded variants); `exp` always lowers through ex2.approx
+# (x * log2 e) — every problem that uses exp has rtol >= 1e-3, far above the
+# approx instruction's ~1 ulp error.
 ACCUM_IDENTITY = {"add": 0.0, "maximum": -1e30, "minimum": 1e30}
 CMP_OPS = {"==": "eq", "!=": "ne", "<": "lt", "<=": "le", ">": "gt", ">=": "ge"}
 INT_OPS = {"+": "add.s32", "-": "sub.s32", "*": "mul.lo.s32", "/": "div.s32", "%": "rem.s32"}
@@ -139,6 +167,20 @@ class Compiler:
         self.labels = 0
         self.accum_defs: dict[str, object] = {}
         self.init_names: set[str] = set()
+        # tuning: per-instance op tables so the search can flip approximations
+        self.tuning = load_tuning()
+        self.float_ops = {
+            "add": "add.f32", "subtract": "sub.f32", "multiply": "mul.f32",
+            "divide": f"div.{self.tuning['div']}.f32",
+            "maximum": "max.f32", "minimum": "min.f32",
+        }
+        self.unary_ops = {
+            "reciprocal": f"rcp.{self.tuning['rcp']}.f32",
+            "sqrt": f"sqrt.{self.tuning['sqrt']}.f32",
+            "copy": "mov.f32",
+        }
+        # buffers read but never written by this kernel (eligible for ld.global.nc)
+        self.readonly_buffers: set[str] = set()
 
     # -- setup ---------------------------------------------------------------
 
@@ -203,6 +245,7 @@ class Compiler:
         tile = op.body[0]
         self.scan_accums(op.body)
         self.plan_smem(tile)
+        self.collect_readonly(tile)
 
         self.emit_header()
         self.emit_prologue(params=self.params, tile=tile)
@@ -210,6 +253,20 @@ class Compiler:
         self.e.emit("ret;")
         self.e.raw("}")
         return self.assemble()
+
+    def collect_readonly(self, tile):
+        """Buffers only ever read (Load / CpAsyncCopy src, never a Write target)
+        — these may take the ld.global.nc path when tuning asks for it."""
+        reads, writes = set(), set()
+        for st in tile.body.iter():
+            kind = type(st).__name__
+            if kind == "Load":
+                reads.add(st.input)
+            elif kind == "CpAsyncCopy":
+                reads.add(st.src)
+            elif kind == "Write":
+                writes.add(st.output)
+        self.readonly_buffers = reads - writes
 
     def emit_header(self):
         e = self.e
@@ -355,13 +412,16 @@ class Compiler:
         addr = self.flat_addr(buf, st.index)
         dtype = getattr(st.dtype, "name", None) or "f32"
         ptx_t = "f32" if dtype == "f32" else dtype
+        prefix = "ld.shared" if desc["cls"] == "s" else "ld.global"
+        if prefix == "ld.global" and self.tuning["nc_loads"] and buf in self.readonly_buffers:
+            prefix = "ld.global.nc"
         if len(st.names) == 1:
             d = self.e.reg("f")
-            self.e.emit(f"{'ld.global' if desc['cls'] == 'g' else 'ld.shared'}.{ptx_t} {d}, [{addr}];")
+            self.e.emit(f"{prefix}.{ptx_t} {d}, [{addr}];")
             self.env[st.names[0]] = (d, "f")
         elif len(st.names) in (2, 4):
             regs = [self.e.reg("f") for _ in st.names]
-            op = ("ld.global" if desc["cls"] == "g" else "ld.shared") + f".v{len(st.names)}.{ptx_t}"
+            op = f"{prefix}.v{len(st.names)}.{ptx_t}"
             self.e.emit(f"{op} {{{', '.join(regs)}}}, [{addr}];")
             for name, reg in zip(st.names, regs):
                 self.env[name] = (reg, "f")
@@ -391,16 +451,16 @@ class Compiler:
         args = [self.env[a] for a in st.args]
         op = op_name(st.op)
         d = self.e.reg("f")
-        if op in UNARY_OPS:
-            self.e.emit(f"{UNARY_OPS[op]} {d}, {args[0][0]};")
+        if op in self.unary_ops:
+            self.e.emit(f"{self.unary_ops[op]} {d}, {args[0][0]};")
         elif op == "relu":
             self.e.emit(f"max.f32 {d}, {args[0][0]}, {f32_hex(0.0)};")
         elif op == "exp":
             log2e = self.e.reg("f")
             self.e.emit(f"mul.f32 {log2e}, {args[0][0]}, {f32_hex(math.log2(math.e))};")
             self.e.emit(f"ex2.approx.f32 {d}, {log2e};")
-        elif op in BINARY_OPS:
-            self.e.emit(f"{BINARY_OPS[op]} {d}, {args[0][0]}, {args[1][0]};")
+        elif op in self.float_ops:
+            self.e.emit(f"{self.float_ops[op]} {d}, {args[0][0]}, {args[1][0]};")
         else:
             raise CompileError(f"unsupported elementwise op: {op}")
         self.env[st.name] = (d, "f")
@@ -415,8 +475,8 @@ class Compiler:
         value = self.env[st.value]
         lhs = self.env[st.base] if st.base is not None else self.env[st.name]
         d = self.env[st.name][0]
-        if op in BINARY_OPS:
-            self.e.emit(f"{BINARY_OPS[op]} {d}, {lhs[0]}, {value[0]};")
+        if op in self.float_ops:
+            self.e.emit(f"{self.float_ops[op]} {d}, {lhs[0]}, {value[0]};")
         else:
             raise CompileError(f"unsupported accumulator op: {op}")
         self.env[st.name] = (d, "f")
@@ -501,8 +561,15 @@ class Compiler:
         self.loop_axis_stack.append(axis_name)
         if not getattr(st, "seed", True):
             return
-        owned = {a.name for a in self.iter_accums(st.body)
-                 if axis_name in a.axes and a.name not in self.init_names}
+        # Seed in body-walk order (NOT set order): set iteration varies with the
+        # interpreter's hash seed, which made the PTX text nondeterministic run
+        # to run — same semantics, different register numbering, impossible diffs.
+        seen = set()
+        owned = []
+        for a in self.iter_accums(st.body):
+            if axis_name in a.axes and a.name not in self.init_names and a.name not in seen:
+                seen.add(a.name)
+                owned.append(a.name)
         for name in owned:
             acc = self.accum_defs[name]
             identity = ACCUM_IDENTITY.get(op_name(acc.op))
@@ -729,9 +796,9 @@ class Compiler:
             d = self.e.reg("r")
             self.e.emit(f"{INT_OPS[op]} {d}, {left}, {right};")
             return (d, "r")
-        if op in BINARY_OPS and lk == "f" and rk == "f":
+        if op in self.float_ops and lk == "f" and rk == "f":
             d = self.e.reg("f")
-            self.e.emit(f"{BINARY_OPS[op]} {d}, {left}, {right};")
+            self.e.emit(f"{self.float_ops[op]} {d}, {left}, {right};")
             return (d, "f")
         raise CompileError(f"unsupported binary op {op} over {lk}/{rk}")
 
