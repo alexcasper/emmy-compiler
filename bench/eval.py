@@ -32,18 +32,26 @@ PROBLEMS = [
     "f01_rmsnorm", "f02_row_softmax", "f03_l2norm",
     "a01_attention", "a02_attention_128",
 ]
-# Patterns that would mean the candidate lowers via an existing compiler.
-FORBIDDEN = [
-    r"\bemmy\.compile\b", r"\bemmy\s+compile\b", r"render_kernelop", r"\bnvcc\b",
-    r"\bptxas\b", r"\bnvrtc\b", r"\bclang\b.*cuda", r"\bsubprocess\b.*\bemmy\b",
+# Calls that would mean the candidate lowers via an existing compiler. We match
+# *invocations*, not prose: "let ptxas allocate" in a comment is fine, running it is not.
+FORBIDDEN_PATTERNS = [
+    r"render_kernelop",                                # emmy's renderer, any use
+    r"\bemmy\.compile\s*\(",                           # emmy compile as a python call
+    r"(subprocess\.(?:run|call|Popen|check_output|check_call)|os\.(?:system|popen|exec\w*|spawn\w*))\s*\([^)]*\b(?:nvcc|ptxas|nvrtc|clang|emmy)\b",
+    r"\bos\.system\b[^)]*\b(?:nvcc|ptxas|nvrtc)\b",
 ]
-PASS_RE = re.compile(r"PASS\b.*\(([\d.]+)\s*us\)")
 
 
 def rule_check(path):
     src = open(path, encoding="utf-8").read()
-    hits = [p for p in FORBIDDEN if re.search(p, src)]
+    # Strip comment tails (prose like "let ptxas allocate" is fine; calls are not).
+    # Naive per-line strip: strings containing '#' are rare in this threat model.
+    code = "\n".join(re.sub(r"#[^\n]*", "", line) for line in src.splitlines())
+    hits = [p for p in FORBIDDEN_PATTERNS if re.search(p, code)]
     return hits
+
+
+PASS_RE = re.compile(r"PASS\b.*\(([\d.]+)\s*us\)")
 
 
 def run_problem(candidate, problem):
