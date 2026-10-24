@@ -3,3 +3,4 @@ task/
 __pycache__/
 out.ptx
 *.pyc
+gen/out/
