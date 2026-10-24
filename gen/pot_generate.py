@@ -43,12 +43,16 @@ Write only the file contents, no markdown fences, no commentary."""
 
 class GenerateCompiler(dspy.Signature):
     """Generate an improved compile.py from the previous round's execution feedback."""
-    ir_reference: str = (
-        "Structure notes of the Emmy IR and an example problem (p00) to target."
+    ir_reference: str = dspy.InputField(
+        desc="Structure notes of the Emmy IR and an example problem (p00) to target."
     )
-    rules: str = "Hard constraints for the generated translator."
-    previous: str = "Previous candidate's execution result: score line and failure tails."
-    compiler_code: str = "The complete Python file, nothing else."
+    rules: str = dspy.InputField(desc="Hard constraints for the generated translator.")
+    previous: str = dspy.InputField(
+        desc="Previous candidate's execution result: score line and failure tails."
+    )
+    compiler_code: str = dspy.OutputField(
+        desc="The complete Python file, nothing else."
+    )
 
 
 class PoTCompilerGen(dspy.Module):
