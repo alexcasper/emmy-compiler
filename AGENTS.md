@@ -47,6 +47,43 @@ cp -rf source dest          # NOT: cp -r source dest
 - `apt-get` - use `-y` flag
 - `brew` - use `HOMEBREW_NO_AUTO_UPDATE=1` env var
 
+## Emmy Hackathon Rules (from upstream TASK.md)
+
+Source: `cloudrift-ai/emmy-hackathon-2026/TASK.md` (identical to `task/TASK.md`). Re-check upstream if it changes.
+
+**Contract**
+- Repo root must contain `compile.py`. Invocation: `python compile.py path/to/<kernel>.ir.json > out.ptx`. Reads one IR json path as `argv[1]`, writes PTX to stdout. Hidden-set evaluation runs this exact command.
+- Entry name = the kernel's `name` in the IR (not our own naming).
+- Parameters = `arg_order` from `meta.json` (not the IR node's `inputs`). Buffers are `.u64` pointers.
+- Output must be correct under the launch geometry in `meta.json` (grid, block, smem). Guard threads with `N` from the Tile; the guard is not in the IR.
+- Results must fall within `rtol`/`atol` from `meta.json`. Exact equality is not required.
+- PTX must be pure ASCII, including comments. Start with `.version 8.0` / `.target sm_89` / `.address_size 64` (`sm_89` needs version ≥ 7.8).
+
+**The one rule: the translation must be ours**
+- Allowed: `emmy-ml==0.3.11` to load the IR via `Graph.from_dict`. Nothing else from emmy.
+- Not eligible: lowering through emmy's renderer (`render_kernelop`), `emmy compile`, `nvcc`, or any other existing compiler, including chaining any of them with `nvcc -ptx`.
+- Judges read every submission's code.
+- Scope: DSPy/GEPA-generated candidates inherit this rule. No emmy, nvcc, or any other compiler may be used to lower or build them.
+- **Testing and benchmarking exception (user direction):** `emmy compile` and `nvcc` MAY be used as reference oracles to TEST or BENCHMARK our output (e.g. comparing against emmy's/nvcc's PTX or timings). They must never produce, lower, or build the submitted solution.
+
+**Out of scope**
+- No optimization requirement. Speed is a tiebreaker for judges, not a gate.
+- No register-allocation cleverness (use fresh virtual registers, let `ptxas` allocate).
+- No TMA, tensor-core, or `wgmma` requirement. Dynamic shapes are not needed; every problem is static.
+
+**Categories** (hidden set is variations within these):
+1. pointwise (anchor `p00_scalar_add`)
+2. reductions (`r01_array_sum`)
+3. matmul (`m01_matmul_512`)
+4. fused (`f01_rmsnorm`; `f02` is online softmax)
+5. attention-like (`a01_attention`)
+
+**Facts that cost time**
+- `ConstantOp` nodes arrive as 1-element buffer args.
+- Vectorized loads and stores (`ld/st.global.v2`/`v4`) are expected when the IR groups values.
+- Static shared memory needs no `smem_bytes` at launch; `meta.json` already accounts for it.
+- The IR `json` graph level is plain: `inputs`, `outputs`, and per-node `shape`/`dtype` give signatures for free.
+
 <!-- BEGIN BEADS INTEGRATION v:1 profile:minimal hash:1105d646 -->
 ## Beads Issue Tracker
 
