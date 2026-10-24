@@ -27,6 +27,7 @@ import json
 import math
 import os
 import re
+import statistics
 import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -48,6 +49,7 @@ import dspy  # noqa: E402
 
 SUBSET = ["r02_big_sum", "r03_mean", "m01_matmul_512",
           "f02_row_softmax", "f03_l2norm", "a01_attention"]
+METRIC_REPS = 3  # median-of-3 per problem: single runs are noise-dominated
 CANDIDATE = os.path.join(ROOT, "compile.py")
 TRIALS = os.path.join(HERE, "out", "gepa_trials.jsonl")
 
@@ -85,7 +87,7 @@ class TuningGen(dspy.Module):
         return self.gen(context=context, previous=previous)
 
 
-_score_cache: dict[str, float] = {}
+_score_cache: dict[tuple, float] = {}
 
 
 def canonical(cfg: dict) -> str:
@@ -93,15 +95,26 @@ def canonical(cfg: dict) -> str:
                       sort_keys=True)
 
 
-def score_config(cfg: dict, problems=SUBSET, log=True) -> float:
-    key = canonical(cfg) + "|" + ",".join(problems)
+def score_config(cfg: dict, problems=SUBSET, reps=1, log=True) -> float:
+    """Median-of-reps subset score: the runner is noisy enough (identical
+    configs scoring 6% apart) that single measurements can't rank configs."""
+    key = (canonical(cfg), tuple(problems), reps)
     if key in _score_cache:
         return _score_cache[key]
     extra = {"EMMY_TUNING": json.dumps(cfg)}
-    results = [bench.run_problem(CANDIDATE, p, extra_env=extra) for p in problems]
+    per_problem: dict[str, list[float]] = {p: [] for p in problems}
+    failed = []
+    for _ in range(reps):
+        for p in problems:
+            r = bench.run_problem(CANDIDATE, p, extra_env=extra)
+            if r["ok"]:
+                per_problem[p].append(r["us"])
+            else:
+                failed.append((p, r["reason"]))
     score = 0.0
-    if all(r["ok"] for r in results):
-        gm = math.exp(sum(math.log(r["us"]) for r in results) / len(results))
+    if not failed and all(per_problem.values()):
+        gm = math.exp(sum(math.log(statistics.median(v))
+                          for v in per_problem.values()) / len(per_problem))
         score = 1e6 / gm
     _score_cache[key] = score
     if log:
@@ -110,9 +123,11 @@ def score_config(cfg: dict, problems=SUBSET, log=True) -> float:
             f.write(json.dumps({
                 "config": json.loads(canonical(cfg)),
                 "problems": problems,
+                "reps": reps,
                 "score": score,
-                "results": [{k: r.get(k) for k in ("problem", "ok", "us", "reason")}
-                            for r in results],
+                "medians": {p: statistics.median(v) if v else None
+                            for p, v in per_problem.items()},
+                "fails": failed,
             }) + "\n")
     return score
 
@@ -140,7 +155,7 @@ def metric(gold, pred, trace=None, pred_name=None, pred_trace=None):
     cfg = parse_config(getattr(pred, "tuning_json", ""))
     if cfg is None:
         return 0.0  # unparseable proposal: no runner time wasted
-    return score_config(cfg)
+    return score_config(cfg, reps=METRIC_REPS)
 
 
 def lm_from_env(tag):
@@ -168,8 +183,9 @@ def main():
     reflection.kwargs["temperature"] = 1.0
 
     baseline = dict(emmy_compile.DEFAULT_TUNING)
-    base_score = score_config(baseline, log=True)
-    print(f"[baseline] {canonical(baseline)} subset score {base_score:.1f}", flush=True)
+    base_score = score_config(baseline, reps=METRIC_REPS, log=True)
+    print(f"[baseline] {canonical(baseline)} subset score {base_score:.1f} "
+          f"(median of {METRIC_REPS} reps)", flush=True)
 
     trainset = [
         dspy.Example(context=KNOB_DOC + f"\nBaseline subset score: {base_score:.1f}.",
@@ -178,9 +194,12 @@ def main():
                      previous="none yet").with_inputs("context", "previous"),
     ]
     # dspy 3.4: exactly one of auto / max_full_evals / max_metric_calls — we
-    # drive the budget explicitly (auto="light" just picks a small one).
+    # drive the budget explicitly. skip_perfect_score=False + an unreachable
+    # perfect_score: our metric is 1e6/geomean (~25k), never 1.0, and GEPA's
+    # default "perfect" heuristic stopped reflection after ~2 proposals.
     gepa_opt = dspy.GEPA(metric=metric, reflection_lm=reflection,
-                        max_full_evals=args.budget)
+                        max_full_evals=args.budget,
+                        skip_perfect_score=False, perfect_score=1e12)
     optimized = gepa_opt.compile(TuningGen(), trainset=trainset, valset=trainset)
 
     # pick the best measured config from the trial log, then full-gate it
