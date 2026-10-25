@@ -25,8 +25,7 @@ CANDIDATE = os.path.join(ROOT, "compile.py")
 PROBLEMS = ["r02_big_sum", "r03_mean", "f02_row_softmax", "f03_l2norm", "a01_attention"]
 CONFIGS = {
     "A_default": {"nc_loads": False, "div": "rn", "sqrt": "rn", "rcp": "rn"},
-    "B_nc": {"nc_loads": True, "div": "rn", "sqrt": "rn", "rcp": "rn"},
-    "C_nc_approx": {"nc_loads": True, "div": "approx", "sqrt": "approx", "rcp": "approx"},
+    "D_div_approx": {"nc_loads": False, "div": "approx", "sqrt": "rn", "rcp": "rn"},
 }
 
 

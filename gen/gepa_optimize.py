@@ -168,7 +168,7 @@ def lm_from_env(tag):
         api_base=base,
         api_key=os.environ.get(f"{tag}_LM_API_KEY", "dummy"),
         temperature=0.2,
-        max_tokens=12000,
+        max_tokens=16000,
     )
 
 

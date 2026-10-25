@@ -30,4 +30,5 @@ export GEPA_LM_API_KEY="dummy"
 
 ## Status
 
-Scaffolded; optimization blocked on a reachable LM endpoint (nothing is hard-coded).
+Runs completed (flint local, GLM-5.3-Flash via Z.ai coding-plan API): no config beats
+all-default beyond runner noise — see DESIGN.md "GEPA tuning-knob search".

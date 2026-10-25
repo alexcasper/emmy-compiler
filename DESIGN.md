@@ -108,3 +108,36 @@ them), no `Pre`/`Carry`/`Select`/`ZeroPrologue`, no dynamic shapes, no
 `serial` axes, no aux (producer-warp) tiles — the decode supports them but
 no open problem exercises it. Loops marked `unroll` are emitted as real
 loops; `ptxas` still pipelines them.
+
+## GEPA tuning-knob search (branch experiment, both LMs)
+
+`gen/gepa_optimize.py` runs GEPA over the `EMMY_TUNING` knob surface
+(`nc_loads`, `div`/`sqrt`/`rcp` rounding), scoring every proposal by real
+execution on a 6-problem subset (median of 3 reps), then full-gating the
+winner. Ran twice: with the local LM (`flint`) and with GLM-5.3-Flash via
+the Z.ai coding-plan API.
+
+**Outcome: falsified — no knob config beats the all-default compiler.**
+
+- GLM's search was markedly better than flint's: the evolved instructions
+  maintain a per-knob marginal-effect table, avoid re-proposing known-bad
+  configs, and gate the aggressive `div:approx.ftz` on full-gate pass.
+- But every candidate was within runner noise of baseline. The apparent
+  winner (`div:approx` alone) read as −1.9% geomean at 3 interleaved reps
+  and flipped to +0.5% *slower* at 6 reps. The 3-rep "win" landed exactly
+  on the div-heavy problems, which is why it looked mechanistic — a
+  reminder that plausible mechanisms don't exempt a result from the
+  noise-band test.
+- Single subset measurements of the *identical* config spread 24765 /
+  26387 / 24867 (7%) across one session. Picking the best config by max
+  trial score therefore selects outliers; the deciding measurement is
+  always the interleaved paired bench (`gen/paired_bench.py`), and the
+  full gate independently confirmed the outlier config was slower
+  (27.96 us vs 26.81 us baseline geomean, single runs).
+- Consistent negative results across both runs: `nc_loads` neutral,
+  approx rounding neutral on r02/r03, ~7% attention regression when the
+  approx trio is stacked.
+
+**Conclusion:** compile-time instruction-selection variants are exhausted;
+remaining speedup, if any, must come from codegen changes (vectorized
+access, scheduling), not knob flipping. `main` stays all-default.
