@@ -4,6 +4,8 @@
 
 Notes: find leading one (bfind/clz) (category: Integer)
 
+Opcode cross-check vs Mesa NAK (open-source NVK compiler, mirror commit `837ab0e30740`): **agree**. NAK encodes 0xbd, 0x100 ([source](https://github.com/chaotic-cx/mesa-mirror/blob/837ab0e30740abb9ebb60bcd40a5114c68c673d9/src/nouveau/compiler/nak/sm70_encode.rs#L1561)); see [verify/NAK_CROSSCHECK.md](../verify/NAK_CROSSCHECK.md).
+
 Observed on sm_120: 4 instruction(s) across 3 probe(s).
 
 ## Evidence

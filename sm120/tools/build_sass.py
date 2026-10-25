@@ -274,7 +274,7 @@ def aggregate():
 # rendering
 # ---------------------------------------------------------------------------
 
-def render_op(op, d, nv):
+def render_op(op, d, nv, nak):
     cat, note = CATALOG[op]
     out = [f"# {op} (SM120 SASS)", ""]
     if op in nv:
@@ -283,6 +283,13 @@ def render_op(op, d, nv):
     else:
         out += [f"**NVIDIA:** not listed in NVIDIA's Blackwell/Rubin opcode table ([CUDA Binary Utilities]({BINUTILS})).", ""]
     out += [f"Notes: {note} (category: {cat})", ""]
+    nak_line = []
+    if nak and op in nak["ops"]:
+        n = nak["ops"][op]
+        nak_line = [f"Opcode cross-check vs Mesa NAK (open-source NVK compiler, mirror commit `{nak['commit'][:12]}`): "
+                    f"**{n['status']}**. NAK encodes {', '.join(n['nak'])} ([source]({n['ref']})); "
+                    "see [verify/NAK_CROSSCHECK.md](../verify/NAK_CROSSCHECK.md).", ""]
+    out += nak_line
     n_probes = len(d["probes"])
     out += [f"Observed on sm_120: {d['count']} instruction(s) across {n_probes} probe(s).", "", "## Evidence", ""]
     out += ["Compiled with ptxas V12.9.86 (`-arch=sm_120`, PTX `.version 8.8`) and read back with "
@@ -296,11 +303,15 @@ def render_op(op, d, nv):
             ", ".join(f"`0x{int(v, 2):03x}`" for v in low12) + "."]
     mask = const_mask(d["bits"])
     nfix = mask.count("0") + mask.count("1")
+    if d["count"] == 1:
+        strength = ("**Single instance observed: all 128 bits are trivially 'constant'** and carry "
+                    "no information beyond this one encoding")
+    else:
+        strength = (f"**Constant bits across all {d['count']} observed instance(s): {nfix} of 128**")
     out += ["", "## Encoding observations", "",
-            f"**Constant bits across all {d['count']} observed instance(s): {nfix} of 128** "
-            "(observation-derived and *partial*: there is no fuzzed encoding reference for sm_120, "
-            "so bits that never varied here may still be modifiers in forms this corpus never "
-            "compiled; bits 105-125 are the scheduling control code and vary with instruction "
+            strength + " (observation-derived and *partial*: there is no fuzzed encoding reference "
+            "for sm_120, so bits that never varied here may still be modifiers in forms this corpus "
+            "never compiled; bits 105-125 are the scheduling control code and vary with instruction "
             "placement). LSB-first, bit 0 first:", "", "```", fmt_mask(mask), "```", ""]
     forms = sorted(d["forms"].items(), key=lambda kv: -len(kv[1]))
     shown = forms[:8]
@@ -309,14 +320,21 @@ def render_op(op, d, nv):
     for form, examples in shown:
         out += [f"### `{form}` - {len(examples)} instance(s)", "", "| instruction | encoding (word0 word1) | probe |",
                 "|---|---|---|"]
-        seen_probe = set()
-        n = 0
+        seen_probe = []
+        rows = []
+        for text, w0, w1, pname in examples:      # distinct probes first, cap 4 rows
+            if pname not in seen_probe:
+                seen_probe.append(pname)
+                rows.append((text, w0, w1, pname))
         for text, w0, w1, pname in examples:
-            if pname in seen_probe and n >= 3:
-                continue
-            seen_probe.add(pname)
+            if len(rows) >= 4:
+                break
+            if (text, w0, w1, pname) not in rows:
+                rows.append((text, w0, w1, pname))
+        for text, w0, w1, pname in rows[:4]:
             out.append(f"| `{text}` | `{w0} {w1}` | {pname} |")
-            n += 1
+        if len(examples) > len(rows[:4]):
+            out.append(f"| ... {len(examples) - len(rows[:4])} more instance(s) in results.json | | |")
         out.append("")
     if len(forms) > len(shown):
         out += ["Additional forms: " + ", ".join(f"`{f}`" for f, _ in forms[len(shown):]), ""]
@@ -488,6 +506,11 @@ def render_index(res, ops, nv):
              "",
              "Raw artifacts: `sm120/.cache/sass/results.json` (per-probe instruction dump, gitignored).",
              "",
+             "The 12-bit opcode values are independently cross-checked against Mesa's open-source NVK compiler "
+             f"({sum(1 for v in json.loads((ROOT / 'verify' / 'nak.json').read_text())['ops'].values() if v['status'] == 'agree')}"
+             "/67 same-named opcodes agree; see [../verify/NAK_CROSSCHECK.md](../verify/NAK_CROSSCHECK.md)) "
+             "where `verify/nak.json` is present.",
+             "",
              "Columns: **NVIDIA description** from the Blackwell/Rubin opcode table "
              f"([CUDA Binary Utilities]({NV_TABLE})); **emitted by** = probe names that produced the "
              "opcode; **enc** = instructions observed; **ops** = distinct 12-bit opcode-field values; "
@@ -525,9 +548,11 @@ def render_index(res, ops, nv):
 def main():
     OUT.mkdir(parents=True, exist_ok=True)
     nv = nvidia_table()
+    nak_path = ROOT / "verify" / "nak.json"
+    nak = json.loads(nak_path.read_text()) if nak_path.exists() else None
     res, ops = aggregate()
     for op, d in sorted(ops.items()):
-        (OUT / f"{op}.md").write_text(render_op(op, d, nv))
+        (OUT / f"{op}.md").write_text(render_op(op, d, nv, nak))
     (OUT / "INDEX.md").write_text(render_index(res, ops, nv))
     n_nv = sum(1 for op in ops if op in nv)
     print(f"{len(ops)} opcode pages + INDEX.md; {n_nv} have an NVIDIA Blackwell-table description; "

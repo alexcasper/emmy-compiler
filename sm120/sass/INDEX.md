@@ -6,6 +6,8 @@ Everything in `sass/` is derived from these probes: there is **no** kuterdinel-s
 
 Raw artifacts: `sm120/.cache/sass/results.json` (per-probe instruction dump, gitignored).
 
+The 12-bit opcode values are independently cross-checked against Mesa's open-source NVK compiler (62/67 same-named opcodes agree; see [../verify/NAK_CROSSCHECK.md](../verify/NAK_CROSSCHECK.md)) where `verify/nak.json` is present.
+
 Columns: **NVIDIA description** from the Blackwell/Rubin opcode table ([CUDA Binary Utilities](https://docs.nvidia.com/cuda/cuda-binary-utilities/index.html#blackwell-and-rubin-instruction-set)); **emitted by** = probe names that produced the opcode; **enc** = instructions observed; **ops** = distinct 12-bit opcode-field values; **forms** = normalized operand forms.
 
 ## Atomics / reductions

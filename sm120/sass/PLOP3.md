@@ -4,6 +4,8 @@
 
 Notes: 3-input predicate logic (category: Predicate / compare)
 
+Opcode cross-check vs Mesa NAK (open-source NVK compiler, mirror commit `837ab0e30740`): **agree**. NAK encodes 0x81c, 0x89c ([source](https://github.com/chaotic-cx/mesa-mirror/blob/837ab0e30740abb9ebb60bcd40a5114c68c673d9/src/nouveau/compiler/nak/sm70_encode.rs#L2616)); see [verify/NAK_CROSSCHECK.md](../verify/NAK_CROSSCHECK.md).
+
 Observed on sm_120: 21 instruction(s) across 6 probe(s).
 
 ## Evidence
@@ -37,11 +39,8 @@ Emitted by probe(s):
 | instruction | encoding (word0 word1) | probe |
 |---|---|---|
 | `PLOP3.LUT P0, PT, P0, P1, PT, 0xf8, 0x8f` | `00000000008f781c 000fda0000703f70` | fdiv_rn |
-| `PLOP3.LUT P1, PT, P1, P2, PT, 0x2f, 0xf2` | `0000000000f2781c 000fda0000f24577` | fdiv_rn |
-| `PLOP3.LUT P0, PT, P0, P1, PT, 0x2f, 0xf2` | `0000000000f2781c 000fda0000702577` | fdiv_rn |
 | `PLOP3.LUT P0, PT, PT, PT, PT, 0x80, 0x8` | `000000000008781c 000fe20003f0f070` | cp_async_bulk_tma |
 | `PLOP3.LUT P1, PT, PT, PT, PT, 0x80, 0x8` | `000000000008781c 000fe20003f2f070` | cp_async_bulk_prefetch |
 | `PLOP3.LUT P0, PT, PT, PT, PT, 0x80, 0x8` | `000000000008781c 000fc60003f0f070` | diverge |
-| `PLOP3.LUT P0, PT, PT, PT, PT, 0x80, 0x8` | `000000000008781c 000fc60003f0f070` | uniform_loop |
-| `PLOP3.LUT P0, PT, P2, PT, PT, 0x8, 0x80` | `000000000080781c 000fd0000170e170` | s2ur_loop |
+| ... 17 more instance(s) in results.json | | |
 

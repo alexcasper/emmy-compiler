@@ -4,6 +4,8 @@
 
 Notes: packed FP16x2/BF16x2 FMA; on sm_120 also absorbs add.f16x2/mul.f16x2 (no HADD2/HMUL2 seen) (category: FP16 (packed half2))
 
+Opcode cross-check vs Mesa NAK (open-source NVK compiler, mirror commit `837ab0e30740`): **agree**. NAK encodes 0x31 ([source](https://github.com/chaotic-cx/mesa-mirror/blob/837ab0e30740abb9ebb60bcd40a5114c68c673d9/src/nouveau/compiler/nak/sm70_encode.rs#L1350)); see [verify/NAK_CROSSCHECK.md](../verify/NAK_CROSSCHECK.md).
+
 Observed on sm_120: 19 instruction(s) across 16 probe(s).
 
 ## Evidence
@@ -50,12 +52,7 @@ Emitted by probe(s):
 | `HFMA2 R4, -RZ, RZ, 15, 0` | `4b800000ff047431 000fe200000001ff` | mufu_rcp |
 | `HFMA2 R5, -RZ, RZ, 0, 0` | `00000000ff057431 000fe200000001ff` | vabsdiff |
 | `HFMA2 R5, -RZ, RZ, 0, 0` | `00000000ff057431 000fe200000001ff` | cp_async_bulk_tma |
-| `HFMA2 R5, -RZ, RZ, 0, 0` | `00000000ff057431 000fe200000001ff` | diverge |
-| `HFMA2 R5, -RZ, RZ, 0, 0` | `00000000ff057431 000fe400000001ff` | call |
-| `HFMA2 R5, -RZ, RZ, 0, 0` | `00000000ff057431 000fc800000001ff` | uniform_loop |
-| `HFMA2 R5, -RZ, RZ, 0, 0` | `00000000ff057431 000fc800000001ff` | s2ur_loop |
-| `HFMA2 R5, -RZ, RZ, 0, 0` | `00000000ff057431 000fe200000001ff` | txq |
-| `HFMA2 R5, -RZ, RZ, 0, 0` | `00000000ff057431 000fe200000001ff` | suq |
+| ... 6 more instance(s) in results.json | | |
 
 ### `HFMA2 R, -R, R, IMM, IMM.9604644775390625e-IMM` - 2 instance(s)
 

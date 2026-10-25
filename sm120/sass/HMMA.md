@@ -4,6 +4,8 @@
 
 Notes: warp-level MMA: f16/bf16/tf32 mma.sync shapes (category: Tensor core (MMA))
 
+Opcode cross-check vs Mesa NAK (open-source NVK compiler, mirror commit `837ab0e30740`): **agree**. NAK encodes 0x23c ([source](https://github.com/chaotic-cx/mesa-mirror/blob/837ab0e30740abb9ebb60bcd40a5114c68c673d9/src/nouveau/compiler/nak/sm70_encode.rs#L4577)); see [verify/NAK_CROSSCHECK.md](../verify/NAK_CROSSCHECK.md).
+
 Observed on sm_120: 3 instruction(s) across 3 probe(s).
 
 ## Evidence

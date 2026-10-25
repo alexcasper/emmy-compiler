@@ -52,28 +52,17 @@ Emitted by probe(s):
 | `UMOV UR4, 0x400` | `0000040000047882 000fe40000000000` | lds_sts |
 | `UMOV UR4, 0x400` | `0000040000047882 000fcc0000000000` | cp_async |
 | `UMOV UR4, 0x400` | `0000040000047882 000fe40000000000` | ldsm |
-| `UMOV UR4, 0x400` | `0000040000047882 000fe40000000000` | ldsm_trans |
-| `UMOV UR4, 0x400` | `0000040000047882 000fc80000000000` | atoms |
-| `UMOV UR6, 0x400` | `0000040000067882 000fe20000000000` | cp_async_bulk_tma |
-| `UMOV UR4, 0x400` | `0000040000047882 000fe20000000000` | mbarrier_red |
-| `UMOV UR4, 0x400` | `0000040000047882 000fe20000000000` | st_bulk |
-| `UMOV UR4, 0x4` | `0000000400047882 000fe20000000000` | cp_async_bulk_prefetch |
-| `UMOV UR6, 0x400` | `0000040000067882 000fe20000000000` | st_async |
+| ... 12 more instance(s) in results.json | | |
 
 ### `UMOV UR, UR` - 11 instance(s)
 
 | instruction | encoding (word0 word1) | probe |
 |---|---|---|
 | `UMOV UR4, UR38` | `0000002600047c82 002fe20008000000` | cp_async_bulk_tma |
-| `UMOV UR5, URZ` | `000000ff00057c82 000fe40008000000` | cp_async_bulk_tma |
 | `UMOV UR5, URZ` | `000000ff00057c82 000fc80008000000` | st_bulk |
 | `UMOV UR5, URZ` | `000000ff00057c82 000fc60008000000` | uniform_txq |
 | `UMOV UR5, URZ` | `000000ff00057c82 000fe40008000000` | tex |
-| `UMOV UR5, URZ` | `000000ff00057c82 000fe40008000000` | tld4 |
-| `UMOV UR5, URZ` | `000000ff00057c82 000fca0008000000` | txq |
-| `UMOV UR5, URZ` | `000000ff00057c82 000fe40008000000` | tld |
-| `UMOV UR5, URZ` | `000000ff00057c82 000fe20008000000` | txd |
-| `UMOV UR5, URZ` | `000000ff00057c82 000fca0008000000` | suq |
+| ... 7 more instance(s) in results.json | | |
 
 ### `UMOV UR, (.nv.unified.texrefDescSize)` - 1 instance(s)
 

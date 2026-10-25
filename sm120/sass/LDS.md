@@ -37,10 +37,10 @@ Emitted by probe(s):
 | instruction | encoding (word0 word1) | probe |
 |---|---|---|
 | `@!PT LDS RZ, [RZ]` | `00000000fffff984 000fe20000000800` | cp_async |
-| `@!PT LDS RZ, [RZ]` | `00000000fffff984 000fe20000000800` | cp_async |
-| `@!PT LDS RZ, [RZ]` | `00000000fffff984 000fe20000000800` | cp_async |
 | `LDS R7, [R5]` | `0000000005077984 000e280000000800` | stmatrix |
 | `LDS R9, [R0]` | `0000000000097984 000e280000000800` | stmatrix_x4 |
+| `LDS R7, [R5]` | `0000000005077984 000e680000000800` | cp_async |
+| ... 2 more instance(s) in results.json | | |
 
 ### `LDS R, [UR]` - 2 instance(s)
 

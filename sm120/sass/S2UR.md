@@ -44,10 +44,5 @@ Emitted by probe(s):
 | `S2UR UR5, SR_CgaCtaId` | `00000000000579c3 000ea20000008800` | cp_async |
 | `S2UR UR5, SR_CgaCtaId` | `00000000000579c3 000e220000008800` | ldsm |
 | `S2UR UR5, SR_CgaCtaId` | `00000000000579c3 000e220000008800` | ldsm_trans |
-| `S2UR UR5, SR_CgaCtaId` | `00000000000579c3 000e620000008800` | atoms |
-| `S2UR UR7, SR_CgaCtaId` | `00000000000779c3 000e620000008800` | cp_async_bulk_tma |
-| `S2UR UR6, SR_CgaCtaId` | `00000000000679c3 000e620000008800` | mbarrier_red |
-| `S2UR UR5, SR_CgaCtaId` | `00000000000579c3 000e220000008800` | st_bulk |
-| `S2UR UR8, SR_CgaCtaId` | `00000000000879c3 000e220000008800` | st_async |
-| `S2UR UR6, SR_CTAID.X` | `00000000000679c3 000ea20000002500` | s2ur_loop |
+| ... 6 more instance(s) in results.json | | |
 

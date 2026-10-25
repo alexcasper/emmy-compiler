@@ -4,6 +4,8 @@
 
 Notes: FP32 add (also the tail of emulated fp ops) (category: FP32)
 
+Opcode cross-check vs Mesa NAK (open-source NVK compiler, mirror commit `837ab0e30740`): **agree**. NAK encodes 0x21, 0x54 ([source](https://github.com/chaotic-cx/mesa-mirror/blob/837ab0e30740abb9ebb60bcd40a5114c68c673d9/src/nouveau/compiler/nak/sm70_encode.rs#L849)); see [verify/NAK_CROSSCHECK.md](../verify/NAK_CROSSCHECK.md).
+
 Observed on sm_120: 14 instruction(s) across 13 probe(s).
 
 ## Evidence
@@ -47,12 +49,7 @@ Emitted by probe(s):
 | `FADD R5, R4, R5` | `0000000504057221 004fca0000000000` | ldg_v2 |
 | `FADD R5, R0, R5` | `0000000500057221 004fca0000000000` | ldg_nc |
 | `FADD R7, R4, R8` | `0000000804077221 008fca0000000000` | stg_v4 |
-| `FADD R7, R4, R5` | `0000000504077221 004fca0000000000` | atom_v2_f32 |
-| `FADD R11, R8, R11` | `0000000b080b7221 000fca0000000000` | hmma_f16 |
-| `FADD R11, R8, R11` | `0000000b080b7221 000fca0000000000` | hmma_bf16 |
-| `FADD R11, R8, R11` | `0000000b080b7221 000fca0000000000` | hmma_tf32 |
-| `FADD R11, R8, R11` | `0000000b080b7221 000fca0000000000` | qmma_e4m3 |
-| `FADD R11, R8, R11` | `0000000b080b7221 000fca0000000000` | qmma_e5m2 |
+| ... 6 more instance(s) in results.json | | |
 
 ### `FADD R, R.reuse, R` - 1 instance(s)
 

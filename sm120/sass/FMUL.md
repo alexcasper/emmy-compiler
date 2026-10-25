@@ -4,6 +4,8 @@
 
 Notes: FP32 multiply (category: FP32)
 
+Opcode cross-check vs Mesa NAK (open-source NVK compiler, mirror commit `837ab0e30740`): **agree**. NAK encodes 0x20, 0x56 ([source](https://github.com/chaotic-cx/mesa-mirror/blob/837ab0e30740abb9ebb60bcd40a5114c68c673d9/src/nouveau/compiler/nak/sm70_encode.rs#L963)); see [verify/NAK_CROSSCHECK.md](../verify/NAK_CROSSCHECK.md).
+
 Observed on sm_120: 13 instruction(s) across 9 probe(s).
 
 ## Evidence
@@ -43,15 +45,16 @@ Emitted by probe(s):
 | `FMUL R0, R0, R7` | `0000000700007220 008fca0000400000` | fsetp_selp |
 | `FMUL R0, R0, R5` | `0000000500007220 000fcc0000400000` | mufu_rcp |
 | `@!P0 FMUL R5, R5, R5` | `0000000505058220 001fca0000400000` | mufu_ex2 |
+| ... 1 more instance(s) in results.json | | |
 
 ### `FMUL R, R, IMM` - 4 instance(s)
 
 | instruction | encoding (word0 word1) | probe |
 |---|---|---|
 | `@!P0 FMUL R0, R0, 16777216` | `4b80000000008820 000fc80000400000` | mufu_rsqrt |
-| `@!P0 FMUL R5, R5, 4096` | `4580000005058820 001fca0000400000` | mufu_rsqrt |
 | `@!P0 FMUL R0, R0, 16777216` | `4b80000000008820 000fc80000400000` | mufu_sqrt |
 | `@!P0 FMUL R0, R0, 16777216` | `4b80000000008820 000fc80000400000` | mufu_lg2 |
+| `@!P0 FMUL R5, R5, 4096` | `4580000005058820 001fca0000400000` | mufu_rsqrt |
 
 ### `FMUL R, R, IMM.IMM` - 2 instance(s)
 

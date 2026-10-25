@@ -4,6 +4,8 @@
 
 Notes: warp shuffle (category: Movement)
 
+Opcode cross-check vs Mesa NAK (open-source NVK compiler, mirror commit `837ab0e30740`): **agree**. NAK encodes 0x389, 0x589, 0x989, 0xf89 ([source](https://github.com/chaotic-cx/mesa-mirror/blob/837ab0e30740abb9ebb60bcd40a5114c68c673d9/src/nouveau/compiler/nak/sm70_encode.rs#L2558)); see [verify/NAK_CROSSCHECK.md](../verify/NAK_CROSSCHECK.md).
+
 Observed on sm_120: 10 instruction(s) across 4 probe(s).
 
 ## Evidence
@@ -37,6 +39,8 @@ Emitted by probe(s):
 | `SHFL.UP P0, R5, R0, 0x1, RZ` | `0420000000057989 004e2200000000ff` | atoms |
 | `SHFL.UP P0, R5, R6, 0x2, RZ` | `0440000006057989 000e6400000000ff` | atoms |
 | `SHFL.UP P0, R5, R7, 0x4, RZ` | `0480000007057989 000e2400000000ff` | atoms |
+| `SHFL.UP P0, R5, R8, 0x8, RZ` | `0500000008057989 000e2400000000ff` | atoms |
+| ... 2 more instance(s) in results.json | | |
 
 ### `SHFL.BFLY P, R, R, IMM, IMM` - 2 instance(s)
 

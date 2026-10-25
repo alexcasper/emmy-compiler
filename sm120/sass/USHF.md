@@ -35,9 +35,10 @@ Emitted by probe(s):
 | instruction | encoding (word0 word1) | probe |
 |---|---|---|
 | `USHF.L.U32 UR5, UR4, 0xb, URZ` | `0000000b04057899 000fe200080006ff` | cp_async_bulk_tma |
-| `USHF.L.U32 UR4, UR4, 0x1, URZ` | `0000000104047899 000fe200080006ff` | cp_async_bulk_tma |
 | `USHF.L.U32 UR5, UR4, 0xb, URZ` | `0000000b04057899 000fe200080006ff` | mbarrier_red |
 | `USHF.L.U32 UR5, UR4, 0xb, URZ` | `0000000b04057899 000fe200080006ff` | st_async |
+| `USHF.L.U32 UR4, UR4, 0x1, URZ` | `0000000104047899 000fe200080006ff` | cp_async_bulk_tma |
+| ... 2 more instance(s) in results.json | | |
 
 ### `USHF.L.U64.HI UR, UR, IMM, UR` - 1 instance(s)
 

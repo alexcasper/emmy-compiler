@@ -4,6 +4,8 @@
 
 Notes: relative branch (category: Control flow)
 
+Opcode cross-check vs Mesa NAK (open-source NVK compiler, mirror commit `837ab0e30740`): **agree**. NAK encodes 0x547, 0x947 ([source](https://github.com/chaotic-cx/mesa-mirror/blob/837ab0e30740abb9ebb60bcd40a5114c68c673d9/src/nouveau/compiler/nak/sm70_encode.rs#L4191)); see [verify/NAK_CROSSCHECK.md](../verify/NAK_CROSSCHECK.md).
+
 Observed on sm_120: 189 instruction(s) across 149 probe(s).
 
 ## Evidence
@@ -183,161 +185,17 @@ Emitted by probe(s):
 | `BRA (.L_x_0)` | `fffffffc00fc7947 000fc0000383ffff` | ffma |
 | `BRA (.L_x_0)` | `fffffffc00fc7947 000fc0000383ffff` | fmul |
 | `BRA (.L_x_0)` | `fffffffc00fc7947 000fc0000383ffff` | fminmax |
-| `BRA (.L_x_0)` | `fffffffc00fc7947 000fc0000383ffff` | fminmax_nan |
-| `BRA (.L_x_0)` | `fffffffc00fc7947 000fc0000383ffff` | fminmax_xorsign |
-| `BRA (.L_x_0)` | `fffffffc00fc7947 000fc0000383ffff` | fsetp_selp |
-| `BRA (.L_x_0)` | `fffffffc00fc7947 000fc0000383ffff` | selp_to_predicated_load |
-| `BRA (.L_x_0)` | `fffffffc00fc7947 000fc0000383ffff` | fset |
-| `@!P0 BRA (.L_x_1)` | `0000000000088947 005fec0003800000` | fdiv_rn |
-| `BRA (.L_x_0)` | `fffffffc00fc7947 000fc0000383ffff` | mufu_rcp |
-| `BRA (.L_x_0)` | `fffffffc00fc7947 000fc0000383ffff` | mufu_rsqrt |
-| `BRA (.L_x_0)` | `fffffffc00fc7947 000fc0000383ffff` | mufu_sqrt |
-| `BRA (.L_x_0)` | `fffffffc00fc7947 000fc0000383ffff` | mufu_lg2 |
-| `BRA (.L_x_0)` | `fffffffc00fc7947 000fc0000383ffff` | mufu_ex2 |
-| `BRA (.L_x_0)` | `fffffffc00fc7947 000fc0000383ffff` | mufu_sin |
-| `BRA (.L_x_0)` | `fffffffc00fc7947 000fc0000383ffff` | mufu_cos |
-| `BRA (.L_x_0)` | `fffffffc00fc7947 000fc0000383ffff` | mufu_tanh |
-| `BRA (.L_x_0)` | `fffffffc00fc7947 000fc0000383ffff` | frnd |
-| `BRA (.L_x_0)` | `fffffffc00fc7947 000fc0000383ffff` | dadd |
-| `BRA (.L_x_0)` | `fffffffc00fc7947 000fc0000383ffff` | dfma |
-| `BRA (.L_x_0)` | `fffffffc00fc7947 000fc0000383ffff` | dmul |
-| `BRA (.L_x_0)` | `fffffffc00fc7947 000fc0000383ffff` | dsetp |
-| `BRA (.L_x_0)` | `fffffffc00fc7947 000fc0000383ffff` | hadd2 |
-| `BRA (.L_x_0)` | `fffffffc00fc7947 000fc0000383ffff` | hfma2 |
-| `BRA (.L_x_0)` | `fffffffc00fc7947 000fc0000383ffff` | hfma2_bf16 |
-| `BRA (.L_x_0)` | `fffffffc00fc7947 000fc0000383ffff` | hmul2 |
-| `BRA (.L_x_0)` | `fffffffc00fc7947 000fc0000383ffff` | hmnmx2 |
-| `BRA (.L_x_0)` | `fffffffc00fc7947 000fc0000383ffff` | hsetp2 |
-| `BRA (.L_x_0)` | `fffffffc00fc7947 000fc0000383ffff` | hset2 |
-| `BRA (.L_x_0)` | `fffffffc00fc7947 000fc0000383ffff` | iadd |
-| `BRA (.L_x_0)` | `fffffffc00fc7947 000fc0000383ffff` | iadd64 |
-| `BRA (.L_x_0)` | `fffffffc00fc7947 000fc0000383ffff` | imad |
-| `BRA (.L_x_0)` | `fffffffc00fc7947 000fc0000383ffff` | imad_wide |
-| `BRA (.L_x_0)` | `fffffffc00fc7947 000fc0000383ffff` | imad_hi |
-| `BRA (.L_x_0)` | `fffffffc00fc7947 000fc0000383ffff` | iabs |
-| `BRA (.L_x_0)` | `fffffffc00fc7947 000fc0000383ffff` | imnmx |
-| `BRA (.L_x_0)` | `fffffffc00fc7947 000fc0000383ffff` | isetp_pred |
-| `BRA (.L_x_0)` | `fffffffc00fc7947 000fc0000383ffff` | imnmx_from_selp |
-| `BRA (.L_x_0)` | `fffffffc00fc7947 000fc0000383ffff` | lea |
-| `BRA (.L_x_0)` | `fffffffc00fc7947 000fc0000383ffff` | lea64 |
-| `BRA (.L_x_0)` | `fffffffc00fc7947 000fc0000383ffff` | lop3 |
-| `BRA (.L_x_0)` | `fffffffc00fc7947 000fc0000383ffff` | shf |
-| `BRA (.L_x_0)` | `fffffffc00fc7947 000fc0000383ffff` | shl64 |
-| `BRA (.L_x_0)` | `fffffffc00fc7947 000fc0000383ffff` | prmt |
-| `BRA (.L_x_0)` | `fffffffc00fc7947 000fc0000383ffff` | sgxt |
-| `BRA (.L_x_0)` | `fffffffc00fc7947 000fc0000383ffff` | bmsk |
-| `BRA (.L_x_0)` | `fffffffc00fc7947 000fc0000383ffff` | flo |
-| `BRA (.L_x_0)` | `fffffffc00fc7947 000fc0000383ffff` | brev |
-| `BRA (.L_x_0)` | `fffffffc00fc7947 000fc0000383ffff` | popc |
-| `BRA (.L_x_0)` | `fffffffc00fc7947 000fc0000383ffff` | idp |
-| `BRA (.L_x_0)` | `fffffffc00fc7947 000fc0000383ffff` | vabsdiff |
-| `BRA (.L_x_0)` | `fffffffc00fc7947 000fc0000383ffff` | vabsdiff2 |
-| `BRA (.L_x_0)` | `fffffffc00fc7947 000fc0000383ffff` | vabsdiff4 |
-| `BRA (.L_x_0)` | `fffffffc00fc7947 000fc0000383ffff` | f2f |
-| `BRA (.L_x_0)` | `fffffffc00fc7947 000fc0000383ffff` | f2i |
-| `BRA (.L_x_0)` | `fffffffc00fc7947 000fc0000383ffff` | i2fp |
-| `BRA (.L_x_0)` | `fffffffc00fc7947 000fc0000383ffff` | i2f |
-| `BRA (.L_x_0)` | `fffffffc00fc7947 000fc0000383ffff` | f2fp_f16 |
-| `BRA (.L_x_0)` | `fffffffc00fc7947 000fc0000383ffff` | f2fp_bf16 |
-| `BRA (.L_x_0)` | `fffffffc00fc7947 000fc0000383ffff` | f2fp_e4m3 |
-| `BRA (.L_x_0)` | `fffffffc00fc7947 000fc0000383ffff` | cvt_e4m3_to_f16x2 |
-| `BRA (.L_x_0)` | `fffffffc00fc7947 000fc0000383ffff` | i2i |
-| `BRA (.L_x_0)` | `fffffffc00fc7947 000fc0000383ffff` | i2ip |
-| `BRA (.L_x_0)` | `fffffffc00fc7947 000fc0000383ffff` | f2ip |
-| `BRA (.L_x_0)` | `fffffffc00fc7947 000fc0000383ffff` | shfl |
-| `BRA (.L_x_0)` | `fffffffc00fc7947 000fc0000383ffff` | vote |
-| `BRA (.L_x_0)` | `fffffffc00fc7947 000fc0000383ffff` | match |
-| `BRA (.L_x_0)` | `fffffffc00fc7947 000fc0000383ffff` | redux |
-| `BRA (.L_x_0)` | `fffffffc00fc7947 000fc0000383ffff` | s2r |
-| `BRA (.L_x_0)` | `fffffffc00fc7947 000fc0000383ffff` | cs2r |
-| `BRA (.L_x_0)` | `fffffffc00fc7947 000fc0000383ffff` | globaltimer |
-| `BRA (.L_x_0)` | `fffffffc00fc7947 000fc0000383ffff` | s2r_ctaid |
-| `BRA (.L_x_0)` | `fffffffc00fc7947 000fc0000383ffff` | s2ur |
-| `BRA (.L_x_0)` | `fffffffc00fc7947 000fc0000383ffff` | movm |
-| `BRA (.L_x_0)` | `fffffffc00fc7947 000fc0000383ffff` | lds_sts |
-| `BRA (.L_x_0)` | `fffffffc00fc7947 000fc0000383ffff` | ld_generic |
-| `BRA (.L_x_0)` | `fffffffc00fc7947 000fc0000383ffff` | st_generic |
-| `BRA (.L_x_0)` | `fffffffc00fc7947 000fc0000383ffff` | ldg_hints |
-| `BRA (.L_x_0)` | `fffffffc00fc7947 000fc0000383ffff` | ldg_l2_128b |
-| `BRA (.L_x_0)` | `fffffffc00fc7947 000fc0000383ffff` | ldg_v2 |
-| `BRA (.L_x_0)` | `fffffffc00fc7947 000fc0000383ffff` | ldg_nc |
-| `BRA (.L_x_0)` | `fffffffc00fc7947 000fc0000383ffff` | stg_v4 |
-| `BRA (.L_x_0)` | `fffffffc00fc7947 000fc0000383ffff` | ldl_stl |
-| `BRA (.L_x_0)` | `fffffffc00fc7947 000fc0000383ffff` | ldc |
-| `BRA (.L_x_0)` | `fffffffc00fc7947 000fc0000383ffff` | cp_async |
-| `BRA (.L_x_0)` | `fffffffc00fc7947 000fc0000383ffff` | ldsm |
-| `BRA (.L_x_0)` | `fffffffc00fc7947 000fc0000383ffff` | ldsm_trans |
-| `BRA (.L_x_0)` | `fffffffc00fc7947 000fc0000383ffff` | atomg |
-| `BRA (.L_x_0)` | `fffffffc00fc7947 000fc0000383ffff` | red |
-| `@!P0 BRA (.L_x_0)` | `0000000000548947 001fea0003800000` | atoms |
-| `BRA (.L_x_0)` | `fffffffc00fc7947 000fc0000383ffff` | atom_generic |
-| `BRA (.L_x_0)` | `fffffffc00fc7947 000fc0000383ffff` | atom_v2_f32 |
-| `BRA (.L_x_0)` | `fffffffc00fc7947 000fc0000383ffff` | red_v2_f32 |
-| `BRA (.L_x_0)` | `fffffffc00fc7947 000fc0000383ffff` | atom_cas |
-| `BRA (.L_x_0)` | `fffffffc00fc7947 000fc0000383ffff` | atom_add_f32 |
-| `BRA (.L_x_0)` | `fffffffc00fc7947 000fc0000383ffff` | qspc |
-| `BRA (.L_x_0)` | `fffffffc00fc7947 000fc0000383ffff` | cctl |
-| `BRA (.L_x_0)` | `fffffffc00fc7947 000fc0000383ffff` | elect_sync |
-| `BRA (.L_x_0)` | `fffffffc00fc7947 000fc0000383ffff` | stmatrix |
-| `BRA (.L_x_0)` | `fffffffc00fc7947 000fc0000383ffff` | stmatrix_x4 |
-| `BRA (.L_x_0)` | `fffffffc00fc7947 000fc0000383ffff` | mapa |
-| `BRA (.L_x_0)` | `fffffffc00fc7947 000fc0000383ffff` | cluster_ctarank |
-| `BRA (.L_x_1)` | `0000000000047947 000fea0003800000` | cluster_barrier |
-| `BRA (.L_x_0)` | `fffffffc00fc7947 000fc0000383ffff` | fence_cluster |
-| `BRA (.L_x_2)` | `0000000000247947 000fea0003800000` | cp_async_bulk_tma |
-| `BRA (.L_x_0)` | `fffffffc00fc7947 000fc0000383ffff` | mbarrier_red |
-| `BRA (.L_x_0)` | `fffffffc00fc7947 000fc0000383ffff` | st_bulk |
-| `BRA (.L_x_1)` | `fffffffc00fc7947 000fc0000383ffff` | cp_async_bulk_prefetch |
-| `BRA (.L_x_0)` | `fffffffc00fc7947 000fc0000383ffff` | griddepcontrol |
-| `BRA (.L_x_0)` | `fffffffc00fc7947 000fc0000383ffff` | st_async |
-| `BRA (.L_x_0)` | `fffffffc00fc7947 000fc0000383ffff` | hmma_f16 |
-| `BRA (.L_x_0)` | `fffffffc00fc7947 000fc0000383ffff` | hmma_bf16 |
-| `BRA (.L_x_0)` | `fffffffc00fc7947 000fc0000383ffff` | hmma_tf32 |
-| `BRA (.L_x_0)` | `fffffffc00fc7947 000fc0000383ffff` | imma |
-| `BRA (.L_x_0)` | `fffffffc00fc7947 000fc0000383ffff` | dmma |
-| `BRA (.L_x_0)` | `fffffffc00fc7947 000fc0000383ffff` | bmma |
-| `BRA (.L_x_0)` | `fffffffc00fc7947 000fc0000383ffff` | qmma_e4m3 |
-| `BRA (.L_x_0)` | `fffffffc00fc7947 000fc0000383ffff` | qmma_e5m2 |
-| `BRA (.L_x_0)` | `fffffffc00fc7947 000fc0000383ffff` | bar |
-| `BRA (.L_x_0)` | `fffffffc00fc7947 000fc0000383ffff` | bar_red |
-| `BRA (.L_x_0)` | `fffffffc00fc7947 000fc0000383ffff` | membar |
-| `BRA (.L_x_0)` | `fffffffc00fc7947 000fc0000383ffff` | fence_sys |
-| `BRA (.L_x_0)` | `fffffffc00fc7947 000fc0000383ffff` | nanosleep |
-| `BRA (.L_x_0)` | `fffffffc00fc7947 000fc0000383ffff` | warpsync |
-| `@!P0 BRA (.L_x_1)` | `0000000000608947 001fea0003800000` | diverge |
-| `BRA (.L_x_0)` | `fffffffc00fc7947 000fc0000383ffff` | call |
-| `BRA (.L_x_1)` | `0000000000147947 000fec0003800000` | brx |
-| `@!P1 BRA (.L_x_1)` | `00000000001c9947 001fea0003800000` | uniform_loop |
-| `BRA (.L_x_0)` | `fffffffc00fc7947 000fc0000383ffff` | prologue |
-| `@!P0 BRA (.L_x_1)` | `0000000000108947 000fea0003800000` | bssy_bsync |
-| `BRA (.L_x_0)` | `fffffffc00fc7947 000fc0000383ffff` | agg_atomic |
-| `BRA (.L_x_0)` | `fffffffc00fc7947 000fc0000383ffff` | agg_red |
-| `BRA (.L_x_0)` | `fffffffc00fc7947 000fc0000383ffff` | activemask |
-| `@P1 BRA (.L_x_1)` | `00000000001c1947 000fea0003800000` | s2ur_loop |
-| `BRA (.L_x_0)` | `fffffffc00fc7947 000fc0000383ffff` | uniform_alu |
-| `BRA (.L_x_0)` | `fffffffc00fc7947 000fc0000383ffff` | uniform_txq |
-| `BRA (.L_x_0)` | `fffffffc00fc7947 000fc0000383ffff` | cctll |
-| `BRA (.L_x_0)` | `fffffffc00fc7947 000fc0000383ffff` | pmtrig |
-| `BRA (.L_x_0)` | `fffffffc00fc7947 000fc0000383ffff` | plop3_folded |
-| `BRA (.L_x_0)` | `fffffffc00fc7947 000fc0000383ffff` | tex |
-| `BRA (.L_x_0)` | `fffffffc00fc7947 000fc0000383ffff` | tld4 |
-| `BRA (.L_x_0)` | `fffffffc00fc7947 000fc0000383ffff` | txq |
-| `BRA (.L_x_0)` | `fffffffc00fc7947 000fc0000383ffff` | suld |
-| `BRA (.L_x_0)` | `fffffffc00fc7947 000fc0000383ffff` | tld |
-| `BRA (.L_x_0)` | `fffffffc00fc7947 000fc0000383ffff` | txd |
-| `BRA (.L_x_0)` | `fffffffc00fc7947 000fc0000383ffff` | sured |
-| `BRA (.L_x_0)` | `fffffffc00fc7947 000fc0000383ffff` | suq |
-| `BRA (.L_x_0)` | `fffffffc00fc7947 000fc0000383ffff` | sust |
+| ... 177 more instance(s) in results.json | | |
 
 ### `BRA.U !UP, (L)` - 5 instance(s)
 
 | instruction | encoding (word0 word1) | probe |
 |---|---|---|
 | `BRA.U !UP0, (.L_x_0)` | `0000000108147547 003fea000b800000` | cluster_barrier |
-| `BRA.U !UP0, (.L_x_2)` | `00000001080c7547 000fea000b800000` | cluster_barrier |
 | `BRA.U !UP0, (.L_x_0)` | `0000000108347547 019fea000b800000` | cp_async_bulk_tma |
 | `BRA.U !UP0, (.L_x_0)` | `0000000108507547 009fea000b800000` | uniform_loop |
 | `BRA.U !UP0, (.L_x_0)` | `0000000108647547 009fea000b800000` | s2ur_loop |
+| ... 1 more instance(s) in results.json | | |
 
 ### `BRA.U.ANY (L)` - 2 instance(s)
 

@@ -4,6 +4,8 @@
 
 Notes: byte permute (category: Integer)
 
+Opcode cross-check vs Mesa NAK (open-source NVK compiler, mirror commit `837ab0e30740`): **agree**. NAK encodes 0x16, 0x96 ([source](https://github.com/chaotic-cx/mesa-mirror/blob/837ab0e30740abb9ebb60bcd40a5114c68c673d9/src/nouveau/compiler/nak/sm70_encode.rs#L2448)); see [verify/NAK_CROSSCHECK.md](../verify/NAK_CROSSCHECK.md).
+
 Observed on sm_120: 15 instruction(s) across 6 probe(s).
 
 ## Evidence
@@ -38,11 +40,9 @@ Emitted by probe(s):
 |---|---|---|
 | `PRMT R5, R0, 0x5140, R5` | `0000514000057816 004fca0000000005` | prmt |
 | `PRMT R4, R5, 0x7604, R4` | `0000760405047816 004fc80000000004` | sgxt |
-| `PRMT R4, RZ, 0x5, R4` | `00000005ff047816 000fe40000000004` | sgxt |
 | `PRMT R4, R4, 0x3210, RZ` | `0000321004047816 004fe400000000ff` | vabsdiff |
 | `PRMT R7, R0, 0x7710, RZ` | `0000771000077816 004fe400000000ff` | vabsdiff2 |
-| `PRMT R5, R0, 0x8880, RZ` | `0000888000057816 000fca00000000ff` | i2i |
-| `PRMT R4, R7, 0x654, R4` | `0000065407047816 004fe20000000004` | mapa |
+| ... 9 more instance(s) in results.json | | |
 
 ### `PRMT R, R, IMM, R.reuse` - 1 instance(s)
 

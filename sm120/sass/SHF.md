@@ -4,6 +4,8 @@
 
 Notes: funnel shift / 64-bit shifts (category: Integer)
 
+Opcode cross-check vs Mesa NAK (open-source NVK compiler, mirror commit `837ab0e30740`): **agree**. NAK encodes 0x19, 0x99 ([source](https://github.com/chaotic-cx/mesa-mirror/blob/837ab0e30740abb9ebb60bcd40a5114c68c673d9/src/nouveau/compiler/nak/sm70_encode.rs#L2141)); see [verify/NAK_CROSSCHECK.md](../verify/NAK_CROSSCHECK.md).
+
 Observed on sm_120: 23 instruction(s) across 9 probe(s).
 
 ## Evidence
@@ -40,10 +42,10 @@ Emitted by probe(s):
 | instruction | encoding (word0 word1) | probe |
 |---|---|---|
 | `SHF.R.U32.HI R7, RZ, 0x17, R3` | `00000017ff077819 000fe20000011603` | fdiv_rn |
-| `SHF.R.U32.HI R6, RZ, 0x17, R0` | `00000017ff067819 000fe40000011600` | fdiv_rn |
-| `SHF.R.U32.HI R0, RZ, 0x17, R3` | `00000017ff007819 000fc80000011603` | fdiv_rn |
 | `SHF.R.U32.HI R5, RZ, 0x10, R6` | `00000010ff057819 000fc80000011606` | vabsdiff2 |
 | `SHF.R.U32.HI R2, RZ, 0x3, R2` | `00000003ff027819 000fe40000011602` | bmma |
+| `SHF.R.U32.HI R6, RZ, 0x17, R0` | `00000017ff067819 000fe40000011600` | fdiv_rn |
+| ... 10 more instance(s) in results.json | | |
 
 ### `SHF.L.U32 R, R, R, R` - 2 instance(s)
 

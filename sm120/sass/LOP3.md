@@ -4,6 +4,8 @@
 
 Notes: 3-input bitwise logic (8-bit LUT) (category: Integer)
 
+Opcode cross-check vs Mesa NAK (open-source NVK compiler, mirror commit `837ab0e30740`): **agree**. NAK encodes 0x12, 0x92 ([source](https://github.com/chaotic-cx/mesa-mirror/blob/837ab0e30740abb9ebb60bcd40a5114c68c673d9/src/nouveau/compiler/nak/sm70_encode.rs#L2064)); see [verify/NAK_CROSSCHECK.md](../verify/NAK_CROSSCHECK.md).
+
 Observed on sm_120: 39 instruction(s) across 11 probe(s).
 
 ## Evidence
@@ -42,24 +44,20 @@ Emitted by probe(s):
 | instruction | encoding (word0 word1) | probe |
 |---|---|---|
 | `LOP3.LUT R7, R7, 0xff, RZ, 0xc0, !PT` | `000000ff07077812 000fe400078ec0ff` | fdiv_rn |
-| `LOP3.LUT R6, R6, 0xff, RZ, 0xc0, !PT` | `000000ff06067812 000fe200078ec0ff` | fdiv_rn |
-| `LOP3.LUT R0, R0, 0xff, RZ, 0xc0, !PT` | `000000ff00007812 000fc800078ec0ff` | fdiv_rn |
 | `LOP3.LUT R5, R0, 0xffff, RZ, 0xc0, !PT` | `0000ffff00057812 000fca00078ec0ff` | f2fp_e4m3 |
 | `LOP3.LUT R0, R0, 0x3f, RZ, 0xc0, !PT` | `0000003f00007812 004fe400078ec0ff` | ldl_stl |
 | `LOP3.LUT R0, R0, 0xfc, RZ, 0xe2, !PT` | `000000fc00007812 000fc800078ee2ff` | ldc |
-| `LOP3.LUT R6, R12, 0x44444444, RZ, 0xc0, !PT` | `444444440c067812 000fe200078ec0ff` | bmma |
-| `LOP3.LUT R0, R0, 0x3, RZ, 0xc0, !PT` | `0000000300007812 004fca00078ec0ff` | brx |
-| `LOP3.LUT R2, R2, 0xf, RZ, 0xc0, !PT` | `0000000f02027812 004fc800078ec0ff` | cctll |
+| ... 23 more instance(s) in results.json | | |
 
 ### `LOP3.LUT R, R, R, R, IMM, !P` - 5 instance(s)
 
 | instruction | encoding (word0 word1) | probe |
 |---|---|---|
 | `LOP3.LUT R0, R0, R7, RZ, 0xc0, !PT` | `0000000700007212 000fc800078ec0ff` | fdiv_rn |
-| `LOP3.LUT R3, R0, R3, RZ, 0xfc, !PT` | `0000000300037212 000fe200078efcff` | fdiv_rn |
 | `@P0 LOP3.LUT R5, R0, R7, RZ, 0x3c, !PT` | `0000000700050212 000fca00078e3cff` | isetp_pred |
 | `LOP3.LUT R0, R0, R7, RZ, 0x3c, !PT` | `0000000700007212 008fca00078e3cff` | imnmx_from_selp |
 | `LOP3.LUT R5, R0, R4, R5, 0xfc, !PT` | `0000000400057212 004fca00078efc05` | lop3 |
+| ... 1 more instance(s) in results.json | | |
 
 ### `LOP3.LUT P, R, R, IMM, R, IMM, !P` - 3 instance(s)
 

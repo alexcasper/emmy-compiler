@@ -4,6 +4,8 @@
 
 Notes: texture query (txq/suq; sm_120 form: 'TXQ RZ, R5, R5, TEX_HEADER_DIMENSION, UR4, ...') (category: Texture / surface)
 
+Opcode cross-check vs Mesa NAK (open-source NVK compiler, mirror commit `837ab0e30740`): **agree**. NAK encodes 0x370, 0xb6f ([source](https://github.com/chaotic-cx/mesa-mirror/blob/837ab0e30740abb9ebb60bcd40a5114c68c673d9/src/nouveau/compiler/nak/sm70_encode.rs#L3198)); see [verify/NAK_CROSSCHECK.md](../verify/NAK_CROSSCHECK.md).
+
 Observed on sm_120: 2 instruction(s) across 2 probe(s).
 
 ## Evidence

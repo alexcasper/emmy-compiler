@@ -4,6 +4,8 @@
 
 Notes: movmatrix transpose (also appears in b1-mma emulation) (category: Movement)
 
+Opcode cross-check vs Mesa NAK (open-source NVK compiler, mirror commit `837ab0e30740`): **agree**. NAK encodes 0x23a ([source](https://github.com/chaotic-cx/mesa-mirror/blob/837ab0e30740abb9ebb60bcd40a5114c68c673d9/src/nouveau/compiler/nak/sm70_encode.rs#L4663)); see [verify/NAK_CROSSCHECK.md](../verify/NAK_CROSSCHECK.md).
+
 Observed on sm_120: 13 instruction(s) across 2 probe(s).
 
 ## Evidence
@@ -35,6 +37,8 @@ Emitted by probe(s):
 | `MOVM.U4TO8.M832 R22, R2` | `000000000216723a 000e220000004800` | bmma |
 | `MOVM.U4TO8.M832 R4, R3` | `000000000304723a 000e620000004800` | bmma |
 | `MOVM.U4TO8.M832 R18, R6` | `000000000612723a 000ea80000004800` | bmma |
+| `MOVM.U4TO8.M832 R2, R24` | `000000001802723a 000ee20000004800` | bmma |
+| ... 8 more instance(s) in results.json | | |
 
 ### `MOVM.IMM.MT88 R, R` - 1 instance(s)
 

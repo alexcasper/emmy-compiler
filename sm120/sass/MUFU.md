@@ -4,6 +4,8 @@
 
 Notes: multi-function unit: rcp/rsqrt/sqrt/lg2/ex2/sin/cos/tanh approx (category: FP32)
 
+Opcode cross-check vs Mesa NAK (open-source NVK compiler, mirror commit `837ab0e30740`): **agree**. NAK encodes 0x108 ([source](https://github.com/chaotic-cx/mesa-mirror/blob/837ab0e30740abb9ebb60bcd40a5114c68c673d9/src/nouveau/compiler/nak/sm70_encode.rs#L1168)); see [verify/NAK_CROSSCHECK.md](../verify/NAK_CROSSCHECK.md).
+
 Observed on sm_120: 11 instruction(s) across 9 probe(s).
 
 ## Evidence
@@ -40,8 +42,8 @@ Emitted by probe(s):
 | instruction | encoding (word0 word1) | probe |
 |---|---|---|
 | `MUFU.RCP R2, R3` | `0000000300027308 004e620000001000` | fdiv_rn |
-| `MUFU.RCP R3, R9` | `0000000900037308 000e220000001000` | fdiv_rn |
 | `MUFU.RCP R0, R0` | `0000000000007308 000e240000001000` | mufu_rcp |
+| `MUFU.RCP R3, R9` | `0000000900037308 000e220000001000` | fdiv_rn |
 
 ### `MUFU.RSQ R, -QNAN` - 1 instance(s)
 

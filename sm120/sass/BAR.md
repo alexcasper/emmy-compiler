@@ -4,6 +4,8 @@
 
 Notes: CTA barrier (bar.sync/bar.red) (category: Synchronization / barriers)
 
+Opcode cross-check vs Mesa NAK (open-source NVK compiler, mirror commit `837ab0e30740`): **agree**. NAK encodes 0x31d, 0xb1d ([source](https://github.com/chaotic-cx/mesa-mirror/blob/837ab0e30740abb9ebb60bcd40a5114c68c673d9/src/nouveau/compiler/nak/sm70_encode.rs#L4245)); see [verify/NAK_CROSSCHECK.md](../verify/NAK_CROSSCHECK.md).
+
 Observed on sm_120: 10 instruction(s) across 10 probe(s).
 
 ## Evidence
@@ -44,11 +46,7 @@ Emitted by probe(s):
 | `BAR.SYNC.DEFER_BLOCKING 0x0` | `0000000000007b1d 000fec0000010000` | cp_async |
 | `BAR.SYNC.DEFER_BLOCKING 0x0` | `0000000000007b1d 000fec0000010000` | ldsm |
 | `BAR.SYNC.DEFER_BLOCKING 0x0` | `0000000000007b1d 000fec0000010000` | ldsm_trans |
-| `BAR.SYNC.DEFER_BLOCKING 0x0` | `0000000000007b1d 000fec0000010000` | stmatrix |
-| `BAR.SYNC.DEFER_BLOCKING 0x0` | `0000000000007b1d 000fec0000010000` | stmatrix_x4 |
-| `BAR.SYNC.DEFER_BLOCKING 0x0` | `0000000000007b1d 000fec0000010000` | cluster_barrier |
-| `BAR.SYNC.DEFER_BLOCKING 0x0` | `0000000000007b1d 000fec0000010000` | st_bulk |
-| `BAR.SYNC.DEFER_BLOCKING 0x0` | `0000000000007b1d 000fec0000010000` | bar |
+| ... 5 more instance(s) in results.json | | |
 
 ### `BAR.RED.POPC.DEFER_BLOCKING IMM, P` - 1 instance(s)
 

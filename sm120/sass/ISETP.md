@@ -4,6 +4,8 @@
 
 Notes: integer compare to predicate (category: Integer)
 
+Opcode cross-check vs Mesa NAK (open-source NVK compiler, mirror commit `837ab0e30740`): **agree**. NAK encodes 0xc, 0x8c ([source](https://github.com/chaotic-cx/mesa-mirror/blob/837ab0e30740abb9ebb60bcd40a5114c68c673d9/src/nouveau/compiler/nak/sm70_encode.rs#L1866)); see [verify/NAK_CROSSCHECK.md](../verify/NAK_CROSSCHECK.md).
+
 Observed on sm_120: 38 instruction(s) across 13 probe(s).
 
 ## Evidence
@@ -45,27 +47,28 @@ Emitted by probe(s):
 |---|---|---|
 | `ISETP.GT.AND P0, PT, R10, 0xfe, PT` | `000000fe0a00780c 000fda0003f04270` | fdiv_rn |
 | `ISETP.GT.AND P1, PT, R6, 0x3, PT` | `000000030600780c 000fda0003f24270` | diverge |
-| `ISETP.GT.AND P1, PT, R6, 0x1, PT` | `000000010600780c 000fda0003f24270` | diverge |
 | `ISETP.GT.AND P1, PT, R6, 0x3, PT` | `000000030600780c 000fda0003f24270` | uniform_loop |
+| `ISETP.GT.AND P1, PT, R6, 0x1, PT` | `000000010600780c 000fda0003f24270` | diverge |
+| ... 1 more instance(s) in results.json | | |
 
 ### `ISETP.NE.AND P, P, R, R, P` - 5 instance(s)
 
 | instruction | encoding (word0 word1) | probe |
 |---|---|---|
 | `ISETP.NE.AND P2, PT, R10, RZ, PT` | `000000ff0a00720c 000fe20003f45270` | fdiv_rn |
-| `ISETP.NE.AND P1, PT, R9, RZ, P1` | `000000ff0900720c 000fc60000f25270` | fdiv_rn |
 | `ISETP.NE.AND P0, PT, R0, RZ, PT` | `000000ff0000720c 004fda0003f05270` | vote |
 | `ISETP.NE.AND P0, PT, R0, RZ, PT` | `000000ff0000720c 004fda0003f05270` | bar_red |
 | `ISETP.NE.AND P0, PT, R4, R7, PT` | `000000070400720c 020fda0003f05270` | bssy_bsync |
+| ... 1 more instance(s) in results.json | | |
 
 ### `ISETP.GE.AND P, P, R, R, P` - 4 instance(s)
 
 | instruction | encoding (word0 word1) | probe |
 |---|---|---|
 | `ISETP.GE.AND P0, PT, R11, RZ, PT` | `000000ff0b00720c 000fe20003f06270` | fdiv_rn |
-| `ISETP.GE.AND P1, PT, R12, RZ, PT` | `000000ff0c00720c 000fd80003f26270` | fdiv_rn |
 | `ISETP.GE.AND P1, PT, R4, R7, PT` | `000000070400720c 000fda0003f26270` | diverge |
 | `ISETP.GE.AND P0, PT, R7, R0, PT` | `000000000700720c 000fda0003f06270` | bssy_bsync |
+| `ISETP.GE.AND P1, PT, R12, RZ, PT` | `000000ff0c00720c 000fd80003f26270` | fdiv_rn |
 
 ### `ISETP.GE.U32.AND P, P, R, UR, P` - 2 instance(s)
 
@@ -79,7 +82,7 @@ Emitted by probe(s):
 | instruction | encoding (word0 word1) | probe |
 |---|---|---|
 | `ISETP.LT.U32.AND P1, PT, R4.reuse, UR6, PT` | `0000000604007c0c 040fe2000bf21070` | s2ur_loop |
-| `ISETP.LT.U32.AND P1, PT, R4.reuse, UR6, PT` | `0000000604007c0c 040fe2000bf21070` | s2ur_loop |
+| ... 1 more instance(s) in results.json | | |
 
 ### `ISETP.LE.U32.OR P, P, R, IMM, !P` - 2 instance(s)
 

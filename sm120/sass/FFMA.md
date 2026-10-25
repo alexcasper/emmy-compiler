@@ -4,6 +4,8 @@
 
 Notes: FP32 fused multiply-add (category: FP32)
 
+Opcode cross-check vs Mesa NAK (open-source NVK compiler, mirror commit `837ab0e30740`): **agree**. NAK encodes 0x23, 0x55 ([source](https://github.com/chaotic-cx/mesa-mirror/blob/837ab0e30740abb9ebb60bcd40a5114c68c673d9/src/nouveau/compiler/nak/sm70_encode.rs#L890)); see [verify/NAK_CROSSCHECK.md](../verify/NAK_CROSSCHECK.md).
+
 Observed on sm_120: 18 instruction(s) across 2 probe(s).
 
 ## Evidence
@@ -35,6 +37,8 @@ Emitted by probe(s):
 | `FFMA R5, R0, R5, R7` | `0000000500057223 004fca0000000007` | ffma |
 | `FFMA R7, R2, R7, R2` | `0000000702077223 000fc80000000002` | fdiv_rn |
 | `FFMA R2, R0, R7, RZ` | `0000000700027223 000fc800000000ff` | fdiv_rn |
+| `FFMA R7, R7, R6, R2` | `0000000607077223 000fe20000000002` | fdiv_rn |
+| ... 6 more instance(s) in results.json | | |
 
 ### `FFMA R, R, IMM.84467440737095516160e+IMM, R` - 2 instance(s)
 

@@ -4,6 +4,8 @@
 
 Notes: integer (s8) mma.sync; also the tail of b1-mma emulation (no BMMA opcode seen on sm_120) (category: Tensor core (MMA))
 
+Opcode cross-check vs Mesa NAK (open-source NVK compiler, mirror commit `837ab0e30740`): **agree**. NAK encodes 0x237 ([source](https://github.com/chaotic-cx/mesa-mirror/blob/837ab0e30740abb9ebb60bcd40a5114c68c673d9/src/nouveau/compiler/nak/sm70_encode.rs#L4520)); see [verify/NAK_CROSSCHECK.md](../verify/NAK_CROSSCHECK.md).
+
 Observed on sm_120: 9 instruction(s) across 2 probe(s).
 
 ## Evidence
@@ -35,6 +37,8 @@ Emitted by probe(s):
 | `IMMA.16832.U8.U8 R8, R8.ROW, R4.COL, R12` | `0000000408087237 000fe20000400c0c` | bmma |
 | `IMMA.16832.U8.U8 R4, R4.ROW, R2.COL, R8` | `0000000204047237 000ff00000400c08` | bmma |
 | `IMMA.16832.U8.U8 R4, R8.ROW, R24.COL, R4` | `0000001808047237 000ff00000400c04` | bmma |
+| `IMMA.16832.U8.U8 R4, R8.ROW, R12.COL, R4` | `0000000c08047237 000ff00000400c04` | bmma |
+| ... 4 more instance(s) in results.json | | |
 
 ### `IMMA.IMM.S8.S8 R, R.ROW, R.COL, R` - 1 instance(s)
 

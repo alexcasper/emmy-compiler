@@ -43,9 +43,5 @@ Emitted by probe(s):
 | `ULEA UR4, UR5, UR4, 0x18` | `0000000405047291 004fe2000f8ec0ff` | cp_async |
 | `ULEA UR4, UR5, UR4, 0x18` | `0000000405047291 001fcc000f8ec0ff` | ldsm |
 | `ULEA UR4, UR5, UR4, 0x18` | `0000000405047291 001fcc000f8ec0ff` | ldsm_trans |
-| `ULEA UR4, UR5, UR4, 0x18` | `0000000405047291 002fd8000f8ec0ff` | atoms |
-| `ULEA UR39, UR7, UR39, 0x18` | `0000002707277291 002fe2000f8ec0ff` | cp_async_bulk_tma |
-| `ULEA UR6, UR6, UR4, 0x18` | `0000000406067291 002fe2000f8ec0ff` | mbarrier_red |
-| `ULEA UR4, UR5, UR4, 0x18` | `0000000405047291 001fc6000f8ec0ff` | st_bulk |
-| `ULEA UR7, UR8, UR7, 0x18` | `0000000708077291 001fe2000f8ec0ff` | st_async |
+| ... 7 more instance(s) in results.json | | |
 
