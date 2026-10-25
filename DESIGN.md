@@ -161,6 +161,30 @@ First calibration, baseline compiler, all 15 problems deterministic:
 - pointwise: fully unrolled, no loop, 32-48 instrs — nothing to win.
 - no register spills anywhere; 16-56 regs — pressure is a non-issue.
 
+## Address-math transforms (pow2_shift + hoist_invariants)
+
+Two emitter transforms landed behind EMMY_TUNING, both driven by the SASS probe:
+
+1. `pow2_shift` (on everywhere): `/`|`%` by a power-of-2 constant emit
+   `shr.u32`/`and.b32` — ptxas expands `div.s32`/`rem.s32` into MUFU
+   float-reciprocal sequences at every emission site, including the axis
+   decode in the prologue. L4-verified neutral-to-positive on every problem.
+2. `hoist_invariants` (`"auto"` by default): maximal loop-invariant address
+   subexpressions are compiled once into loop preheaders. Purely syntactic
+   dep analysis — expressions reading any per-iteration-defined name (loads,
+   lets, accums, nested axes) are never hoisted, so semantics cannot change.
+   
+   **Policy: "auto" = hoist iff the kernel body contains cp.async.** The L4
+   evidence matrix (open set + 9 tracer-generated variations) shows hoisting
+   is a massive win in cp.async-staged matmul pipelines (m01 440->94us on L4,
+   113->35us on the judge runner) and a consistent ~8-9% regression in
+   cp.async-free kernels (a01 246->350us L4, ga1 100->110us) where the long-
+   lived hoisted base registers cost ptxas its load-scheduling freedom.
+
+Judge-runner result with both transforms (auto policy): 15/15 gate PASS,
+geomean 26.8 -> 23.1 us, m01 113 -> 35 us. Attention kernels unchanged
+(a01 back to ~102 us class).
+
 Conclusion: the compiler's headroom is integer-address elimination (loop-
 invariant hoisting, pointer increment instead of recompute, avoiding `/`/`%`
 on loop indices in emitted PTX). Any GEPA codegen candidate is pre-screened
