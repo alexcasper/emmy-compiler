@@ -1,0 +1,55 @@
+<!-- Generated from https://docs.nvidia.com/cuda/archive/12.9.1/parallel-thread-execution/index.html by tools/build_ptx.py; do not edit. -->
+
+<a id="floating-point-instructions-tanh"></a>
+# 9.7.3.22. Floating Point Instructions: `tanh`
+
+`tanh`
+
+Find the hyperbolic tangent of a value (in radians)
+
+Syntax
+
+    tanh.approx.f32 d, a;
+
+Description
+
+Take hyperbolic tangent value of `a`.
+
+The operands `d` and `a` are of type `.f32`.
+
+Semantics
+
+    d = tanh(a);
+
+Notes
+
+`tanh.approx.f32` implements a fast approximation to FP32 hyperbolic-tangent.
+
+Results of `tanh` for various corner-case inputs are as follows:
+
+| Input | Result |
+|-------|--------|
+| -Inf  | -1.0   |
+| -0.0  | -0.0   |
+| +0.0  | +0.0   |
+| +Inf  | 1.0    |
+| NaN   | NaN    |
+
+The maximum relative error over the entire floating point range is 2⁻¹¹. The subnormal numbers are supported.
+
+Note
+
+The subnormal inputs gets passed through to the output since the value of `tanh(x)` for small values of `x` is approximately the same as `x`.
+
+PTX ISA Notes
+
+Introduced in PTX ISA version 7.0.
+
+Target ISA Notes
+
+Requires `sm_75` or higher.
+
+Examples
+
+    tanh.approx.f32 ta, a;
+

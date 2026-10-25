@@ -1,0 +1,39 @@
+<!-- Generated from https://docs.nvidia.com/cuda/archive/12.9.1/parallel-thread-execution/index.html by tools/build_ptx.py; do not edit. -->
+
+<a id="data-movement-and-conversion-instructions-st-bulk"></a>
+# 9.7.9.13. Data Movement and Conversion Instructions: `st.bulk`
+
+`st.bulk`
+
+Initializes a region of memory as specified by state space.
+
+Syntax
+
+    st.bulk{.weak}{.shared::cta}  [a], size, initval; // initval must be zero
+
+Description
+
+`st.bulk` instruction initializes a region of shared memory starting from the location specified by destination address operand `a`.
+
+The 64-bit integer operand `size` specifies the amount of memory to be initialized in terms of number of bytes. `size` must be a multiple of 8. If the value is not a multiple of 8, then the behavior is undefined. The maximum value of `size` operand can be 34359738360.
+
+The integer immediate operand `initval` specifies the initialization value for the memory locations. The only numeric value allowed for operand `initval` is 0.
+
+If no state space is specified then [Generic Addressing](../../06-instruction-operands.md#generic-addressing) is used. If the address specified by `a` does not fall within the address window of `.shared` state space then the behavior is undefined.
+
+The optional qualifier `.weak` specify the memory synchronizing effect of the `st.bulk` instruction as described in the [Memory Consistency Model](../../08-memory-consistency-model.md#memory-consistency-model).
+
+PTX ISA Notes
+
+Introduced in PTX ISA version 8.6.
+
+Target ISA Notes
+
+Requires `sm_100` or higher.
+
+Examples
+
+    st.bulk.weak.shared::cta  [dst], n, 0;
+
+    st.bulk                   [gdst], 4096, 0;
+

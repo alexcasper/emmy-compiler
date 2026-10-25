@@ -1,0 +1,42 @@
+<!-- Generated from https://docs.nvidia.com/cuda/archive/12.9.1/parallel-thread-execution/index.html by tools/build_ptx.py; do not edit. -->
+
+<a id="logic-and-shift-instructions-and"></a>
+# 9.7.8.1. Logic and Shift Instructions: `and`
+
+`and`
+
+Bitwise AND.
+
+Syntax
+
+    and.type d, a, b;
+
+    .type = { .pred, .b16, .b32, .b64 };
+
+Description
+
+Compute the bit-wise and operation for the bits in `a` and `b`.
+
+Semantics
+
+    d = a & b;
+
+Notes
+
+The size of the operands must match, but not necessarily the type.
+
+Allowed types include predicate registers.
+
+PTX ISA Notes
+
+Introduced in PTX ISA version 1.0.
+
+Target ISA Notes
+
+Supported on all target architectures.
+
+Examples
+
+    and.b32  x,q,r;
+    and.b32  sign,fpvalue,0x80000000;
+
