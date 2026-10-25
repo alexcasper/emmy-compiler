@@ -1,0 +1,2912 @@
+{
+ "tools": {
+  "ptxas": "Build cuda_12.9.r12.9/compiler.36037853_0",
+  "nvdisasm": "Build cuda_13.4.r13.4/compiler.38855100_0"
+ },
+ "observed": {
+  "ATOM": [
+   "atom_generic"
+  ],
+  "ATOMG": [
+   "agg_atomic",
+   "atomg"
+  ],
+  "ATOMS": [
+   "atoms"
+  ],
+  "B2R": [
+   "bar_red"
+  ],
+  "BAR": [
+   "bar",
+   "bar_red",
+   "cp_async",
+   "lds_sts",
+   "ldsm"
+  ],
+  "BMMA": [
+   "bmma"
+  ],
+  "BMSK": [
+   "bmsk"
+  ],
+  "BRA": [
+   "activemask",
+   "agg_atomic",
+   "agg_red",
+   "atom_generic",
+   "atomg",
+   "atoms",
+   "bar",
+   "bar_red",
+   "bmma",
+   "bmsk",
+   "brev",
+   "brx",
+   "bssy_bsync",
+   "call",
+   "cctl",
+   "cctll",
+   "cp_async",
+   "cs2r",
+   "dadd",
+   "dfma",
+   "diverge",
+   "dmma",
+   "dmul",
+   "dsetp",
+   "f2f",
+   "f2fp_bf16",
+   "f2fp_e4m3",
+   "f2fp_f16",
+   "f2i",
+   "f2ip",
+   "fadd",
+   "fdiv_rn",
+   "fence_sys",
+   "ffma",
+   "flo",
+   "fminmax",
+   "fmul",
+   "frnd",
+   "fset",
+   "fsetp_selp",
+   "hadd2",
+   "hfma2",
+   "hfma2_bf16",
+   "hmma_f16",
+   "hmma_tf32",
+   "hmnmx2",
+   "hmul2",
+   "hset2",
+   "hsetp2",
+   "i2f",
+   "i2fp",
+   "i2i",
+   "i2ip",
+   "iabs",
+   "iadd",
+   "iadd64",
+   "idp",
+   "imad",
+   "imad_hi",
+   "imad_wide",
+   "imma",
+   "imnmx",
+   "imnmx_from_selp",
+   "isetp_pred",
+   "ld_generic",
+   "ldc",
+   "ldg_nc",
+   "ldl_stl",
+   "lds_sts",
+   "ldsm",
+   "lea",
+   "lea64",
+   "lop3",
+   "match",
+   "membar",
+   "movm",
+   "mufu_cos",
+   "mufu_ex2",
+   "mufu_lg2",
+   "mufu_rcp",
+   "mufu_rsqrt",
+   "mufu_sin",
+   "mufu_sqrt",
+   "mufu_tanh",
+   "nanosleep",
+   "plop3_folded",
+   "pmtrig",
+   "popc",
+   "prmt",
+   "prologue",
+   "qmma_e4m3",
+   "qspc",
+   "red",
+   "redux",
+   "s2r",
+   "s2r_ctaid",
+   "s2ur",
+   "s2ur_loop",
+   "selp_to_predicated_load",
+   "sgxt",
+   "shf",
+   "shfl",
+   "shl64",
+   "st_generic",
+   "suld",
+   "suq",
+   "sured",
+   "sust",
+   "tex",
+   "tld",
+   "tld4",
+   "txd",
+   "txq",
+   "uniform_alu",
+   "uniform_loop",
+   "uniform_txq",
+   "vabsdiff",
+   "vabsdiff2",
+   "vabsdiff4",
+   "vote",
+   "warpsync"
+  ],
+  "BREV": [
+   "brev"
+  ],
+  "BRX": [
+   "brx"
+  ],
+  "BSSY": [
+   "brx",
+   "bssy_bsync",
+   "diverge",
+   "fdiv_rn"
+  ],
+  "BSYNC": [
+   "brx",
+   "bssy_bsync",
+   "diverge",
+   "fdiv_rn"
+  ],
+  "CALL": [
+   "call",
+   "fdiv_rn",
+   "warpsync"
+  ],
+  "CCTL": [
+   "cctl",
+   "fence_sys",
+   "membar"
+  ],
+  "CCTLL": [
+   "cctll"
+  ],
+  "CS2R": [
+   "bssy_bsync",
+   "cs2r"
+  ],
+  "DADD": [
+   "dadd",
+   "dmma"
+  ],
+  "DEPBAR": [
+   "cp_async"
+  ],
+  "DFMA": [
+   "dfma"
+  ],
+  "DMMA": [
+   "dmma"
+  ],
+  "DMUL": [
+   "dmul"
+  ],
+  "DSETP": [
+   "dsetp"
+  ],
+  "ERRBAR": [
+   "fence_sys",
+   "membar"
+  ],
+  "EXIT": [
+   "activemask",
+   "agg_atomic",
+   "agg_red",
+   "atom_generic",
+   "atomg",
+   "atoms",
+   "bar",
+   "bar_red",
+   "bmma",
+   "bmsk",
+   "brev",
+   "brx",
+   "bssy_bsync",
+   "call",
+   "cctl",
+   "cctll",
+   "cp_async",
+   "cs2r",
+   "dadd",
+   "dfma",
+   "diverge",
+   "dmma",
+   "dmul",
+   "dsetp",
+   "f2f",
+   "f2fp_bf16",
+   "f2fp_e4m3",
+   "f2fp_f16",
+   "f2i",
+   "f2ip",
+   "fadd",
+   "fdiv_rn",
+   "fence_sys",
+   "ffma",
+   "flo",
+   "fminmax",
+   "fmul",
+   "frnd",
+   "fset",
+   "fsetp_selp",
+   "hadd2",
+   "hfma2",
+   "hfma2_bf16",
+   "hmma_f16",
+   "hmma_tf32",
+   "hmnmx2",
+   "hmul2",
+   "hset2",
+   "hsetp2",
+   "i2f",
+   "i2fp",
+   "i2i",
+   "i2ip",
+   "iabs",
+   "iadd",
+   "iadd64",
+   "idp",
+   "imad",
+   "imad_hi",
+   "imad_wide",
+   "imma",
+   "imnmx",
+   "imnmx_from_selp",
+   "isetp_pred",
+   "ld_generic",
+   "ldc",
+   "ldg_nc",
+   "ldl_stl",
+   "lds_sts",
+   "ldsm",
+   "lea",
+   "lea64",
+   "lop3",
+   "match",
+   "membar",
+   "movm",
+   "mufu_cos",
+   "mufu_ex2",
+   "mufu_lg2",
+   "mufu_rcp",
+   "mufu_rsqrt",
+   "mufu_sin",
+   "mufu_sqrt",
+   "mufu_tanh",
+   "nanosleep",
+   "plop3_folded",
+   "pmtrig",
+   "popc",
+   "prmt",
+   "prologue",
+   "qmma_e4m3",
+   "qspc",
+   "red",
+   "redux",
+   "s2r",
+   "s2r_ctaid",
+   "s2ur",
+   "s2ur_loop",
+   "selp_to_predicated_load",
+   "sgxt",
+   "shf",
+   "shfl",
+   "shl64",
+   "st_generic",
+   "suld",
+   "suq",
+   "sured",
+   "sust",
+   "tex",
+   "tld",
+   "tld4",
+   "txd",
+   "txq",
+   "uniform_alu",
+   "uniform_loop",
+   "uniform_txq",
+   "vabsdiff",
+   "vabsdiff2",
+   "vabsdiff4",
+   "vote",
+   "warpsync"
+  ],
+  "F2F": [
+   "f2f"
+  ],
+  "F2FP": [
+   "f2fp_bf16",
+   "f2fp_e4m3",
+   "f2fp_f16"
+  ],
+  "F2I": [
+   "f2i",
+   "f2ip"
+  ],
+  "FADD": [
+   "fadd",
+   "fdiv_rn",
+   "fsetp_selp",
+   "hmma_f16",
+   "hmma_tf32",
+   "ldg_nc",
+   "mufu_lg2",
+   "qmma_e4m3"
+  ],
+  "FCHK": [
+   "fdiv_rn"
+  ],
+  "FFMA": [
+   "fdiv_rn",
+   "ffma"
+  ],
+  "FLO": [
+   "agg_atomic",
+   "flo",
+   "uniform_alu"
+  ],
+  "FMNMX": [
+   "fminmax"
+  ],
+  "FMUL": [
+   "fmul",
+   "fsetp_selp",
+   "mufu_cos",
+   "mufu_ex2",
+   "mufu_lg2",
+   "mufu_rcp",
+   "mufu_rsqrt",
+   "mufu_sin",
+   "mufu_sqrt"
+  ],
+  "FRND": [
+   "frnd"
+  ],
+  "FSEL": [
+   "dsetp",
+   "fsetp_selp",
+   "mufu_rcp"
+  ],
+  "FSETP": [
+   "fdiv_rn",
+   "fset",
+   "fsetp_selp",
+   "mufu_ex2",
+   "mufu_lg2",
+   "mufu_rcp",
+   "mufu_rsqrt",
+   "mufu_sqrt",
+   "plop3_folded",
+   "selp_to_predicated_load"
+  ],
+  "HADD2": [
+   "hadd2"
+  ],
+  "HFMA2": [
+   "hfma2",
+   "hfma2_bf16"
+  ],
+  "HMMA": [
+   "hmma_f16",
+   "hmma_tf32"
+  ],
+  "HMNMX2": [
+   "hmnmx2"
+  ],
+  "HMUL2": [
+   "hmul2"
+  ],
+  "HSET2": [
+   "hset2"
+  ],
+  "HSETP2": [
+   "hsetp2"
+  ],
+  "I2F": [
+   "i2f"
+  ],
+  "I2FP": [
+   "i2fp"
+  ],
+  "I2I": [
+   "i2i"
+  ],
+  "I2IP": [
+   "i2ip"
+  ],
+  "IABS": [
+   "iabs",
+   "vabsdiff2"
+  ],
+  "IADD3": [
+   "atoms",
+   "bmma",
+   "bssy_bsync",
+   "cctll",
+   "diverge",
+   "fdiv_rn",
+   "flo",
+   "iadd",
+   "iadd64",
+   "imma",
+   "ldl_stl",
+   "ldsm",
+   "s2ur",
+   "s2ur_loop",
+   "uniform_alu",
+   "uniform_loop",
+   "vabsdiff"
+  ],
+  "IDP": [
+   "idp"
+  ],
+  "IMAD": [
+   "activemask",
+   "agg_atomic",
+   "agg_red",
+   "atom_generic",
+   "atomg",
+   "atoms",
+   "bar",
+   "bar_red",
+   "bmma",
+   "bmsk",
+   "brev",
+   "brx",
+   "bssy_bsync",
+   "call",
+   "cctl",
+   "cctll",
+   "cp_async",
+   "cs2r",
+   "dadd",
+   "dfma",
+   "diverge",
+   "dmma",
+   "dmul",
+   "dsetp",
+   "f2f",
+   "f2fp_bf16",
+   "f2fp_e4m3",
+   "f2fp_f16",
+   "f2i",
+   "f2ip",
+   "fadd",
+   "fdiv_rn",
+   "fence_sys",
+   "ffma",
+   "flo",
+   "fminmax",
+   "fmul",
+   "frnd",
+   "fset",
+   "fsetp_selp",
+   "hadd2",
+   "hfma2",
+   "hfma2_bf16",
+   "hmma_f16",
+   "hmma_tf32",
+   "hmnmx2",
+   "hmul2",
+   "hset2",
+   "hsetp2",
+   "i2f",
+   "i2fp",
+   "i2i",
+   "i2ip",
+   "iabs",
+   "iadd",
+   "iadd64",
+   "idp",
+   "imad",
+   "imad_hi",
+   "imad_wide",
+   "imma",
+   "imnmx",
+   "imnmx_from_selp",
+   "isetp_pred",
+   "ld_generic",
+   "ldc",
+   "ldg_nc",
+   "ldl_stl",
+   "lds_sts",
+   "ldsm",
+   "lea",
+   "lea64",
+   "lop3",
+   "match",
+   "membar",
+   "movm",
+   "mufu_cos",
+   "mufu_ex2",
+   "mufu_lg2",
+   "mufu_rcp",
+   "mufu_rsqrt",
+   "mufu_sin",
+   "mufu_sqrt",
+   "mufu_tanh",
+   "nanosleep",
+   "plop3_folded",
+   "popc",
+   "prmt",
+   "prologue",
+   "qmma_e4m3",
+   "qspc",
+   "red",
+   "redux",
+   "s2r",
+   "s2r_ctaid",
+   "s2ur",
+   "s2ur_loop",
+   "selp_to_predicated_load",
+   "sgxt",
+   "shf",
+   "shfl",
+   "shl64",
+   "st_generic",
+   "suld",
+   "suq",
+   "sured",
+   "sust",
+   "tex",
+   "tld",
+   "tld4",
+   "txd",
+   "txq",
+   "uniform_alu",
+   "uniform_loop",
+   "uniform_txq",
+   "vabsdiff",
+   "vabsdiff2",
+   "vabsdiff4",
+   "vote",
+   "warpsync"
+  ],
+  "IMMA": [
+   "imma"
+  ],
+  "IMNMX": [
+   "imnmx",
+   "imnmx_from_selp"
+  ],
+  "ISETP": [
+   "agg_atomic",
+   "agg_red",
+   "atoms",
+   "bar_red",
+   "bssy_bsync",
+   "diverge",
+   "fdiv_rn",
+   "isetp_pred",
+   "plop3_folded",
+   "s2ur_loop",
+   "uniform_loop",
+   "vabsdiff",
+   "vote"
+  ],
+  "LD": [
+   "ld_generic"
+  ],
+  "LDC": [
+   "brx",
+   "ldc"
+  ],
+  "LDG": [
+   "atom_generic",
+   "atomg",
+   "atoms",
+   "bar",
+   "bar_red",
+   "bmma",
+   "bmsk",
+   "brev",
+   "brx",
+   "bssy_bsync",
+   "call",
+   "cctl",
+   "cctll",
+   "dadd",
+   "dfma",
+   "diverge",
+   "dmma",
+   "dmul",
+   "dsetp",
+   "f2f",
+   "f2fp_bf16",
+   "f2fp_e4m3",
+   "f2fp_f16",
+   "f2i",
+   "f2ip",
+   "fadd",
+   "fdiv_rn",
+   "fence_sys",
+   "ffma",
+   "flo",
+   "fminmax",
+   "fmul",
+   "frnd",
+   "fset",
+   "fsetp_selp",
+   "hadd2",
+   "hfma2",
+   "hfma2_bf16",
+   "hmma_f16",
+   "hmma_tf32",
+   "hmnmx2",
+   "hmul2",
+   "hset2",
+   "hsetp2",
+   "i2f",
+   "i2fp",
+   "i2i",
+   "i2ip",
+   "iabs",
+   "iadd",
+   "iadd64",
+   "idp",
+   "imad",
+   "imad_hi",
+   "imad_wide",
+   "imma",
+   "imnmx",
+   "imnmx_from_selp",
+   "isetp_pred",
+   "ld_generic",
+   "ldc",
+   "ldg_nc",
+   "ldl_stl",
+   "lds_sts",
+   "ldsm",
+   "lea",
+   "lea64",
+   "lop3",
+   "match",
+   "membar",
+   "movm",
+   "mufu_cos",
+   "mufu_ex2",
+   "mufu_lg2",
+   "mufu_rcp",
+   "mufu_rsqrt",
+   "mufu_sin",
+   "mufu_sqrt",
+   "mufu_tanh",
+   "nanosleep",
+   "plop3_folded",
+   "popc",
+   "prmt",
+   "prologue",
+   "qmma_e4m3",
+   "qspc",
+   "red",
+   "redux",
+   "s2ur",
+   "s2ur_loop",
+   "selp_to_predicated_load",
+   "sgxt",
+   "shf",
+   "shfl",
+   "shl64",
+   "st_generic",
+   "suld",
+   "sured",
+   "sust",
+   "tex",
+   "tld",
+   "tld4",
+   "txd",
+   "uniform_alu",
+   "uniform_loop",
+   "uniform_txq",
+   "vabsdiff",
+   "vabsdiff2",
+   "vabsdiff4",
+   "vote",
+   "warpsync"
+  ],
+  "LDGDEPBAR": [
+   "cp_async"
+  ],
+  "LDGSTS": [
+   "cp_async"
+  ],
+  "LDL": [
+   "cctll",
+   "ldl_stl"
+  ],
+  "LDS": [
+   "cp_async",
+   "lds_sts"
+  ],
+  "LDSM": [
+   "ldsm"
+  ],
+  "LEA": [
+   "fdiv_rn",
+   "ldl_stl",
+   "lea",
+   "lea64",
+   "vabsdiff2"
+  ],
+  "LOP3": [
+   "agg_atomic",
+   "brx",
+   "cctll",
+   "f2fp_e4m3",
+   "fdiv_rn",
+   "imnmx_from_selp",
+   "isetp_pred",
+   "ldc",
+   "ldl_stl",
+   "lop3",
+   "warpsync"
+  ],
+  "MATCH": [
+   "match",
+   "warpsync"
+  ],
+  "MEMBAR": [
+   "fence_sys",
+   "membar"
+  ],
+  "MOV": [
+   "activemask",
+   "agg_atomic",
+   "agg_red",
+   "atom_generic",
+   "atomg",
+   "atoms",
+   "bar",
+   "bar_red",
+   "bmma",
+   "bmsk",
+   "brev",
+   "brx",
+   "bssy_bsync",
+   "call",
+   "cctl",
+   "cctll",
+   "cp_async",
+   "cs2r",
+   "dadd",
+   "dfma",
+   "dmma",
+   "dmul",
+   "dsetp",
+   "f2f",
+   "f2fp_bf16",
+   "f2fp_e4m3",
+   "f2fp_f16",
+   "f2i",
+   "f2ip",
+   "fadd",
+   "fdiv_rn",
+   "fence_sys",
+   "ffma",
+   "flo",
+   "fminmax",
+   "fmul",
+   "frnd",
+   "fset",
+   "fsetp_selp",
+   "hadd2",
+   "hfma2",
+   "hfma2_bf16",
+   "hmma_f16",
+   "hmma_tf32",
+   "hmnmx2",
+   "hmul2",
+   "hset2",
+   "hsetp2",
+   "i2f",
+   "i2fp",
+   "i2i",
+   "i2ip",
+   "iabs",
+   "iadd",
+   "iadd64",
+   "idp",
+   "imad",
+   "imad_hi",
+   "imad_wide",
+   "imma",
+   "imnmx",
+   "imnmx_from_selp",
+   "isetp_pred",
+   "ld_generic",
+   "ldc",
+   "ldg_nc",
+   "lds_sts",
+   "ldsm",
+   "lea",
+   "lop3",
+   "match",
+   "membar",
+   "movm",
+   "mufu_cos",
+   "mufu_ex2",
+   "mufu_lg2",
+   "mufu_rcp",
+   "mufu_rsqrt",
+   "mufu_sin",
+   "mufu_sqrt",
+   "mufu_tanh",
+   "nanosleep",
+   "plop3_folded",
+   "pmtrig",
+   "popc",
+   "prmt",
+   "prologue",
+   "qmma_e4m3",
+   "qspc",
+   "red",
+   "redux",
+   "s2r",
+   "s2r_ctaid",
+   "s2ur",
+   "selp_to_predicated_load",
+   "shf",
+   "shfl",
+   "shl64",
+   "st_generic",
+   "suld",
+   "suq",
+   "sured",
+   "sust",
+   "tex",
+   "tld",
+   "tld4",
+   "txd",
+   "txq",
+   "uniform_alu",
+   "uniform_txq",
+   "vabsdiff4",
+   "vote",
+   "warpsync"
+  ],
+  "MOVM": [
+   "movm"
+  ],
+  "MUFU": [
+   "fdiv_rn",
+   "mufu_cos",
+   "mufu_ex2",
+   "mufu_lg2",
+   "mufu_rcp",
+   "mufu_rsqrt",
+   "mufu_sin",
+   "mufu_sqrt",
+   "mufu_tanh"
+  ],
+  "NANOSLEEP": [
+   "nanosleep"
+  ],
+  "PLOP3": [
+   "diverge",
+   "fdiv_rn",
+   "s2ur_loop",
+   "uniform_loop"
+  ],
+  "PMTRIG": [
+   "pmtrig"
+  ],
+  "POPC": [
+   "activemask",
+   "agg_atomic",
+   "agg_red",
+   "popc"
+  ],
+  "PRMT": [
+   "i2i",
+   "prmt",
+   "sgxt",
+   "vabsdiff",
+   "vabsdiff2"
+  ],
+  "QMMA": [
+   "qmma_e4m3"
+  ],
+  "QSPC": [
+   "qspc"
+  ],
+  "RED": [
+   "agg_red",
+   "red"
+  ],
+  "REDUX": [
+   "redux",
+   "warpsync"
+  ],
+  "RET": [
+   "call",
+   "fdiv_rn",
+   "warpsync"
+  ],
+  "S2R": [
+   "activemask",
+   "agg_atomic",
+   "agg_red",
+   "atom_generic",
+   "atomg",
+   "atoms",
+   "bar",
+   "bar_red",
+   "bmma",
+   "bmsk",
+   "brev",
+   "brx",
+   "bssy_bsync",
+   "call",
+   "cctl",
+   "cctll",
+   "cp_async",
+   "cs2r",
+   "dadd",
+   "dfma",
+   "diverge",
+   "dmma",
+   "dmul",
+   "dsetp",
+   "f2f",
+   "f2fp_bf16",
+   "f2fp_e4m3",
+   "f2fp_f16",
+   "f2i",
+   "f2ip",
+   "fadd",
+   "fdiv_rn",
+   "fence_sys",
+   "ffma",
+   "flo",
+   "fminmax",
+   "fmul",
+   "frnd",
+   "fset",
+   "fsetp_selp",
+   "hadd2",
+   "hfma2",
+   "hfma2_bf16",
+   "hmma_f16",
+   "hmma_tf32",
+   "hmnmx2",
+   "hmul2",
+   "hset2",
+   "hsetp2",
+   "i2f",
+   "i2fp",
+   "i2i",
+   "i2ip",
+   "iabs",
+   "iadd",
+   "iadd64",
+   "idp",
+   "imad",
+   "imad_hi",
+   "imad_wide",
+   "imma",
+   "imnmx",
+   "imnmx_from_selp",
+   "isetp_pred",
+   "ld_generic",
+   "ldc",
+   "ldg_nc",
+   "ldl_stl",
+   "lds_sts",
+   "ldsm",
+   "lea",
+   "lea64",
+   "lop3",
+   "match",
+   "membar",
+   "movm",
+   "mufu_cos",
+   "mufu_ex2",
+   "mufu_lg2",
+   "mufu_rcp",
+   "mufu_rsqrt",
+   "mufu_sin",
+   "mufu_sqrt",
+   "mufu_tanh",
+   "nanosleep",
+   "plop3_folded",
+   "popc",
+   "prmt",
+   "prologue",
+   "qmma_e4m3",
+   "qspc",
+   "red",
+   "redux",
+   "s2r",
+   "s2r_ctaid",
+   "s2ur",
+   "s2ur_loop",
+   "selp_to_predicated_load",
+   "sgxt",
+   "shf",
+   "shfl",
+   "shl64",
+   "st_generic",
+   "suld",
+   "suq",
+   "sured",
+   "sust",
+   "tex",
+   "tld",
+   "tld4",
+   "txd",
+   "txq",
+   "uniform_alu",
+   "uniform_loop",
+   "uniform_txq",
+   "vabsdiff",
+   "vabsdiff2",
+   "vabsdiff4",
+   "vote",
+   "warpsync"
+  ],
+  "S2UR": [
+   "s2ur_loop"
+  ],
+  "SEL": [
+   "fdiv_rn",
+   "fset",
+   "hsetp2",
+   "qspc"
+  ],
+  "SGXT": [
+   "sgxt"
+  ],
+  "SHF": [
+   "brx",
+   "cp_async",
+   "fdiv_rn",
+   "ldc",
+   "ldsm",
+   "lea64",
+   "sgxt",
+   "shf",
+   "shl64",
+   "vabsdiff2"
+  ],
+  "SHFL": [
+   "agg_atomic",
+   "atoms",
+   "bssy_bsync",
+   "shfl"
+  ],
+  "ST": [
+   "st_generic"
+  ],
+  "STG": [
+   "activemask",
+   "agg_atomic",
+   "atom_generic",
+   "atomg",
+   "atoms",
+   "bar",
+   "bar_red",
+   "bmma",
+   "bmsk",
+   "brev",
+   "brx",
+   "bssy_bsync",
+   "call",
+   "cctll",
+   "cp_async",
+   "cs2r",
+   "dadd",
+   "dfma",
+   "diverge",
+   "dmma",
+   "dmul",
+   "dsetp",
+   "f2f",
+   "f2fp_bf16",
+   "f2fp_e4m3",
+   "f2fp_f16",
+   "f2i",
+   "f2ip",
+   "fadd",
+   "fdiv_rn",
+   "fence_sys",
+   "ffma",
+   "flo",
+   "fminmax",
+   "fmul",
+   "frnd",
+   "fset",
+   "fsetp_selp",
+   "hadd2",
+   "hfma2",
+   "hfma2_bf16",
+   "hmma_f16",
+   "hmma_tf32",
+   "hmnmx2",
+   "hmul2",
+   "hset2",
+   "hsetp2",
+   "i2f",
+   "i2fp",
+   "i2i",
+   "i2ip",
+   "iabs",
+   "iadd",
+   "iadd64",
+   "idp",
+   "imad",
+   "imad_hi",
+   "imad_wide",
+   "imma",
+   "imnmx",
+   "imnmx_from_selp",
+   "isetp_pred",
+   "ld_generic",
+   "ldc",
+   "ldg_nc",
+   "ldl_stl",
+   "lds_sts",
+   "ldsm",
+   "lea",
+   "lea64",
+   "lop3",
+   "match",
+   "membar",
+   "movm",
+   "mufu_cos",
+   "mufu_ex2",
+   "mufu_lg2",
+   "mufu_rcp",
+   "mufu_rsqrt",
+   "mufu_sin",
+   "mufu_sqrt",
+   "mufu_tanh",
+   "plop3_folded",
+   "popc",
+   "prmt",
+   "prologue",
+   "qmma_e4m3",
+   "qspc",
+   "redux",
+   "s2r",
+   "s2r_ctaid",
+   "s2ur",
+   "s2ur_loop",
+   "selp_to_predicated_load",
+   "sgxt",
+   "shf",
+   "shfl",
+   "shl64",
+   "suld",
+   "suq",
+   "tex",
+   "tld",
+   "tld4",
+   "txd",
+   "txq",
+   "uniform_alu",
+   "uniform_loop",
+   "uniform_txq",
+   "vabsdiff",
+   "vabsdiff2",
+   "vabsdiff4",
+   "vote"
+  ],
+  "STL": [
+   "cctll",
+   "ldl_stl"
+  ],
+  "STS": [
+   "lds_sts",
+   "ldsm"
+  ],
+  "SULD": [
+   "suld"
+  ],
+  "SURED": [
+   "sured"
+  ],
+  "SUST": [
+   "sust"
+  ],
+  "TEX": [
+   "tex"
+  ],
+  "TLD": [
+   "tld"
+  ],
+  "TLD4": [
+   "tld4"
+  ],
+  "TXD": [
+   "txd"
+  ],
+  "TXQ": [
+   "suq",
+   "txq"
+  ],
+  "UBREV": [
+   "uniform_alu"
+  ],
+  "UFLO": [
+   "agg_red"
+  ],
+  "UIADD3": [
+   "s2ur_loop",
+   "uniform_loop",
+   "uniform_txq"
+  ],
+  "UIMAD": [
+   "uniform_txq"
+  ],
+  "ULDC": [
+   "activemask",
+   "agg_atomic",
+   "agg_red",
+   "atom_generic",
+   "atomg",
+   "atoms",
+   "bar",
+   "bar_red",
+   "bmma",
+   "bmsk",
+   "brev",
+   "brx",
+   "bssy_bsync",
+   "call",
+   "cctl",
+   "cctll",
+   "cp_async",
+   "cs2r",
+   "dadd",
+   "dfma",
+   "diverge",
+   "dmma",
+   "dmul",
+   "dsetp",
+   "f2f",
+   "f2fp_bf16",
+   "f2fp_e4m3",
+   "f2fp_f16",
+   "f2i",
+   "f2ip",
+   "fadd",
+   "fdiv_rn",
+   "fence_sys",
+   "ffma",
+   "flo",
+   "fminmax",
+   "fmul",
+   "frnd",
+   "fset",
+   "fsetp_selp",
+   "hadd2",
+   "hfma2",
+   "hfma2_bf16",
+   "hmma_f16",
+   "hmma_tf32",
+   "hmnmx2",
+   "hmul2",
+   "hset2",
+   "hsetp2",
+   "i2f",
+   "i2fp",
+   "i2i",
+   "i2ip",
+   "iabs",
+   "iadd",
+   "iadd64",
+   "idp",
+   "imad",
+   "imad_hi",
+   "imad_wide",
+   "imma",
+   "imnmx",
+   "imnmx_from_selp",
+   "isetp_pred",
+   "ld_generic",
+   "ldc",
+   "ldg_nc",
+   "ldl_stl",
+   "lds_sts",
+   "ldsm",
+   "lea",
+   "lea64",
+   "lop3",
+   "match",
+   "membar",
+   "movm",
+   "mufu_cos",
+   "mufu_ex2",
+   "mufu_lg2",
+   "mufu_rcp",
+   "mufu_rsqrt",
+   "mufu_sin",
+   "mufu_sqrt",
+   "mufu_tanh",
+   "nanosleep",
+   "plop3_folded",
+   "popc",
+   "prmt",
+   "prologue",
+   "qmma_e4m3",
+   "qspc",
+   "red",
+   "redux",
+   "s2r",
+   "s2r_ctaid",
+   "s2ur",
+   "s2ur_loop",
+   "selp_to_predicated_load",
+   "sgxt",
+   "shf",
+   "shfl",
+   "shl64",
+   "st_generic",
+   "suld",
+   "suq",
+   "sured",
+   "sust",
+   "tex",
+   "tld",
+   "tld4",
+   "txd",
+   "txq",
+   "uniform_alu",
+   "uniform_loop",
+   "uniform_txq",
+   "vabsdiff",
+   "vabsdiff2",
+   "vabsdiff4",
+   "vote",
+   "warpsync"
+  ],
+  "ULOP3": [
+   "uniform_alu",
+   "uniform_txq"
+  ],
+  "UMOV": [
+   "uniform_txq"
+  ],
+  "UPOPC": [
+   "uniform_alu"
+  ],
+  "UPRMT": [
+   "uniform_alu"
+  ],
+  "USHF": [
+   "uniform_alu"
+  ],
+  "VABSDIFF4": [
+   "vabsdiff4"
+  ],
+  "VOTE": [
+   "atoms",
+   "vote"
+  ],
+  "VOTEU": [
+   "activemask",
+   "agg_atomic",
+   "agg_red",
+   "warpsync"
+  ],
+  "WARPSYNC": [
+   "warpsync"
+  ]
+ },
+ "probes": [
+  {
+   "name": "fadd",
+   "ptx": "add.f32",
+   "expect": [
+    "FADD"
+   ],
+   "status": "ok",
+   "reject": false
+  },
+  {
+   "name": "ffma",
+   "ptx": "fma.rn.f32",
+   "expect": [
+    "FFMA"
+   ],
+   "status": "ok",
+   "reject": false
+  },
+  {
+   "name": "fmul",
+   "ptx": "mul.f32",
+   "expect": [
+    "FMUL"
+   ],
+   "status": "ok",
+   "reject": false
+  },
+  {
+   "name": "fminmax",
+   "ptx": "min.f32 / max.f32",
+   "expect": [
+    "FMNMX"
+   ],
+   "status": "ok",
+   "reject": false
+  },
+  {
+   "name": "fsetp_selp",
+   "ptx": "setp.lt.f32 + selp.f32 (both arms computed)",
+   "expect": [
+    "FSETP",
+    "FSEL"
+   ],
+   "status": "ok",
+   "reject": false
+  },
+  {
+   "name": "selp_to_predicated_load",
+   "ptx": "selp.f32 between two loaded values",
+   "expect": [
+    "FSETP"
+   ],
+   "status": "ok",
+   "reject": false
+  },
+  {
+   "name": "fset",
+   "ptx": "set.lt.u32.f32 (lowered as FSETP + SEL)",
+   "expect": [
+    "FSETP",
+    "SEL"
+   ],
+   "status": "ok",
+   "reject": false
+  },
+  {
+   "name": "fdiv_rn",
+   "ptx": "div.rn.f32 (IEEE division)",
+   "expect": [
+    "FCHK",
+    "MUFU",
+    "FFMA",
+    "CALL"
+   ],
+   "status": "ok",
+   "reject": false
+  },
+  {
+   "name": "mufu_rcp",
+   "ptx": "rcp.approx.f32",
+   "expect": [
+    "MUFU"
+   ],
+   "status": "ok",
+   "reject": false
+  },
+  {
+   "name": "mufu_rsqrt",
+   "ptx": "rsqrt.approx.f32",
+   "expect": [
+    "MUFU"
+   ],
+   "status": "ok",
+   "reject": false
+  },
+  {
+   "name": "mufu_sqrt",
+   "ptx": "sqrt.approx.f32",
+   "expect": [
+    "MUFU"
+   ],
+   "status": "ok",
+   "reject": false
+  },
+  {
+   "name": "mufu_lg2",
+   "ptx": "lg2.approx.f32",
+   "expect": [
+    "MUFU"
+   ],
+   "status": "ok",
+   "reject": false
+  },
+  {
+   "name": "mufu_ex2",
+   "ptx": "ex2.approx.f32",
+   "expect": [
+    "MUFU"
+   ],
+   "status": "ok",
+   "reject": false
+  },
+  {
+   "name": "mufu_sin",
+   "ptx": "sin.approx.f32",
+   "expect": [
+    "MUFU"
+   ],
+   "status": "ok",
+   "reject": false
+  },
+  {
+   "name": "mufu_cos",
+   "ptx": "cos.approx.f32",
+   "expect": [
+    "MUFU"
+   ],
+   "status": "ok",
+   "reject": false
+  },
+  {
+   "name": "mufu_tanh",
+   "ptx": "tanh.approx.f32",
+   "expect": [
+    "MUFU"
+   ],
+   "status": "ok",
+   "reject": false
+  },
+  {
+   "name": "frnd",
+   "ptx": "cvt.rmi.f32.f32 (floor)",
+   "expect": [
+    "FRND"
+   ],
+   "status": "ok",
+   "reject": false
+  },
+  {
+   "name": "dadd",
+   "ptx": "add.f64",
+   "expect": [
+    "DADD"
+   ],
+   "status": "ok",
+   "reject": false
+  },
+  {
+   "name": "dfma",
+   "ptx": "fma.rn.f64",
+   "expect": [
+    "DFMA"
+   ],
+   "status": "ok",
+   "reject": false
+  },
+  {
+   "name": "dmul",
+   "ptx": "mul.f64",
+   "expect": [
+    "DMUL"
+   ],
+   "status": "ok",
+   "reject": false
+  },
+  {
+   "name": "dsetp",
+   "ptx": "setp.lt.f64",
+   "expect": [
+    "DSETP"
+   ],
+   "status": "ok",
+   "reject": false
+  },
+  {
+   "name": "hadd2",
+   "ptx": "add.f16x2",
+   "expect": [
+    "HADD2"
+   ],
+   "status": "ok",
+   "reject": false
+  },
+  {
+   "name": "hfma2",
+   "ptx": "fma.rn.f16x2",
+   "expect": [
+    "HFMA2"
+   ],
+   "status": "ok",
+   "reject": false
+  },
+  {
+   "name": "hfma2_bf16",
+   "ptx": "fma.rn.bf16x2",
+   "expect": [
+    "HFMA2"
+   ],
+   "status": "ok",
+   "reject": false
+  },
+  {
+   "name": "hmul2",
+   "ptx": "mul.f16x2",
+   "expect": [
+    "HMUL2"
+   ],
+   "status": "ok",
+   "reject": false
+  },
+  {
+   "name": "hmnmx2",
+   "ptx": "min.f16x2",
+   "expect": [
+    "HMNMX2"
+   ],
+   "status": "ok",
+   "reject": false
+  },
+  {
+   "name": "hsetp2",
+   "ptx": "setp.lt.f16x2",
+   "expect": [
+    "HSETP2"
+   ],
+   "status": "ok",
+   "reject": false
+  },
+  {
+   "name": "hset2",
+   "ptx": "set.lt.f16x2.f16x2",
+   "expect": [
+    "HSET2"
+   ],
+   "status": "ok",
+   "reject": false
+  },
+  {
+   "name": "iadd",
+   "ptx": "add.s32 / sub.s32",
+   "expect": [
+    "IADD3"
+   ],
+   "status": "ok",
+   "reject": false
+  },
+  {
+   "name": "iadd64",
+   "ptx": "add.s64",
+   "expect": [
+    "IADD3"
+   ],
+   "status": "ok",
+   "reject": false
+  },
+  {
+   "name": "imad",
+   "ptx": "mad.lo.s32",
+   "expect": [
+    "IMAD"
+   ],
+   "status": "ok",
+   "reject": false
+  },
+  {
+   "name": "imad_wide",
+   "ptx": "mul.wide.s32",
+   "expect": [
+    "IMAD"
+   ],
+   "status": "ok",
+   "reject": false
+  },
+  {
+   "name": "imad_hi",
+   "ptx": "mul.hi.u32",
+   "expect": [
+    "IMAD"
+   ],
+   "status": "ok",
+   "reject": false
+  },
+  {
+   "name": "iabs",
+   "ptx": "abs.s32",
+   "expect": [
+    "IABS"
+   ],
+   "status": "ok",
+   "reject": false
+  },
+  {
+   "name": "imnmx",
+   "ptx": "min.s32",
+   "expect": [
+    "IMNMX"
+   ],
+   "status": "ok",
+   "reject": false
+  },
+  {
+   "name": "isetp_pred",
+   "ptx": "setp.lt.s32 + selp.b32 (ptxas if-converts to a predicated op, no SEL)",
+   "expect": [
+    "ISETP"
+   ],
+   "status": "ok",
+   "reject": false
+  },
+  {
+   "name": "imnmx_from_selp",
+   "ptx": "setp.lt.s32 + selp.b32 forming min()",
+   "expect": [
+    "IMNMX"
+   ],
+   "status": "ok",
+   "reject": false
+  },
+  {
+   "name": "lea",
+   "ptx": "shl.b32 + add.s32",
+   "expect": [
+    "LEA"
+   ],
+   "status": "ok",
+   "reject": false
+  },
+  {
+   "name": "lea64",
+   "ptx": "pointer + (sign-extended s32 index << 2)",
+   "expect": [
+    "LEA"
+   ],
+   "status": "ok",
+   "reject": false
+  },
+  {
+   "name": "lop3",
+   "ptx": "and/xor/or of 3 values",
+   "expect": [
+    "LOP3"
+   ],
+   "status": "ok",
+   "reject": false
+  },
+  {
+   "name": "shf",
+   "ptx": "shf.l.wrap.b32",
+   "expect": [
+    "SHF"
+   ],
+   "status": "ok",
+   "reject": false
+  },
+  {
+   "name": "shl64",
+   "ptx": "shl.b64 by register",
+   "expect": [
+    "SHF"
+   ],
+   "status": "ok",
+   "reject": false
+  },
+  {
+   "name": "prmt",
+   "ptx": "prmt.b32",
+   "expect": [
+    "PRMT"
+   ],
+   "status": "ok",
+   "reject": false
+  },
+  {
+   "name": "sgxt",
+   "ptx": "bfe.s32 (signed field extract)",
+   "expect": [
+    "SGXT"
+   ],
+   "status": "ok",
+   "reject": false
+  },
+  {
+   "name": "bmsk",
+   "ptx": "bmsk.clamp.b32",
+   "expect": [
+    "BMSK"
+   ],
+   "status": "ok",
+   "reject": false
+  },
+  {
+   "name": "flo",
+   "ptx": "bfind.u32 / clz.b32",
+   "expect": [
+    "FLO"
+   ],
+   "status": "ok",
+   "reject": false
+  },
+  {
+   "name": "brev",
+   "ptx": "brev.b32",
+   "expect": [
+    "BREV"
+   ],
+   "status": "ok",
+   "reject": false
+  },
+  {
+   "name": "popc",
+   "ptx": "popc.b32",
+   "expect": [
+    "POPC"
+   ],
+   "status": "ok",
+   "reject": false
+  },
+  {
+   "name": "idp",
+   "ptx": "dp4a.s32.s32",
+   "expect": [
+    "IDP"
+   ],
+   "status": "ok",
+   "reject": false
+  },
+  {
+   "name": "vabsdiff",
+   "ptx": "vabsdiff.u32.u32.u32 (observe)",
+   "expect": [],
+   "status": "ok",
+   "reject": false
+  },
+  {
+   "name": "vabsdiff2",
+   "ptx": "vabsdiff2.u32.u32.u32 (observe)",
+   "expect": [],
+   "status": "ok",
+   "reject": false
+  },
+  {
+   "name": "vabsdiff4",
+   "ptx": "vabsdiff4.u32.u32.u32.add",
+   "expect": [
+    "VABSDIFF4"
+   ],
+   "status": "ok",
+   "reject": false
+  },
+  {
+   "name": "f2f",
+   "ptx": "cvt.rn.f32.f64",
+   "expect": [
+    "F2F"
+   ],
+   "status": "ok",
+   "reject": false
+  },
+  {
+   "name": "f2i",
+   "ptx": "cvt.rzi.s32.f32",
+   "expect": [
+    "F2I"
+   ],
+   "status": "ok",
+   "reject": false
+  },
+  {
+   "name": "i2fp",
+   "ptx": "cvt.rn.f32.s32",
+   "expect": [
+    "I2FP"
+   ],
+   "status": "ok",
+   "reject": false
+  },
+  {
+   "name": "i2f",
+   "ptx": "cvt.rn.f64.s32",
+   "expect": [
+    "I2F"
+   ],
+   "status": "ok",
+   "reject": false
+  },
+  {
+   "name": "f2fp_f16",
+   "ptx": "cvt.rn.f16x2.f32",
+   "expect": [
+    "F2FP"
+   ],
+   "status": "ok",
+   "reject": false
+  },
+  {
+   "name": "f2fp_bf16",
+   "ptx": "cvt.rn.bf16x2.f32",
+   "expect": [
+    "F2FP"
+   ],
+   "status": "ok",
+   "reject": false
+  },
+  {
+   "name": "f2fp_e4m3",
+   "ptx": "cvt.rn.satfinite.e4m3x2.f32 (FP8)",
+   "expect": [
+    "F2FP"
+   ],
+   "status": "ok",
+   "reject": false
+  },
+  {
+   "name": "i2i",
+   "ptx": "cvt.sat.s8.s32",
+   "expect": [
+    "I2I"
+   ],
+   "status": "ok",
+   "reject": false
+  },
+  {
+   "name": "i2ip",
+   "ptx": "cvt.pack.sat.s8.s32.b32",
+   "expect": [
+    "I2IP"
+   ],
+   "status": "ok",
+   "reject": false
+  },
+  {
+   "name": "f2ip",
+   "ptx": "cvt.rni.sat.s8.f32 (observe only)",
+   "expect": [],
+   "status": "ok",
+   "reject": false
+  },
+  {
+   "name": "shfl",
+   "ptx": "shfl.sync.bfly.b32",
+   "expect": [
+    "SHFL"
+   ],
+   "status": "ok",
+   "reject": false
+  },
+  {
+   "name": "vote",
+   "ptx": "vote.sync.ballot.b32",
+   "expect": [
+    "VOTE"
+   ],
+   "status": "ok",
+   "reject": false
+  },
+  {
+   "name": "match",
+   "ptx": "match.any.sync.b32",
+   "expect": [
+    "MATCH"
+   ],
+   "status": "ok",
+   "reject": false
+  },
+  {
+   "name": "redux",
+   "ptx": "redux.sync.add.u32",
+   "expect": [
+    "REDUX"
+   ],
+   "status": "ok",
+   "reject": false
+  },
+  {
+   "name": "s2r",
+   "ptx": "mov.u32 %laneid",
+   "expect": [
+    "S2R"
+   ],
+   "status": "ok",
+   "reject": false
+  },
+  {
+   "name": "cs2r",
+   "ptx": "mov.u64 %clock64",
+   "expect": [
+    "CS2R"
+   ],
+   "status": "ok",
+   "reject": false
+  },
+  {
+   "name": "s2r_ctaid",
+   "ptx": "mov.u32 %ctaid.x stored directly",
+   "expect": [
+    "S2R"
+   ],
+   "status": "ok",
+   "reject": false
+  },
+  {
+   "name": "s2ur",
+   "ptx": "%ctaid.x used in uniform address math (observe)",
+   "expect": [],
+   "status": "ok",
+   "reject": false
+  },
+  {
+   "name": "movm",
+   "ptx": "movmatrix.sync.aligned.m8n8.trans.b16",
+   "expect": [
+    "MOVM"
+   ],
+   "status": "ok",
+   "reject": false
+  },
+  {
+   "name": "lds_sts",
+   "ptx": "ld.shared / st.shared",
+   "expect": [
+    "LDS",
+    "STS"
+   ],
+   "status": "ok",
+   "reject": false
+  },
+  {
+   "name": "ld_generic",
+   "ptx": "ld (generic pointer)",
+   "expect": [
+    "LD"
+   ],
+   "status": "ok",
+   "reject": false
+  },
+  {
+   "name": "st_generic",
+   "ptx": "st (generic pointer)",
+   "expect": [
+    "ST"
+   ],
+   "status": "ok",
+   "reject": false
+  },
+  {
+   "name": "ldl_stl",
+   "ptx": "dynamically indexed .local array",
+   "expect": [
+    "LDL",
+    "STL"
+   ],
+   "status": "ok",
+   "reject": false
+  },
+  {
+   "name": "ldc",
+   "ptx": "ld.const with dynamic index",
+   "expect": [
+    "LDC"
+   ],
+   "status": "ok",
+   "reject": false
+  },
+  {
+   "name": "ldg_nc",
+   "ptx": "ld.global.nc.v4.f32",
+   "expect": [
+    "LDG"
+   ],
+   "status": "ok",
+   "reject": false
+  },
+  {
+   "name": "cp_async",
+   "ptx": "cp.async.cg.shared.global + commit_group + wait_group",
+   "expect": [
+    "LDGSTS",
+    "LDGDEPBAR",
+    "DEPBAR"
+   ],
+   "status": "ok",
+   "reject": false
+  },
+  {
+   "name": "ldsm",
+   "ptx": "ldmatrix.sync.aligned.m8n8.x4.shared.b16",
+   "expect": [
+    "LDSM"
+   ],
+   "status": "ok",
+   "reject": false
+  },
+  {
+   "name": "atomg",
+   "ptx": "atom.global.add.u32 (result used)",
+   "expect": [
+    "ATOMG"
+   ],
+   "status": "ok",
+   "reject": false
+  },
+  {
+   "name": "red",
+   "ptx": "red.global.add.u32 (no result)",
+   "expect": [
+    "RED"
+   ],
+   "status": "ok",
+   "reject": false
+  },
+  {
+   "name": "atoms",
+   "ptx": "atom.shared.add.u32",
+   "expect": [
+    "ATOMS"
+   ],
+   "status": "ok",
+   "reject": false
+  },
+  {
+   "name": "atom_generic",
+   "ptx": "atom.add.u32 (generic)",
+   "expect": [
+    "ATOM"
+   ],
+   "status": "ok",
+   "reject": false
+  },
+  {
+   "name": "qspc",
+   "ptx": "isspacep.shared",
+   "expect": [
+    "QSPC"
+   ],
+   "status": "ok",
+   "reject": false
+  },
+  {
+   "name": "cctl",
+   "ptx": "prefetch.global.L1",
+   "expect": [
+    "CCTL"
+   ],
+   "status": "ok",
+   "reject": false
+  },
+  {
+   "name": "hmma_f16",
+   "ptx": "mma.sync.aligned.m16n8k16.row.col.f32.f16.f16.f32",
+   "expect": [
+    "HMMA"
+   ],
+   "status": "ok",
+   "reject": false
+  },
+  {
+   "name": "hmma_tf32",
+   "ptx": "mma.sync.aligned.m16n8k8.row.col.f32.tf32.tf32.f32",
+   "expect": [
+    "HMMA"
+   ],
+   "status": "ok",
+   "reject": false
+  },
+  {
+   "name": "imma",
+   "ptx": "mma.sync.aligned.m16n8k32.row.col.s32.s8.s8.s32",
+   "expect": [
+    "IMMA"
+   ],
+   "status": "ok",
+   "reject": false
+  },
+  {
+   "name": "dmma",
+   "ptx": "mma.sync.aligned.m8n8k4.row.col.f64.f64.f64.f64",
+   "expect": [
+    "DMMA"
+   ],
+   "status": "ok",
+   "reject": false
+  },
+  {
+   "name": "bmma",
+   "ptx": "mma.sync.aligned.m16n8k256.row.col.s32.b1.b1.s32.and.popc",
+   "expect": [
+    "BMMA"
+   ],
+   "status": "ok",
+   "reject": false
+  },
+  {
+   "name": "qmma_e4m3",
+   "ptx": "mma.sync.aligned.m16n8k32.row.col.f32.e4m3.e4m3.f32 (FP8, PTX 8.4)",
+   "expect": [
+    "QMMA"
+   ],
+   "status": "ok",
+   "reject": false
+  },
+  {
+   "name": "bar",
+   "ptx": "bar.sync 0",
+   "expect": [
+    "BAR"
+   ],
+   "status": "ok",
+   "reject": false
+  },
+  {
+   "name": "bar_red",
+   "ptx": "bar.red.popc.u32",
+   "expect": [
+    "BAR",
+    "B2R"
+   ],
+   "status": "ok",
+   "reject": false
+  },
+  {
+   "name": "membar",
+   "ptx": "membar.gl",
+   "expect": [
+    "MEMBAR"
+   ],
+   "status": "ok",
+   "reject": false
+  },
+  {
+   "name": "fence_sys",
+   "ptx": "fence.sc.sys",
+   "expect": [
+    "MEMBAR",
+    "ERRBAR"
+   ],
+   "status": "ok",
+   "reject": false
+  },
+  {
+   "name": "nanosleep",
+   "ptx": "nanosleep.u32",
+   "expect": [
+    "NANOSLEEP"
+   ],
+   "status": "ok",
+   "reject": false
+  },
+  {
+   "name": "warpsync",
+   "ptx": "bar.warp.sync with partial mask",
+   "expect": [
+    "WARPSYNC"
+   ],
+   "status": "ok",
+   "reject": false
+  },
+  {
+   "name": "diverge",
+   "ptx": "data-dependent loop",
+   "expect": [
+    "BRA"
+   ],
+   "status": "ok",
+   "reject": false
+  },
+  {
+   "name": "call",
+   "ptx": ".func .noinline call",
+   "expect": [
+    "CALL",
+    "RET"
+   ],
+   "status": "ok",
+   "reject": false
+  },
+  {
+   "name": "brx",
+   "ptx": "brx.idx (jump table)",
+   "expect": [
+    "BRX"
+   ],
+   "status": "ok",
+   "reject": false
+  },
+  {
+   "name": "uniform_loop",
+   "ptx": "loop with trip count from kernel param (uniform datapath)",
+   "expect": [
+    "ULDC",
+    "UIADD3"
+   ],
+   "status": "ok",
+   "reject": false
+  },
+  {
+   "name": "prologue",
+   "ptx": "empty kernel body: param pointer + %tid.x load/store",
+   "expect": [
+    "MOV",
+    "S2R",
+    "ULDC",
+    "LDG",
+    "STG",
+    "EXIT"
+   ],
+   "status": "ok",
+   "reject": false
+  },
+  {
+   "name": "bssy_bsync",
+   "ptx": "divergent loop exit followed by a warp-synchronous op",
+   "expect": [
+    "BSSY",
+    "BSYNC"
+   ],
+   "status": "ok",
+   "reject": false
+  },
+  {
+   "name": "agg_atomic",
+   "ptx": "atom.global.add.u32 to a warp-uniform address (ptxas warp-aggregates it)",
+   "expect": [
+    "VOTEU",
+    "FLO",
+    "POPC",
+    "ATOMG",
+    "SHFL"
+   ],
+   "status": "ok",
+   "reject": false
+  },
+  {
+   "name": "agg_red",
+   "ptx": "red.global.add.u32 to a warp-uniform address (warp-aggregated)",
+   "expect": [
+    "VOTEU",
+    "UFLO",
+    "POPC",
+    "RED"
+   ],
+   "status": "ok",
+   "reject": false
+  },
+  {
+   "name": "activemask",
+   "ptx": "activemask.b32",
+   "expect": [
+    "VOTEU"
+   ],
+   "status": "ok",
+   "reject": false
+  },
+  {
+   "name": "s2ur_loop",
+   "ptx": "%ctaid.x as a loop bound (warp-uniform)",
+   "expect": [
+    "S2UR",
+    "UIADD3",
+    "PLOP3"
+   ],
+   "status": "ok",
+   "reject": false
+  },
+  {
+   "name": "uniform_alu",
+   "ptx": "integer ops on a kernel parameter (warp-uniform)",
+   "expect": [
+    "USHF",
+    "ULOP3",
+    "UBREV",
+    "UPOPC",
+    "UPRMT"
+   ],
+   "status": "ok",
+   "reject": false
+  },
+  {
+   "name": "uniform_txq",
+   "ptx": "txq.num_mipmap_levels (handle arithmetic runs on uniform datapath)",
+   "expect": [
+    "UIMAD",
+    "UMOV"
+   ],
+   "status": "ok",
+   "reject": false
+  },
+  {
+   "name": "cctll",
+   "ptx": "prefetch.local.L1",
+   "expect": [
+    "CCTLL"
+   ],
+   "status": "ok",
+   "reject": false
+  },
+  {
+   "name": "pmtrig",
+   "ptx": "pmevent",
+   "expect": [
+    "PMTRIG"
+   ],
+   "status": "ok",
+   "reject": false
+  },
+  {
+   "name": "tex",
+   "ptx": "tex.2d.v4.f32.f32",
+   "expect": [
+    "TEX"
+   ],
+   "status": "ok",
+   "reject": false
+  },
+  {
+   "name": "tld4",
+   "ptx": "tld4.r.2d.v4.f32.f32",
+   "expect": [
+    "TLD4"
+   ],
+   "status": "ok",
+   "reject": false
+  },
+  {
+   "name": "txq",
+   "ptx": "txq.width.b32",
+   "expect": [
+    "TXQ"
+   ],
+   "status": "ok",
+   "reject": false
+  },
+  {
+   "name": "suld",
+   "ptx": "suld.b.2d.b32.trap",
+   "expect": [
+    "SULD"
+   ],
+   "status": "ok",
+   "reject": false
+  },
+  {
+   "name": "tld",
+   "ptx": "tex.1d.v4.s32.s32 (integer coords, tex1Dfetch)",
+   "expect": [
+    "TLD"
+   ],
+   "status": "ok",
+   "reject": false
+  },
+  {
+   "name": "txd",
+   "ptx": "tex.grad.2d.v4.f32.f32",
+   "expect": [
+    "TXD"
+   ],
+   "status": "ok",
+   "reject": false
+  },
+  {
+   "name": "sured",
+   "ptx": "sured.b.add.2d.u32.trap",
+   "expect": [
+    "SURED"
+   ],
+   "status": "ok",
+   "reject": false
+  },
+  {
+   "name": "suq",
+   "ptx": "suq.width.b32 (lowers to TXQ, not SUQUERY)",
+   "expect": [
+    "TXQ"
+   ],
+   "status": "ok",
+   "reject": false
+  },
+  {
+   "name": "plop3_folded",
+   "ptx": "xor.pred of two compares (folded into FSETP's combine op, no PLOP3)",
+   "expect": [
+    "ISETP",
+    "FSETP"
+   ],
+   "status": "ok",
+   "reject": false
+  },
+  {
+   "name": "sust",
+   "ptx": "sust.b.2d.b32.trap",
+   "expect": [
+    "SUST"
+   ],
+   "status": "ok",
+   "reject": false
+  },
+  {
+   "name": "no_stmatrix",
+   "ptx": "stmatrix (sm_90+)",
+   "expect": [],
+   "status": "rejected (ok)",
+   "reject": true
+  },
+  {
+   "name": "no_elect",
+   "ptx": "elect.sync (sm_90+)",
+   "expect": [],
+   "status": "rejected (ok)",
+   "reject": true
+  },
+  {
+   "name": "no_setmaxnreg",
+   "ptx": "setmaxnreg (sm_90a)",
+   "expect": [],
+   "status": "rejected (ok)",
+   "reject": true
+  },
+  {
+   "name": "no_mapa",
+   "ptx": "mapa (clusters, sm_90+)",
+   "expect": [],
+   "status": "rejected (ok)",
+   "reject": true
+  },
+  {
+   "name": "no_cp_async_bulk",
+   "ptx": "cp.async.bulk (TMA, sm_90+)",
+   "expect": [],
+   "status": "rejected (ok)",
+   "reject": true
+  },
+  {
+   "name": "no_wgmma_fence",
+   "ptx": "wgmma.fence (sm_90a)",
+   "expect": [],
+   "status": "rejected (ok)",
+   "reject": true
+  },
+  {
+   "name": "no_griddepcontrol",
+   "ptx": "griddepcontrol (sm_90+)",
+   "expect": [],
+   "status": "rejected (ok)",
+   "reject": true
+  },
+  {
+   "name": "no_redux_f32",
+   "ptx": "redux.sync.min.f32 (sm_100a+)",
+   "expect": [],
+   "status": "rejected (ok)",
+   "reject": true
+  }
+ ],
+ "encoding_mismatch": {
+  "FRND": [
+   "FRND.FLOOR R5, R0"
+  ],
+  "IMAD": [
+   "IMAD.HI.U32 R5, R0, R5, RZ"
+  ]
+ },
+ "unlabelled_bits": {
+  "ATOM:66": [
+   "ATOM.E.ADD.STRONG.GPU PT, R5, [R4.64], R7"
+  ],
+  "ATOMG:66": [
+   "@P0 ATOMG.E.ADD.STRONG.GPU PT, R5, [R4.64], R9",
+   "ATOMG.E.ADD.STRONG.GPU PT, R5, [R2.64], R5"
+  ],
+  "F2F:75": [
+   "F2F.F32.F64 R5, R4"
+  ],
+  "F2F:84": [
+   "F2F.F32.F64 R5, R4"
+  ],
+  "F2FP:76": [
+   "F2FP.BF16.F32.PACK_AB R5, R0, R5",
+   "F2FP.SATFINITE.E4M3.F32.PACK_AB_MERGE_C R0, R0, R5, RZ"
+  ],
+  "F2FP:81": [
+   "F2FP.BF16.F32.PACK_AB R5, R0, R5",
+   "F2FP.F16.F32.PACK_AB R5, R0, R5",
+   "F2FP.SATFINITE.E4M3.F32.PACK_AB_MERGE_C R0, R0, R5, RZ"
+  ],
+  "F2FP:87": [
+   "F2FP.SATFINITE.E4M3.F32.PACK_AB_MERGE_C R0, R0, R5, RZ"
+  ],
+  "F2FP:90": [
+   "F2FP.SATFINITE.E4M3.F32.PACK_AB_MERGE_C R0, R0, R5, RZ"
+  ],
+  "F2I:84": [
+   "F2I.S8.NTZ R5, R0",
+   "F2I.TRUNC.NTZ R5, R0"
+  ],
+  "F2I:85": [
+   "F2I.S8.NTZ R5, R0",
+   "F2I.TRUNC.NTZ R5, R0"
+  ],
+  "I2F:84": [
+   "I2F.F64 R4, R4"
+  ],
+  "IADD3:74": [
+   "@!P1 IADD3 R10, R10, 0x40, RZ",
+   "@!P1 IADD3 R4, R4, 0x2, RZ",
+   "@!P1 IADD3 R5, R0, R5, R0",
+   "@P0 IADD3 R4, R0, R5, RZ",
+   "@P0 IADD3 R4, R4, R5, RZ",
+   "@P1 IADD3 R4, R4, 0x2, RZ",
+   "@P1 IADD3 R5, R0, R5, R0",
+   "@P1 IADD3 R5, R6, R5, R4",
+   "@P1 IADD3 R6, R4, 0x1, RZ",
+   "IADD3 R0, R10, -0x1, RZ",
+   "IADD3 R1, R1, -0x100, RZ",
+   "IADD3 R1, R1, -0x40, RZ",
+   "IADD3 R11, R6, -0x1, RZ",
+   "IADD3 R12, R7, -0x1, RZ",
+   "IADD3 R4, P0, R4, R4, RZ",
+   "IADD3 R4, R4, 0x4, RZ",
+   "IADD3 R5, -R4, R0, R5",
+   "IADD3 R5, P0, R0, -R5, RZ",
+   "IADD3 R5, R0, 0x1f, -R5",
+   "IADD3 R5, R0, R5, R0",
+   "IADD3 R5, R0, R5, R0.reuse",
+   "IADD3 R5, R0, UR5, R5",
+   "IADD3 R5, R5, 0x2, R4",
+   "IADD3 R5, R5, 0x3, R4",
+   "IADD3 R5, R6, R5, R4",
+   "IADD3 R6, -R4, UR6, RZ",
+   "IADD3 R6, -R4, c[0x0][0x168], RZ",
+   "IADD3 R6, R4, 0x1, RZ",
+   "IADD3 R6, R6, -0x7f, RZ",
+   "IADD3 R7, R0, -0x3, RZ",
+   "IADD3 R7, R0, R5, RZ",
+   "IADD3 R7, R4, R7, RZ",
+   "IADD3 R7, R6.reuse, 0x7f, -R7",
+   "IADD3 R7, R7, 0x1, RZ",
+   "IADD3 R9, R10, 0x20, RZ"
+  ],
+  "IMAD:74": [
+   "@!P0 IMAD.IADD R5, R0, 0x1, R5",
+   "@!P0 IMAD.IADD R5, R5, 0x1, R4",
+   "@!P0 IMAD.MOV.U32 R10, RZ, RZ, -0x40",
+   "@!P0 IMAD.MOV.U32 R10, RZ, RZ, RZ",
+   "@P0 IMAD.IADD.U32 R5, R5, 0x1, R4",
+   "@P0 IMAD.MOV R5, RZ, RZ, -R5",
+   "@P0 IMAD.MOV.U32 R10, RZ, RZ, RZ",
+   "@P2 IMAD.IADD R5, R0, 0x1, R5",
+   "@P2 IMAD.MOV.U32 R4, RZ, RZ, 0x1",
+   "IMAD R0, R6, -0x800000, R8",
+   "IMAD R2, R2, 0x4, R1",
+   "IMAD R3, R7, 0x800000, R3",
+   "IMAD R5, R0, R5, R4",
+   "IMAD R6, R6, 0x4, R1",
+   "IMAD R7, R0, R0, RZ",
+   "IMAD.IADD R0, R9, 0x1, R0",
+   "IMAD.IADD R10, R0, 0x1, R7",
+   "IMAD.IADD R5, R0, 0x1, R5",
+   "IMAD.IADD R5, R0.reuse, 0x1, R5",
+   "IMAD.IADD R6, R0, 0x1, -R4",
+   "IMAD.IADD R6, R6, 0x1, R4",
+   "IMAD.IADD R7, R7, 0x1, -R8",
+   "IMAD.IADD R7, R7, 0x1, R10",
+   "IMAD.IADD R7, R7, 0x1, R6",
+   "IMAD.IADD R9, R9, 0x1, -R0",
+   "IMAD.MOV R8, RZ, RZ, -R10",
+   "IMAD.MOV.U32 R0, RZ, RZ, R7",
+   "IMAD.MOV.U32 R1, RZ, RZ, c[0x0][0x28]",
+   "IMAD.MOV.U32 R10, RZ, RZ, R4",
+   "IMAD.MOV.U32 R11, RZ, RZ, R8",
+   "IMAD.MOV.U32 R12, RZ, RZ, R4",
+   "IMAD.MOV.U32 R13, RZ, RZ, R5",
+   "IMAD.MOV.U32 R13, RZ, RZ, R6",
+   "IMAD.MOV.U32 R3, RZ, RZ, 0x0",
+   "IMAD.MOV.U32 R3, RZ, RZ, 0x40",
+   "IMAD.MOV.U32 R3, RZ, RZ, c[0x0][0x164]",
+   "IMAD.MOV.U32 R4, RZ, RZ, 0x4b800000",
+   "IMAD.MOV.U32 R4, RZ, RZ, R0",
+   "IMAD.MOV.U32 R4, RZ, RZ, RZ",
+   "IMAD.MOV.U32 R5, RZ, RZ, 0x14",
+   "IMAD.MOV.U32 R5, RZ, RZ, 0x28",
+   "IMAD.MOV.U32 R5, RZ, RZ, 0x40",
+   "IMAD.MOV.U32 R5, RZ, RZ, RZ",
+   "IMAD.MOV.U32 R5, RZ, RZ, c[0x0][0x164]",
+   "IMAD.MOV.U32 R6, RZ, RZ, R4",
+   "IMAD.MOV.U32 R7, RZ, RZ, R3",
+   "IMAD.MOV.U32 R7, RZ, RZ, R4",
+   "IMAD.MOV.U32 R8, RZ, RZ, R0",
+   "IMAD.MOV.U32 R8, RZ, RZ, R4",
+   "IMAD.MOV.U32 R9, RZ, RZ, R3",
+   "IMAD.MOV.U32 R9, RZ, RZ, R4",
+   "IMAD.MOV.U32 R9, RZ, RZ, R6",
+   "IMAD.SHL.U32 R0, R0, 0x4, RZ",
+   "IMAD.WIDE R4, R4, R5, RZ",
+   "IMAD.WIDE.U32 R2, R2, R3, c[0x0][0x160]",
+   "IMAD.WIDE.U32 R2, R7, R2, c[0x0][0x160]",
+   "IMAD.WIDE.U32 R2, R7.reuse, R2, c[0x0][0x160]",
+   "IMAD.WIDE.U32 R2, R9, R2, c[0x0][0x160]",
+   "IMAD.WIDE.U32 R4, R4, R5, c[0x0][0x160]"
+  ],
+  "IMAD:81": [
+   "@!P0 IMAD.MOV.U32 R10, RZ, RZ, -0x40",
+   "@P2 IMAD.MOV.U32 R4, RZ, RZ, 0x1",
+   "IMAD.MOV.U32 R3, RZ, RZ, 0x0",
+   "IMAD.MOV.U32 R3, RZ, RZ, 0x40",
+   "IMAD.MOV.U32 R4, RZ, RZ, 0x4b800000",
+   "IMAD.MOV.U32 R5, RZ, RZ, 0x14",
+   "IMAD.MOV.U32 R5, RZ, RZ, 0x28",
+   "IMAD.MOV.U32 R5, RZ, RZ, 0x40"
+  ],
+  "IMAD:82": [
+   "@!P0 IMAD.MOV.U32 R10, RZ, RZ, -0x40",
+   "@P2 IMAD.MOV.U32 R4, RZ, RZ, 0x1",
+   "IMAD.MOV.U32 R3, RZ, RZ, 0x0",
+   "IMAD.MOV.U32 R3, RZ, RZ, 0x40",
+   "IMAD.MOV.U32 R4, RZ, RZ, 0x4b800000",
+   "IMAD.MOV.U32 R5, RZ, RZ, 0x14",
+   "IMAD.MOV.U32 R5, RZ, RZ, 0x28",
+   "IMAD.MOV.U32 R5, RZ, RZ, 0x40"
+  ],
+  "IMAD:83": [
+   "@!P0 IMAD.MOV.U32 R10, RZ, RZ, -0x40",
+   "@P2 IMAD.MOV.U32 R4, RZ, RZ, 0x1",
+   "IMAD.MOV.U32 R3, RZ, RZ, 0x0",
+   "IMAD.MOV.U32 R3, RZ, RZ, 0x40",
+   "IMAD.MOV.U32 R4, RZ, RZ, 0x4b800000",
+   "IMAD.MOV.U32 R5, RZ, RZ, 0x14",
+   "IMAD.MOV.U32 R5, RZ, RZ, 0x28",
+   "IMAD.MOV.U32 R5, RZ, RZ, 0x40"
+  ],
+  "ISETP:72": [
+   "ISETP.EQ.U32.AND P0, PT, R0, R3, PT",
+   "ISETP.EQ.U32.AND P0, PT, R0, UR5, PT",
+   "ISETP.EQ.U32.AND P0, PT, R4, -0x1, PT",
+   "ISETP.EQ.U32.AND P1, PT, R0, 0x1f, PT",
+   "ISETP.GE.AND P0, PT, R0.reuse, R7, PT",
+   "ISETP.GE.AND P0, PT, R10, -0x18, PT",
+   "ISETP.GE.AND P0, PT, R10, 0x1, PT",
+   "ISETP.GE.AND P0, PT, R11, RZ, PT",
+   "ISETP.GE.AND P0, PT, R4, R0, !P0",
+   "ISETP.GE.AND P0, PT, R4, c[0x0][0x168], !P0",
+   "ISETP.GE.AND P0, PT, R7, R0, PT",
+   "ISETP.GE.AND P1, PT, R12, RZ, PT",
+   "ISETP.GE.AND P1, PT, R4, R7, PT",
+   "ISETP.GE.AND P1, PT, R4, UR4, PT",
+   "ISETP.GE.U32.AND P0, PT, R0, 0xfe, PT",
+   "ISETP.GE.U32.AND P0, PT, R4, UR6, !P0",
+   "ISETP.GE.U32.AND P1, PT, R4, UR7, PT",
+   "ISETP.GE.U32.AND P2, PT, R4, UR6, PT",
+   "ISETP.GT.AND P0, PT, R0, RZ, PT",
+   "ISETP.GT.AND P0, PT, R10, 0xfe, PT",
+   "ISETP.GT.AND P1, PT, R6, 0x1, PT",
+   "ISETP.GT.AND P1, PT, R6, 0x3, PT",
+   "ISETP.GT.U32.AND P0, PT, R12, 0xfd, PT",
+   "ISETP.GT.U32.OR P0, PT, R11, 0xfd, P0",
+   "ISETP.LE.U32.OR P1, PT, R6, 0x1, !P1",
+   "ISETP.LE.U32.OR P1, PT, R6, 0x3, !P1",
+   "ISETP.LT.AND P0, PT, R0, RZ, PT",
+   "ISETP.LT.AND P0, PT, RZ, c[0x0][0x168], PT",
+   "ISETP.LT.U32.AND P0, PT, RZ, UR6, PT",
+   "ISETP.LT.U32.AND P1, PT, R4.reuse, UR6, PT",
+   "ISETP.LT.XOR P0, PT, R0, R5, P0",
+   "ISETP.NE.AND P0, PT, R0, RZ, PT",
+   "ISETP.NE.AND P0, PT, R4, R7, PT",
+   "ISETP.NE.AND P1, PT, R10, RZ, PT",
+   "ISETP.NE.AND P1, PT, R9, RZ, P1",
+   "ISETP.NE.AND P2, PT, R10, RZ, PT"
+  ],
+  "LD:76": [
+   "LD.E R5, [R4.64]"
+  ],
+  "LDG:34": [
+   "@P0 LDG.E R5, [R2.64+0x14]",
+   "LDG.E R0, [R2.64+0x10]",
+   "LDG.E R0, [R2.64+0x8]",
+   "LDG.E R0, [R2.64+0xc]",
+   "LDG.E R0, [R2.64]",
+   "LDG.E R0, [R4.64+0xc]",
+   "LDG.E R0, [R4.64]",
+   "LDG.E R10, [R2.64+0x14]",
+   "LDG.E R2, [R2.64]",
+   "LDG.E R2, [R4.64+0x4]",
+   "LDG.E R3, [R4.64+0x10]",
+   "LDG.E R4, [R2.64+0x14]",
+   "LDG.E R4, [R2.64+0x4]",
+   "LDG.E R4, [R2.64+0x8]",
+   "LDG.E R4, [R2.64+0xc]",
+   "LDG.E R4, [R2.64]",
+   "LDG.E R4, [R4.64]",
+   "LDG.E R5, [R2.64+0x10]",
+   "LDG.E R5, [R2.64+0x4]",
+   "LDG.E R5, [R2.64+0x8]",
+   "LDG.E R5, [R2.64+0xc]",
+   "LDG.E R5, [R2.64]",
+   "LDG.E R5, [R4.64]",
+   "LDG.E R6, [R2.64+0x8]",
+   "LDG.E R7, [R2.64+0x10]",
+   "LDG.E R7, [R2.64+0x14]",
+   "LDG.E R7, [R2.64+0x4]",
+   "LDG.E R7, [R2.64+0x8]",
+   "LDG.E R7, [R2.64]",
+   "LDG.E R8, [R2.64+0x14]",
+   "LDG.E R8, [R2.64+0xc]",
+   "LDG.E R9, [R2.64+0x10]",
+   "LDG.E.64 R2, [R2.64+0x28]",
+   "LDG.E.64 R4, [R2.64+0x18]",
+   "LDG.E.64 R4, [R2.64+0x28]",
+   "LDG.E.64 R4, [R2.64]",
+   "LDG.E.64 R6, [R2.64+0x20]",
+   "LDG.E.64 R6, [R2.64]",
+   "LDG.E.CONSTANT R0, [R2.64+0x30]",
+   "LDG.E.CONSTANT R5, [R2.64+0x3c]",
+   "LDG.E.CONSTANT R5, [R4.64]"
+  ],
+  "LDG:76": [
+   "LDG.E R0, [R2.64]"
+  ],
+  "LDGSTS:76": [
+   "LDGSTS.E.BYPASS.128 [R5], [R2.64]"
+  ],
+  "LEA:74": [
+   "LEA R0, R7, 0xc0800000, 0x17",
+   "LEA R4, P0, R6, R4, 0x2",
+   "LEA R5, R0, R1, 0x2",
+   "LEA R5, R0, R5, 0x3",
+   "LEA.HI R0, R0, -R5, RZ, 0x10"
+  ],
+  "LEA:80": [
+   "LEA R0, R7, 0xc0800000, 0x17",
+   "LEA R4, P0, R6, R4, 0x2",
+   "LEA R5, R0, R1, 0x2",
+   "LEA R5, R0, R5, 0x3"
+  ],
+  "MATCH:79": [
+   "MATCH.ANY R5, R0"
+  ],
+  "RED:71": [
+   "@P0 RED.E.ADD.STRONG.GPU [R2.64], R5",
+   "RED.E.ADD.STRONG.GPU [R2.64], R5"
+  ],
+  "ST:66": [
+   "ST.E [R4.64], R7"
+  ],
+  "STG:66": [
+   "STG.E [R2.64+0x4], R7",
+   "STG.E [R2.64], R11",
+   "STG.E [R2.64], R5",
+   "STG.E [R2.64], R7",
+   "STG.E [R4.64], R2",
+   "STG.E [R4.64], R7",
+   "STG.E.64 [R2.64], R4",
+   "STG.E.64 [R2.64], R6"
+  ],
+  "STG:76": [
+   "STG.E [R2.64], R5"
+  ],
+  "UIADD3:74": [
+   "UIADD3 UR4, UP0, UR4, UR6, URZ",
+   "UIADD3 UR4, UR4, -0x3, URZ",
+   "UIADD3 UR7, UR6, -0x3, URZ"
+  ],
+  "UIMAD:74": [
+   "UIMAD UR4, UR4, UR5, 0x2c"
+  ],
+  "UIMAD:81": [
+   "UIMAD UR4, UR4, UR5, 0x2c"
+  ],
+  "UIMAD:82": [
+   "UIMAD UR4, UR4, UR5, 0x2c"
+  ],
+  "UIMAD:83": [
+   "UIMAD UR4, UR4, UR5, 0x2c"
+  ]
+ }
+}

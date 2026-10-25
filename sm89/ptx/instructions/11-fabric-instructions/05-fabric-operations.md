@@ -1,0 +1,740 @@
+<!-- Generated from https://docs.nvidia.com/cuda/parallel-thread-execution/index.html by tools/build_ptx.py; do not edit. -->
+
+<a id="fabric-operations"></a>
+# 9.7.11.5. Fabric operations
+
+<a id="fabric-instructions-try-get"></a>
+## 9.7.11.5.1. Fabric Instructions: `fabric.try_get`
+
+`fabric.try_get`
+
+Asynchronous copy from fabric handle.
+
+Syntax
+
+    fabric.try_get.async.dst.completion_mechanism{.level::cache_hint}.sem.scope.b128 [dst], [srcLeId, srcDataOff], size, [bar] {, cache_policy};
+
+    .dst = { .shared::cta }
+    .completion_mechanism = { .mbarrier::complete_tx::bytes.mbarrier::report::fabric }
+    .sem = { .relaxed }
+    .scope = { .sys }
+    .level::cache_hint = { .L2::cache_hint }
+
+Description
+
+Asynchronously copies `size` bytes from fabric handle `[srcLeId,`` ``srcDataOff]` to destination memory `[dst]`, where `srcLeId` is a 32-bit unsigned value denoting the logical endpoint identifier, and `srcDataOff` is a 64-bit unsigned value denoting the base offset of the resource to access within the logical endpoint associated with `srcLeId`.
+
+The logical endpoint associated with `srcLeId` must be a unicast logical endpoint.
+
+The `size` operand is 32 bits and specifies the number of bytes to be copied. It must be a multiple of 16; otherwise, the behavior is undefined. The range `[dst,`` ``dst`` ``+`` ``size`` ``-`` ``1]` must be in bounds of the destination memory space. The range `[srcDataOff,`` ``srcDataOff`` ``+`` ``size`` ``-`` ``1]` must be in bounds of the logical endpoint resources associated with `srcLeId`.
+
+The source handle offset `srcDataOff` and destination pointer `dst` must be 16-byte aligned.
+
+If `.dst` is `.shared::cta`, then:
+
+- The destination of the copy `[dst]` and the barrier `[bar]` must refer to the local CTA’s shared memory; otherwise, the behavior is undefined.
+
+- The completion mechanism must be `.mbarrier::complete_tx::bytes.mbarrier::report::fabric`.
+
+The `mbarrier` object `bar` must be initialized with `.layout::v1` (see [Layouts of the mbarrier object](../../instructions/15-parallel-synchronization-and-communication-instructions/16-mbarrier.md#parallel-synchronization-and-communication-instructions-mbarrier-object-layout)). Qualifier `.mbarrier::complete_tx::bytes` specifies that the operation completes by performing a [complete-tx operation](../../instructions/15-parallel-synchronization-and-communication-instructions/16-mbarrier.md#parallel-synchronization-and-communication-instructions-mbarrier-complete-tx-operation) with the total number of bytes copied (`size`) on mbarrier object at the location specified by the address operand `bar`. Refer to [Fabric Reporting Mechanism](../../instructions/11-fabric-instructions/04-completion-mechanisms-of-fabric-operations.md#fabric-reporting-mechanism) for the description of `.mbarrier::report::fabric`. For any thread to observe completion of fabric operations via an `mbarrier` object, the issuing thread is required to submit those operations before the barrier phase tracking these operations advances.
+
+This instruction reads the data at the location specified by the handle operand through the fabric-proxy, copies it to the destination `.shared::cta` memory through the async-proxy, and updates the `mbarrier` object in `.shared::cta` through the generic-proxy.
+
+When the optional argument `cache_policy` is specified, the qualifier `.level::cache_hint` is required. The 64-bit operand `cache_policy` specifies the cache eviction policy that may be used during the memory access. `cache_policy` is a hint to the cache subsystem and may not always be respected. It is treated as a performance hint only and does not change the memory consistency behavior of the program.
+
+The completion of this operation may be observed by waiting at the barrier via *CTA-scope* operations. Threads must submit `fabric` operations and wait for their completion before grid exit; otherwise, the behavior is undefined.
+
+Accesses to a source handle are 128-bit-wide atomic with `.relaxed.sys` memory-order semantics as described in the [Memory Consistency Model](../../08-memory-consistency-model.md#memory-consistency-model).
+
+PTX ISA Notes
+
+Introduced in PTX ISA version 9.3.
+
+Support for `.level::cache_hint` qualifier introduced in PTX ISA version 9.4.
+
+Target ISA Notes
+
+Requires `sm_100` or higher.
+
+Examples
+
+    fabric.try_get.async.shared::cta.mbarrier::complete_tx::bytes.mbarrier::report::fabric.relaxed.sys.b128 [dstSmem], [srcLeId, srcLeOff], 0x100, [mbar];
+
+    fabric.try_get.async.shared::cta.relaxed.sys.L2::cache_hint.mbarrier::complete_tx::bytes.mbarrier::report::fabric.b128 [dstSmem], [srcLeId, srcLeOff], sizeBytes, [mbar], cachePolicy;
+
+<a id="fabric-instructions-try-put"></a>
+## 9.7.11.5.2. Fabric Instructions: `fabric.try_put`
+
+`fabric.try_put`
+
+Asynchronous copy to fabric handle.
+
+Syntax
+
+    fabric.try_put.async{.multimem}.src.completion_mechanism0{.level::cache_hint}.sem.scope.b128 [dstLeId, dstDataOff], [src], size, [bar] {, cache_policy};
+
+    fabric.try_put.async{.multimem}.src.completion_mechanism0{.level::cache_hint}.cp_mask.sem.scope.b128 [dstLeId, dstDataOff], [src], size, [bar], bytemask {, cache_policy};
+
+    fabric.try_put.async{.multimem}.src.completion_mechanism1{.level::cache_hint}.sem.scope.b128 [dstLeId, dstDataOff, dstCounterOff], [src], size, [bar] {, cache_policy};
+
+    .src = { .shared::cta }
+    .completion_mechanism0 = { .mbarrier::complete_tx::16B.mbarrier::report::fabric }
+    .completion_mechanism1 = { .mbarrier::complete_tx::16B.mbarrier::report::fabric.counted::bytes }
+    .sem = { .relaxed }
+    .scope = { .sys }
+    .level::cache_hint = { .L2::cache_hint }
+
+Description
+
+Asynchronously copies `size` bytes from `[src]` to destination fabric handle `[dstLeId,`` ``dstDataOff]`, where `dstLeId` is a 32-bit unsigned value denoting the logical endpoint identifier, and `dstDataOff` is a 64-bit unsigned value denoting the base offset of the resource to access within the logical endpoint associated with `dstLeId`.
+
+The `size` operand is 32 bits and specifies the number of bytes to be copied. It must be a multiple of 16; otherwise, the behavior is undefined. The range `[src,`` ``src`` ``+`` ``size`` ``-`` ``1]` must be in bounds of the source memory space. The range `[dstDataOff,`` ``dstDataOff`` ``+`` ``size`` ``-`` ``1]` must be in bounds of the resource at the logical endpoint associated with `dstLeId` on the current device.
+
+The source pointer `src` and the destination handle offset `dstDataOff` must be 16-byte aligned.
+
+If the qualifier `.multimem` is specified, then `dstLeId` must be associated with a multicast logical endpoint and the device that issues the operation must be a member of that endpoint. In the absence of the `.multimem` qualifier, `dstLeId` must be associated with a unicast logical endpoint.
+
+If `.src` is `.shared::cta`, then the source of the copy `[src]` and the barrier `[bar]` refer to the local CTA’s shared memory.
+
+The `mbarrier` object `bar` must be initialized with `.layout::v1` (see [Layouts of the mbarrier object](../../instructions/15-parallel-synchronization-and-communication-instructions/16-mbarrier.md#parallel-synchronization-and-communication-instructions-mbarrier-object-layout)). Qualifier `.mbarrier::complete_tx::16B` specifies that the complete-tx operation is performed on `bar` with completion count equal to the number of bytes copied divided by 16; that is, the count is incremented by 1 for every 16 bytes copied. Note that this completion mechanism differs from `fabric.try_get`, where the complete-tx operation uses a completion count equal to the number of bytes copied. For any thread to observe completion of fabric operations via an `mbarrier` object, the issuing thread is required to submit those operations before the barrier phase tracking these operations advances.
+
+If the qualifier `.counted::bytes` is present (`completion_mechanism1` form), then:
+
+- `dstLeId` must be associated with a logical endpoint with counted completion support ([Counted completion mechanism](../../instructions/11-fabric-instructions/04-completion-mechanisms-of-fabric-operations.md#fabric-counted-completion-mechanism)), and
+
+- the counter offset `dstCounterOff` must be 256-byte aligned, and
+
+- this operation provides counter-based completion for destination data using a 256-byte-aligned counter of size 8 bytes specified at `[dstLeId,`` ``dstCounterOff]`.
+
+The `.counted::bytes` qualifier is incompatible with the `.cp_mask` qualifier.
+
+Refer to [Fabric Reporting Mechanism](../../instructions/11-fabric-instructions/04-completion-mechanisms-of-fabric-operations.md#fabric-reporting-mechanism) for the description of `.mbarrier::report::fabric`.
+
+If `.cp_mask` is specified, the `bytemask` operand is required and must contain a 16-bit-wide mask to select which bytes of each 16-byte chunk are written to the destination.
+
+This instruction accesses the data and the counter at the locations specified by the handle operands through the fabric-proxy, reads from the source `.shared::cta` through the async-proxy, and updates the `mbarrier` object in `.shared::cta` through the generic-proxy.
+
+When the optional argument `cache_policy` is specified, the qualifier `.level::cache_hint` is required. The 64-bit operand `cache_policy` specifies the cache eviction policy that may be used during the memory access. `cache_policy` is a hint to the cache subsystem and may not always be respected. It is treated as a performance hint only and does not change the memory consistency behavior of the program.
+
+The completion of this operation may be observed by waiting at the barrier via *CTA-scope* operations. Threads must submit `fabric` operations and wait for their completion before grid exit; otherwise, the behavior is undefined.
+
+This operation has `.relaxed.sys` memory-order semantics as described in the [Memory Consistency Model](../../08-memory-consistency-model.md#memory-consistency-model).
+
+PTX ISA Notes
+
+Introduced in PTX ISA version 9.3.
+
+Support for `.level::cache_hint` qualifier introduced in PTX ISA version 9.4.
+
+Target ISA Notes
+
+Requires `sm_100` or higher.
+
+Examples
+
+    fabric.try_put.async.shared::cta.mbarrier::complete_tx::16B.mbarrier::report::fabric.relaxed.sys.b128 [dstLeId, dstLeOffData], [srcSmem], 0x100, [mbar];
+
+    fabric.try_put.async.counted::bytes.shared::cta.L2::cache_hint.mbarrier::complete_tx::16B.mbarrier::report::fabric.relaxed.sys.b128 [dstLeId, dstLeOffData, dstLeOffCntr], [srcSmem], size, [mbar], cachePolicy;
+
+<a id="fabric-instructions-try-red"></a>
+## 9.7.11.5.3. Fabric Instructions: `fabric.try_red`
+
+`fabric.try_red`
+
+Asynchronous copy to fabric handle with reduction.
+
+Syntax
+
+    fabric.try_red.async{.multimem}.src.completion_mechanism0{.level::cache_hint}.sem.scope.redOpBit.typeBit [dstLeId, dstDataOff], [src], size, [bar] {, cache_policy};
+
+    fabric.try_red.async{.multimem}.src.completion_mechanism0{.level::cache_hint}.sem.scope.redOpMinMax.typeMinMax [dstLeId, dstDataOff], [src], size, [bar] {, cache_policy};
+
+    fabric.try_red.async{.multimem}.src.completion_mechanism0{.level::cache_hint}.sem.scope.redOpArith.typeArith [dstLeId, dstDataOff], [src], size, [bar] {, cache_policy};
+
+    fabric.try_red.async{.multimem}.src.completion_mechanism1{.level::cache_hint}.sem.scope.redOpBit.typeBit [dstLeId, dstDataOff, dstCounterOff], [src], size, [bar] {, cache_policy};
+
+    fabric.try_red.async{.multimem}.src.completion_mechanism1{.level::cache_hint}.sem.scope.redOpMinMax.typeMinMax [dstLeId, dstDataOff, dstCounterOff], [src], size, [bar] {, cache_policy};
+
+    fabric.try_red.async{.multimem}.src.completion_mechanism1{.level::cache_hint}.sem.scope.redOpAdd.typeAdd [dstLeId, dstDataOff, dstCounterOff], [src], size, [bar] {, cache_policy};
+
+    .src = { .shared::cta }
+    .completion_mechanism0 = { .mbarrier::complete_tx::16B.mbarrier::report::fabric }
+    .completion_mechanism1 = { .mbarrier::complete_tx::16B.mbarrier::report::fabric.counted::bytes }
+    .sem = { .relaxed }
+    .scope = { .sys }
+    .level::cache_hint = { .L2::cache_hint }
+    .redOpBit = { .and, .xor, .or }
+    .typeBit = { .b32, .b64 }
+    .redOpMinMax = { .min, .max }
+    .typeMinMax = { .u32, .s32, .u64, .s64, .f16, .bf16 }
+    .redOpArith = { .add }
+    .typeArith = { .u32, .u64, .f16, .bf16, .f32, .f64 }
+    .redOpAdd = { .add }
+    .typeAdd = { .u32, .u64, .f16, .bf16, .f32, .f64 }
+
+Description
+
+Asynchronously copies `size` bytes from `[src]` to destination fabric handle `[dstLeId,`` ``dstDataOff]` with element-wise reduction, where `dstLeId` is a 32-bit unsigned value denoting the logical endpoint identifier, and `dstDataOff` is a 64-bit unsigned value denoting the base offset of the resource to access within the logical endpoint associated with `dstLeId`.
+
+The `size` operand is 32 bits and specifies the number of bytes to be copied. It must be a multiple of 16; otherwise, the behavior is undefined. The source range `[src,`` ``src`` ``+`` ``size`` ``-`` ``1]` must be in bounds of the source memory space. The destination range `[dstDataOff,`` ``dstDataOff`` ``+`` ``size`` ``-`` ``1]` must be in bounds of the logical endpoint associated with `dstLeId` on the current device.
+
+The source pointer `src` and the destination handle offset `dstDataOff` must be 16-byte aligned.
+
+Each data element in the destination array is reduced with the corresponding data element in the source array using the reduction operation indicated by the `.redOp*` qualifier. The type of each data element in the source and destination arrays is specified by the matching `.type*` qualifier.
+
+If the qualifier `.multimem` is specified, then `dstLeId` must be associated with a multicast logical endpoint such that the device that issued the operation is a member of the multicast endpoint. In the absence of the qualifier, `dstLeId` must be associated with a unicast logical endpoint.
+
+If `.src` is `.shared::cta`, then the source of the copy `[src]` and the barrier `[bar]` refer to the local CTA’s shared memory.
+
+The `mbarrier` object `bar` must be initialized with `.layout::v1` (see [Layouts of the mbarrier object](../../instructions/15-parallel-synchronization-and-communication-instructions/16-mbarrier.md#parallel-synchronization-and-communication-instructions-mbarrier-object-layout)). Qualifier `.mbarrier::complete_tx::16B` specifies that the complete-tx operation is performed on `bar` with completion count equal to the number of bytes copied divided by 16; that is, the count is incremented by 1 for every 16 bytes copied. Note that `fabric.try_get` uses a different completion mechanism in which the complete-tx operation uses a completion count equal to the number of bytes copied. For any thread to observe completion of fabric operations via an `mbarrier` object, the issuing thread is required to submit those operations before the barrier phase tracking these operations advances.
+
+If the qualifier `.counted::bytes` is present (`completion_mechanism1` form), then:
+
+- `dstLeId` must be associated with a logical endpoint with counted completion support (see [Counted completion mechanism](../../instructions/11-fabric-instructions/04-completion-mechanisms-of-fabric-operations.md#fabric-counted-completion-mechanism) for details), and
+
+- the counter offset `dstCounterOff` must be 256-byte aligned,
+
+- the range `[dstCounterOff,`` ``dstCounterOff`` ``+`` ``7]` is in bounds of the logical endpoint `dstLeId` on the current device, and must not overlap with `[dstDataOff,`` ``dstDataOff`` ``+`` ``size`` ``-`` ``1]`, and
+
+- this operation provides counter-based completion for destination data using a 256-byte-aligned 8-byte counter at `[dstLeId,`` ``dstCounterOff]`.
+
+Refer to [Fabric Reporting Mechanism](../../instructions/11-fabric-instructions/04-completion-mechanisms-of-fabric-operations.md#fabric-reporting-mechanism) for the description of `.mbarrier::report::fabric`.
+
+This instruction accesses the data and the counter at the locations specified by the handle operands through the fabric-proxy, reads from the source `.shared::cta` through the async-proxy, and updates the `mbarrier` object in `.shared::cta` through the generic-proxy.
+
+When the optional argument `cache_policy` is specified, the qualifier `.level::cache_hint` is required. The 64-bit operand `cache_policy` specifies the cache eviction policy that may be used during the memory access. `cache_policy` is a hint to the cache subsystem and may not always be respected. It is treated as a performance hint only and does not change the memory consistency behavior of the program.
+
+The completion of this operation may be observed by waiting at the barrier via *CTA-scope* operations. Threads must submit `fabric` operations and wait for their completion before grid exit; otherwise, the behavior is undefined.
+
+This operation has `.relaxed.sys` memory-order semantics as described in the [Memory Consistency Model](../../08-memory-consistency-model.md#memory-consistency-model).
+
+PTX ISA Notes
+
+Introduced in PTX ISA version 9.3.
+
+Support for `.level::cache_hint` qualifier introduced in PTX ISA version 9.4.
+
+Target ISA Notes
+
+Requires `sm_100` or higher.
+
+Examples
+
+    fabric.try_red.async.shared::cta.mbarrier::complete_tx::16B.mbarrier::report::fabric.relaxed.sys.add.u32 [dstLeId, dstLeOffData], [srcSmem], size, [mbar];
+
+    fabric.try_red.async.counted::bytes.shared::cta.L2::cache_hint.mbarrier::complete_tx::16B.mbarrier::report::fabric.add.u32 [dstLeId, dstLeOffData, dstLeOffCntr], [srcSmem], size, [mbar], cache_policy;
+
+<a id="fabric-instructions-try-pullred"></a>
+## 9.7.11.5.4. Fabric Instructions: `fabric.try_pullred`
+
+`fabric.try_pullred`
+
+Asynchronous copy from fabric handle with pull-reduction.
+
+Syntax
+
+    fabric.try_pullred.async.multimem.dst.completion_mechanism.sem.scope.redOpBit.typeBit.sync [dst], [srcLeId, srcDataOff], size, [bar], imm-membermask;
+
+    fabric.try_pullred.async.multimem.dst.completion_mechanism.sem.scope.redOpMinMax.typeMinMax.sync [dst], [srcLeId, srcDataOff], size, [bar], imm-membermask;
+
+    fabric.try_pullred.async.multimem.dst.completion_mechanism.sem.scope.redOpAdd.typeAdd.sync [dst], [srcLeId, srcDataOff], size, [bar], imm-membermask;
+
+    fabric.try_pullred.async.multimem.dst.completion_mechanism.sem.scope.redOpAddAcc16.typeAddAcc16.sync [dst], [srcLeId, srcDataOff], size, [bar], imm-membermask;
+
+    fabric.try_pullred.async.multimem.dst.completion_mechanism.sem.scope.redOpAddAcc32.typeAddAcc32.sync [dst], [srcLeId, srcDataOff], size, [bar], imm-membermask;
+
+    .dst = { .shared::cta }
+    .completion_mechanism = { .mbarrier::complete_tx::bytes.mbarrier::report::fabric }
+    .sem = { .relaxed }
+    .scope = { .sys }
+    .redOpBit = { .and, .xor, .or }
+    .typeBit = { .b32, .b64 }
+    .redOpMinMax = { .min, .max }
+    .typeMinMax = { .u32, .s32, .u64, .s64, .bf16, .f16, .e4m3, .e5m2 }
+    .redOpAdd = { .add }
+    .typeAdd = { .u32, .u64, .f16, .bf16, .f32 }
+    .redOpAddAcc16 = { .add.acc::f16 }
+    .typeAddAcc16 = { .e4m3, .e5m2 }
+    .redOpAddAcc32 = { .add.acc::f32 }
+    .typeAddAcc32 = { .f16, .bf16 }
+
+Description
+
+Initiates asynchronous loads from multiple resources pointed to by multicast fabric handle `[srcLeId,`` ``srcDataOff]`, of `size` bytes, and performs element-wise reduction on data across each of the loads. The result is stored in `[dst,`` ``dst`` ``+`` ``size`` ``-`` ``1]`. `srcLeId` is a 32-bit unsigned value denoting the logical endpoint identifier, and `srcDataOff` is a 64-bit unsigned value denoting the base offset of the resources to access within the multicast logical endpoint associated with `srcLeId`.
+
+The `size` operand is 32 bits and specifies the number of bytes to be copied. It must be a multiple of 16; otherwise, the behavior is undefined. The destination range `[dst,`` ``dst`` ``+`` ``size`` ``-`` ``1]` must be in bounds of the destination memory space. The source range `[srcDataOff,`` ``srcDataOff`` ``+`` ``size`` ``-`` ``1]` must be in bounds of the logical endpoint associated with `srcLeId` on the current device.
+
+The destination pointer `dst` and the source handle offset `srcDataOff` must be 16-byte aligned.
+
+A reduction is performed on the values read from all resources referred to by the multicast logical endpoint. The `.redOp*` qualifiers specify the reduction operation. The `.type*` qualifiers specify the type of each data element in the source arrays.
+
+The `srcLeId` operand must be associated with a multicast logical endpoint with pull-reduction support, and the device that issues the operation must be a member of the multicast endpoint.
+
+If `.dst` is `.shared::cta`, then the destination `[dst]` and the barrier `[bar]` refer to the local CTA’s shared memory.
+
+The `mbarrier` object `bar` must be initialized with `.layout::v1` (see [Layouts of the mbarrier object](../../instructions/15-parallel-synchronization-and-communication-instructions/16-mbarrier.md#parallel-synchronization-and-communication-instructions-mbarrier-object-layout)). Qualifier `.mbarrier::complete_tx::bytes` specifies that the complete-tx operation is performed on `bar` with completion count equal to the number of bytes copied. For any thread to observe completion of fabric operations via an `mbarrier` object, the issuing thread is required to submit those operations before the barrier phase tracking these operations advances.
+
+Refer to [Fabric Reporting Mechanism](../../instructions/11-fabric-instructions/04-completion-mechanisms-of-fabric-operations.md#fabric-reporting-mechanism) for the description of `.mbarrier::report::fabric`.
+
+This instruction accesses data at the locations specified by the handle operands through the fabric-proxy, accesses the destination `.shared::cta` through the async-proxy, and updates the `mbarrier` object in `.shared::cta` through the generic-proxy.
+
+The completion of this operation may be observed by waiting at the barrier via *CTA-scope* operations. Threads must submit `fabric` operations and wait for their completion before grid exit; otherwise, the behavior is undefined.
+
+This operation has `.relaxed.sys` memory-order semantics as described in the [Memory Consistency Model](../../08-memory-consistency-model.md#memory-consistency-model).
+
+The `.sync` qualifier indicates that this instruction causes the issuing thread to wait until all warp lanes execute this instruction with the same operand values. Operand `imm-membermask` is an integer constant and must be `0xFFFFFFFF`. The behavior is undefined if:
+
+- while a thread is waiting, a warp lane executes this instruction with different operand values, OR
+
+- any thread in the warp has exited.
+
+PTX ISA Notes
+
+Introduced in PTX ISA version 9.3.
+
+Target ISA Notes
+
+Requires `sm_100` or higher.
+
+Reduction operations `.add.acc::f16` and `.add.acc::f32` are supported on following architectures:
+
+- `sm_120a`
+
+- `sm_121a`
+
+- `sm_100f` or higher in the same family
+
+- `sm_110f` or higher in the same family
+
+Reduction operations `.min` and `.max` on types `.e4m3` and `.e5m2` are supported on following architectures:
+
+- `sm_120a`
+
+- `sm_121a`
+
+- `sm_100f` or higher in the same family
+
+- `sm_110f` or higher in the same family
+
+Examples
+
+    fabric.try_pullred.async.multimem.mbarrier::complete_tx::bytes.mbarrier::report::fabric.shared::cta.f32.add.sync.relaxed.sys [dst], [leId, offset], size, [mbar], 0xFFFFFFFF;
+
+<a id="fabric-instructions-submit"></a>
+## 9.7.11.5.5. Fabric Instructions: `fabric.submit`
+
+`fabric.submit`
+
+Submits prior fabric operations issued by the current thread.
+
+Syntax
+
+    fabric.submit{.submitop};
+
+    .submitop = { .op_restrict::fetching }
+
+Description
+
+Submits prior fabric operations issued by the current thread. For any thread to observe completion of fabric operations via an `mbarrier` object, the issuing thread is required to submit those operations before the barrier phase tracking these operations advances. Otherwise, the behavior is undefined. See [Life of a Fabric Operation](../../instructions/11-fabric-instructions/03-life-of-a-fabric-operation.md#fabric-operations-lifecycle).
+
+If `.op_restrict::fetching` is specified, then only prior `fabric.try_get` and `fabric.try_pullred` operations issued by the current thread are submitted. Otherwise, all prior fabric operations issued by the current thread are submitted.
+
+This operation has no effect on fabric operations that have already been submitted.
+
+PTX ISA Notes
+
+Introduced in PTX ISA version 9.3.
+
+Target ISA Notes
+
+Requires `sm_100` or higher.
+
+Examples
+
+    fabric.submit.op_restrict::fetching;
+
+    fabric.submit;
+
+<a id="fabric-instructions-wait"></a>
+## 9.7.11.5.6. Fabric Instructions: `fabric.wait`
+
+`fabric.wait`
+
+Wait on local shared-memory reads of submitted fabric operations.
+
+Syntax
+
+    fabric.wait.sync_restrict::reads;
+
+Description
+
+Fabric-read completion mechanism instruction `fabric.wait` waits on the local shared memory (`.shared::cta`) reads of submitted fabric operations. This enables overwriting the shared memory read by these operations before they complete.
+
+PTX ISA Notes
+
+Introduced in PTX ISA version 9.3.
+
+Target ISA Notes
+
+Requires `sm_100` or higher.
+
+Examples
+
+    fabric.wait.sync_restrict::reads;
+
+<a id="fabric-instructions-try-get-async-tensor"></a>
+## 9.7.11.5.7. Fabric Instructions: `fabric.try_get.async.tensor`
+
+`fabric.try_get.async.tensor`
+
+Asynchronous copy of tensor data from fabric handle.
+
+Syntax
+
+    fabric.try_get.async.tensor.dim.dst{.load_mode}.completion_mechanism
+        {.level::cache_hint}.override::global_address{.override_attribute}
+        .sem.sco.b128
+        [dstMem], [tensorMap, tensorMapLeId, tensorMapOff,
+        attributeOverrideInfo, tensorCoords], [mbar] {, cache_policy};
+
+    .dim                    = { .1d, .2d, .3d, .4d, .5d };
+    .dst                    = { .shared::cta };
+    .load_mode              = { .tiled };
+    .completion_mechanism   = { .mbarrier::complete_tx::bytes.mbarrier::report::fabric };
+    .sem.sco                = { .relaxed.sys };
+    .level::cache_hint      = { .l2::cache_hint };
+    .override_attribute     = { .override::global_dim, .override::global_dim_stride };
+
+Description
+
+Asynchronously copies data from the tensor at fabric handle `[tensorMapLeId,`` ``tensorMapOff]` to destination memory `[dstMem]`, where `tensorMapLeId` is a 32-bit unsigned value denoting the logical endpoint identifier, and `tensorMapOff` is a 64-bit unsigned value denoting the base offset of the resource to access within the logical endpoint associated with `tensorMapLeId`.
+
+The logical endpoint associated with `tensorMapLeId` must be a unicast logical endpoint.
+
+The range `[dstMem,`` ``dstMem`` ``+`` ``size`` ``-`` ``1]` must be in bounds of the destination memory space, where `size` is computed using the tensor descriptor `tensorMap`, and it is the number of bytes copied from the source fabric handle. It must be a multiple of 16; otherwise, the behavior is undefined. The source handle offset `tensorMapOff` and destination pointer `dstMem` must be 16-byte aligned.
+
+If `.dst` is `.shared::cta`, then:
+
+- The destination of the copy `[dstMem]` and the barrier `[mbar]` must refer to the local CTA’s shared memory; otherwise, the behavior is undefined.
+
+- The completion mechanism must be `.mbarrier::complete_tx::bytes.mbarrier::report::fabric`.
+
+The `mbarrier` object `mbar` must be initialized with `.layout::v1` (see [Layouts of the mbarrier object](../../instructions/15-parallel-synchronization-and-communication-instructions/16-mbarrier.md#parallel-synchronization-and-communication-instructions-mbarrier-object-layout)). Qualifier `.mbarrier::complete_tx::bytes` specifies that the operation completes by performing a [complete-tx operation](../../instructions/15-parallel-synchronization-and-communication-instructions/16-mbarrier.md#parallel-synchronization-and-communication-instructions-mbarrier-complete-tx-operation) with the total number of bytes copied on the `mbarrier` object at the location specified by the address operand `mbar`. Refer to [Fabric Reporting Mechanism](../../instructions/11-fabric-instructions/04-completion-mechanisms-of-fabric-operations.md#fabric-reporting-mechanism) for the description of `.mbarrier::report::fabric`. For any thread to observe completion of fabric operations via an `mbarrier` object, the issuing thread is required to submit those operations before the barrier phase tracking these operations advances.
+
+The operand `tensorMap` is the generic address of the opaque tensor-map object which resides in `.param` space, `.const` space, or `.global` space. The operand `tensorMap` specifies the properties of the tensor copy operation. The `tensorMap` is accessed in the tensormap proxy. Refer to the *CUDA programming guide* for creating the tensor-map objects on the host side.
+
+The dimension of the tensor data is specified by the `.dim` qualifier.
+
+The qualifier `.load_mode` specifies how the data in the source location is copied into the destination location.
+
+This instruction reads the data at the location specified by the handle operand through the fabric-proxy, reads the operand `tensorMap` through the tensormap-proxy, copies the data to the destination `.shared::cta` memory through the async-proxy, and updates the `mbarrier` object in `.shared::cta` through the generic-proxy.
+
+The qualifiers `.override::global_address` and `.override_attribute` support value override functionality for various tensor properties present in the `tensorMap` object. For more details refer to the [Overriding tensor property value](../../instructions/10-data-movement-and-conversion-instructions/28-asynchronous-copy.md#data-movement-and-conversion-instructions-overriding-tensor-property-value).
+
+When the optional argument `cache_policy` is specified, the qualifier `.level::cache_hint` is required. The 64-bit operand `cache_policy` specifies the cache eviction policy that may be used during the memory access. `cache_policy` is a hint to the cache subsystem and may not always be respected. It is treated as a performance hint only and does not change the memory consistency behavior of the program.
+
+The completion of this operation may be observed by waiting at the barrier via *CTA-scope* operations. Threads must submit `fabric` operations and wait for their completion before grid exit; otherwise, the behavior is undefined.
+
+Accesses to a source handle are 128-bit-wide atomic with `.relaxed.sys` memory-order semantics as described in the [Memory Consistency Model](../../08-memory-consistency-model.md#memory-consistency-model). Accesses to the destination shared memory are with weak memory-order semantics.
+
+PTX ISA Notes
+
+Introduced in PTX ISA version 9.4.
+
+Target ISA Notes
+
+Requires `sm_107f` or higher in the same family.
+
+Examples
+
+    fabric.try_get.async.tensor.1d.shared::cta.tiled.mbarrier::complete_tx::bytes.mbarrier::report::fabric.override::global_address.relaxed.sys.b128 [dstSmem], [tensorDesc, overrideLeId, overrideLeOff, {u}], [mbar];
+
+    fabric.try_get.async.tensor.1d.shared::cta.tiled.mbarrier::complete_tx::bytes.mbarrier::report::fabric.override::global_address.relaxed.sys.l2::cache_hint.b128 [dstSmem], [tensorDesc, overrideLeId, overrideLeOff, {u}], [mbar], mdesc;
+
+<a id="fabric-instructions-try-put-async-tensor"></a>
+## 9.7.11.5.8. Fabric Instructions: `fabric.try_put.async.tensor`
+
+`fabric.try_put.async.tensor`
+
+Asynchronous copy of tensor data to fabric handle.
+
+Syntax
+
+    // Form 0
+    fabric.try_put.async.tensor{.multimem}.dim.src{.load_mode}.completion_mechanism0
+        {.level::cache_hint}.override::global_address{.override_attribute}
+        .sem.sco.b128
+        [tensorMap, tensorMapLeId, tensorMapOff,
+        attributeOverrideInfo, tensorCoords], [src], sizeBytes, [mbar] {, cache_policy};
+
+    // Form 1 (counted::bytes)
+    fabric.try_put.async.tensor{.multimem}.dim.src{.load_mode}.completion_mechanism1
+        {.level::cache_hint}.override::global_address{.override_attribute}
+        .sem.sco.b128
+        [tensorMap, tensorMapLeId, tensorMapOff, counterOff,
+        attributeOverrideInfo, tensorCoords], [src], sizeBytes, [mbar] {, cache_policy};
+
+    .dim                    = { .1d, .2d, .3d, .4d, .5d };
+    .src                    = { .shared::cta };
+    .load_mode              = { .tiled };
+    .completion_mechanism0  = { .mbarrier::complete_tx::16B.mbarrier::report::fabric };
+    .completion_mechanism1  = { .mbarrier::complete_tx::16B.mbarrier::report::fabric.counted::bytes };
+    .sem.sco                = { .relaxed.sys };
+    .level::cache_hint      = { .l2::cache_hint };
+    .override_attribute     = { .override::global_dim, .override::global_dim_stride };
+
+Description
+
+Asynchronously copies data from source memory `[src]` to the tensor at fabric handle `[tensorMapLeId,`` ``tensorMapOff]`, where `tensorMapLeId` is a 32-bit unsigned value denoting the logical endpoint identifier, and `tensorMapOff` is a 64-bit unsigned value denoting the base offset of the resource to access within the logical endpoint associated with `tensorMapLeId`.
+
+The `sizeBytes` operand is 32 bits and specifies the number of bytes to be copied. It must be a multiple of 16; otherwise, the behavior is undefined. The number of bytes transferred by the instruction is computed using the tensor descriptor operand `tensorMap`, and it must match `sizeBytes`; otherwise, the behavior is undefined. The range `[src,`` ``src`` ``+`` ``sizeBytes`` ``-`` ``1]` must be in bounds of the source memory space. The source pointer `src` and destination handle offset `tensorMapOff` must be 16-byte aligned.
+
+If the optional `.multimem` qualifier is specified, then `tensorMapLeId` must be associated with a multicast logical endpoint and the device that issues the operation must be a member of that endpoint. Also, in the case of `.multimem`, the copy operation is performed on all member devices of the multicast endpoint. In the absence of the `.multimem` modifier, `tensorMapLeId` must be associated with a unicast logical endpoint.
+
+If `.src` is `.shared::cta`, then the source of the copy `[src]` and the barrier `[mbar]` refer to the local CTA’s shared memory.
+
+The `mbarrier` object `mbar` must be initialized with `.layout::v1` (see [Layouts of the mbarrier object](../../instructions/15-parallel-synchronization-and-communication-instructions/16-mbarrier.md#parallel-synchronization-and-communication-instructions-mbarrier-object-layout)). Qualifier `.mbarrier::complete_tx::16B` specifies that the complete-tx operation is performed on `mbar` with completion count equal to the number of bytes copied divided by 16; that is, the count is incremented by 1 for every 16 bytes copied. Note that this completion mechanism differs from that for `fabric.try_get.async.tensor`, in which the complete-tx operation is performed with completion count equal to the number of bytes copied. For any thread to observe completion of fabric operations via an `mbarrier` object, the issuing thread is required to submit those operations before the barrier phase tracking these operations advances.
+
+If the qualifier `.counted::bytes` is present, then:
+
+- `tensorMapLeId` must be associated with a logical endpoint with counted completion support ([Counted completion mechanism](../../instructions/11-fabric-instructions/04-completion-mechanisms-of-fabric-operations.md#fabric-counted-completion-mechanism)), and
+
+- the counter offset `counterOff` must be 256-byte aligned, and
+
+- the range `[counterOff,`` ``counterOff`` ``+`` ``7]` is in bounds of the logical endpoint `tensorMapLeId` on the current device, and must not overlap with the `tensorMap` being accessed, and
+
+- this operation provides counter-based completion for destination data using a 256-byte-aligned counter of size 8 bytes specified at `[tensorMapLeId,`` ``counterOff]`.
+
+Refer to [Fabric Reporting Mechanism](../../instructions/11-fabric-instructions/04-completion-mechanisms-of-fabric-operations.md#fabric-reporting-mechanism) for the description of `.mbarrier::report::fabric`.
+
+The operand `tensorMap` is the generic address of the opaque tensor-map object which resides in `.param` space, `.const` space, or `.global` space. The operand `tensorMap` specifies the properties of the tensor copy operation. The `tensorMap` is accessed in the tensormap proxy. Refer to the *CUDA programming guide* for creating the tensor-map objects on the host side.
+
+The dimension of the tensor data is specified by the `.dim` qualifier.
+
+The qualifier `.load_mode` specifies how the data in the source location is copied to the destination location.
+
+This instruction accesses the data and the counter at the location specified by the handle operands through the fabric-proxy, reads the `tensorMap` through the tensormap-proxy, reads from the source `.shared::cta` through the async-proxy, and updates the `mbarrier` object in `.shared::cta` through the generic-proxy.
+
+The qualifiers `.override::global_address` and `.override_attribute` support value override functionality for various tensor properties present in the `tensorMap` object. For more details refer to the [Overriding tensor property value](../../instructions/10-data-movement-and-conversion-instructions/28-asynchronous-copy.md#data-movement-and-conversion-instructions-overriding-tensor-property-value).
+
+When the optional argument `cache_policy` is specified, the qualifier `.level::cache_hint` is required. The 64-bit operand `cache_policy` specifies the cache eviction policy that may be used during the memory access. `cache_policy` is a hint to the cache subsystem and may not always be respected. It is treated as a performance hint only and does not change the memory consistency behavior of the program.
+
+The completion of this operation may be observed by waiting at the barrier via *CTA-scope* operations. Threads must submit `fabric` operations and wait for their completion before grid exit; otherwise, the behavior is undefined.
+
+This operation has `.relaxed.sys` memory-order semantics as described in the [Memory Consistency Model](../../08-memory-consistency-model.md#memory-consistency-model). Accesses to the source shared memory are with weak memory-order semantics.
+
+PTX ISA Notes
+
+Introduced in PTX ISA version 9.4.
+
+Target ISA Notes
+
+Requires `sm_107f` or higher in the same family.
+
+Examples
+
+    fabric.try_put.async.tensor.2d.shared::cta.tile.mbarrier::complete_tx::16B.mbarrier::report::fabric.override::global_address.override::global_dim_stride.relaxed.sys.b128
+               [tensorDesc, overrideLeId, overrideLeOff, {overrideSize16_0, overrideSize16_1}, {overrideLowerStrd_0}, overrideUpperStrd, {u, v}], [srcSmem], numBytes, [mbar];
+
+    fabric.try_put.async.tensor.multimem.5d.shared::cta.tile.mbarrier::complete_tx::16B.mbarrier::report::fabric.override::global_address.override::global_dim_stride.relaxed.sys.L2::cache_hint.b128
+               [tensorDesc, overrideLeId, overrideLeOff, {overrideSize_0, overrideSize_1, overrideSize_2, overrideSize_3, overrideSize_4}, {overrideLowerStrd_0, overrideLowerStrd_1, overrideLowerStrd_2, overrideLowerStrd_3}, overrideUpperStrd, {u, v, w, x, y}], [srcSmem], numBytes, [mbar], mdesc;
+
+<a id="fabric-instructions-try-red-async-tensor"></a>
+## 9.7.11.5.9. Fabric Instructions: `fabric.try_red.async.tensor`
+
+`fabric.try_red.async.tensor`
+
+Asynchronous reduction of tensor data to fabric handle.
+
+Syntax
+
+    // Form 0
+    fabric.try_red.async.tensor{.multimem}.dim.src{.load_mode}.completion_mechanism0
+        {.level::cache_hint}.override::global_address{.override_attribute}
+        .sem.sco.redOp.type
+        [tensorMap, tensorMapLeId, tensorMapOff,
+        attributeOverrideInfo, tensorCoords], [src], sizeBytes, [mbar] {, cache_policy};
+
+    // Form 1 (counted::bytes)
+    fabric.try_red.async.tensor{.multimem}.dim.src{.load_mode}.completion_mechanism1
+        {.level::cache_hint}.override::global_address{.override_attribute}
+        .sem.sco.redOp.type
+        [tensorMap, tensorMapLeId, tensorMapOff, counterOff,
+        attributeOverrideInfo, tensorCoords], [src], sizeBytes, [mbar] {, cache_policy};
+
+    .dim                    = { .1d, .2d, .3d, .4d, .5d };
+    .src                    = { .shared::cta };
+    .load_mode              = { .tiled };
+    .completion_mechanism0  = { .mbarrier::complete_tx::16B.mbarrier::report::fabric };
+    .completion_mechanism1  = { .mbarrier::complete_tx::16B.mbarrier::report::fabric.counted::bytes };
+    .sem.sco                = { .relaxed.sys };
+    .level::cache_hint      = { .l2::cache_hint };
+    .override_attribute     = { .override::global_dim, .override::global_dim_stride };
+    .redOp                  = { .and, .xor, .or, .add, .min, .max };
+
+Description
+
+Asynchronously copies `sizeBytes` bytes from source memory `[src]` to the tensor at fabric handle `[tensorMapLeId,`` ``tensorMapOff]` with element-wise reduction, where `tensorMapLeId` is a 32-bit unsigned value denoting the logical endpoint identifier, and `tensorMapOff` is a 64-bit unsigned value denoting the base offset of the resource to access within the logical endpoint associated with `tensorMapLeId`.
+
+The `sizeBytes` operand is 32 bits and specifies the number of bytes to be copied. It must be a multiple of 16; otherwise, the behavior is undefined. The range `[src,`` ``src`` ``+`` ``sizeBytes`` ``-`` ``1]` must be in bounds of the source memory space. The source pointer `src` and the destination handle offset `tensorMapOff` must be 16-byte aligned.
+
+Each data element in the destination array is reduced at the destination with the corresponding data element in the source array and the reduction operation specified by the modifier `.redOp`. The type of each data element in the source and the destination array is specified by the `tensorMap`.
+
+If the optional `.multimem` qualifier is specified, then `tensorMapLeId` must be associated with a multicast logical endpoint such that the device that issued the operation is a member of the multicast endpoint. Also, in the case of `.multimem`, the reduction operation is performed on all member devices of the multicast endpoint. In the absence of the `.multimem` qualifier, `tensorMapLeId` must be associated with a unicast logical endpoint.
+
+If `.src` is `.shared::cta`, then the source of the copy `[src]` and the barrier `[mbar]` refer to the local CTA’s shared memory.
+
+The `mbarrier` object `mbar` must be initialized with `.layout::v1` (see [Layouts of the mbarrier object](../../instructions/15-parallel-synchronization-and-communication-instructions/16-mbarrier.md#parallel-synchronization-and-communication-instructions-mbarrier-object-layout)). Qualifier `.mbarrier::complete_tx::16B` specifies that the complete-tx operation is performed on `mbar` with completion count equal to the number of bytes copied divided by 16; that is, the count is incremented by 1 for every 16 bytes copied. Note that `fabric.try_get` uses a different completion mechanism in which the complete-tx operation is performed with completion count equal to the number of bytes copied. For any thread to observe completion of fabric operations via an `mbarrier` object, the issuing thread is required to submit those operations before the barrier phase tracking these operations advances.
+
+If the qualifier `.counted::bytes` is present, then:
+
+- `tensorMapLeId` must be associated with a logical endpoint with counted completion support ([Counted completion mechanism](../../instructions/11-fabric-instructions/04-completion-mechanisms-of-fabric-operations.md#fabric-counted-completion-mechanism)), and
+
+- the counter offset `counterOff` must be 256-byte aligned, and
+
+- the range `[counterOff,`` ``counterOff`` ``+`` ``7]` is in bounds of the logical endpoint `tensorMapLeId` on the current device, and must not overlap with the `tensorMap` being accessed, and
+
+- this operation provides counter-based completion for destination data using a 256-byte-aligned counter of size 8 bytes specified at `[tensorMapLeId,`` ``counterOff]`.
+
+Refer to [Fabric Reporting Mechanism](../../instructions/11-fabric-instructions/04-completion-mechanisms-of-fabric-operations.md#fabric-reporting-mechanism) for the description of `.mbarrier::report::fabric`.
+
+The operand `tensorMap` is the generic address of the opaque tensor-map object which resides in `.param` space, `.const` space, or `.global` space. The operand `tensorMap` specifies the properties of the tensor copy operation, as described in Tensor-map. The `tensorMap` is accessed in the tensormap proxy. Refer to the *CUDA programming guide* for creating the tensor-map objects on the host side.
+
+The dimension of the tensor data is specified by the `.dim` qualifier.
+
+The qualifier `.load_mode` specifies how the data in the source location is copied into the destination location.
+
+The following table describes the valid combinations of `.redOp` and element type:
+
+| `.redOp`              | Element Type                                    |
+|-----------------------|-------------------------------------------------|
+| `.and`, `.xor`, `.or` | `.b32`, `.b64`                                  |
+| `.min`, `.max`        | `.u32`, `.s32`, `.u64`, `.s64`, `.f16`, `.bf16` |
+| `.add`                | `.u32`, `.u64`, `.f16`, `.bf16`, `.f32`, `.f64` |
+
+This instruction accesses the data and the counter at the location specified by the handle operands through the fabric-proxy, reads the `tensorMap` through the tensormap-proxy, reads from the source `.shared::cta` through the async-proxy, and updates the `mbarrier` object in `.shared::cta` through the generic-proxy.
+
+The qualifiers `.override::global_address` and `.override_attribute` support value override functionality for various tensor properties present in the `tensorMap` object. For more details refer to the [Overriding tensor property value](../../instructions/10-data-movement-and-conversion-instructions/28-asynchronous-copy.md#data-movement-and-conversion-instructions-overriding-tensor-property-value).
+
+When the optional argument `cache_policy` is specified, the qualifier `.level::cache_hint` is required. The 64-bit operand `cache_policy` specifies the cache eviction policy that may be used during the memory access. `cache_policy` is a hint to the cache subsystem and may not always be respected. It is treated as a performance hint only, and does not change the memory consistency behavior of the program.
+
+The completion of this operation may be observed by waiting at the barrier via *CTA-scope* operations. Threads must submit `fabric` operations and wait for their completion before grid exit; otherwise, the behavior is undefined.
+
+This operation has `.relaxed.sys` memory-order semantics as described in the [Memory Consistency Model](../../08-memory-consistency-model.md#memory-consistency-model). Accesses to the source shared memory are with weak memory-order semantics.
+
+PTX ISA Notes
+
+Introduced in PTX ISA version 9.4.
+
+Target ISA Notes
+
+Requires `sm_107f` or higher in the same family.
+
+Examples
+
+    fabric.try_red.async.tensor.2d.shared::cta.tile.mbarrier::complete_tx::16B.mbarrier::report::fabric.override::global_address.override::global_dim_stride.relaxed.sys.max
+           [tensorDesc, overrideLeId, overrideLeOff, {overrideSize_0, overrideSize_1}, {overrideLowerStrd_0}, overrideUpperStrd, {u, v}], [srcSmem], numBytes, [mbar];
+
+    fabric.try_red.async.tensor.3d.shared::cta.tile.mbarrier::complete_tx::16B.mbarrier::report::fabric.override::global_address.override::global_dim_stride.relaxed.sys.L2::cache_hint.or
+           [tensorDesc, overrideLeId, overrideLeOff, {overrideSize_0, overrideSize_1, overrideSize_2}, {overrideLowerStrd_0, overrideLowerStrd_1}, overrideUpperStrd, {u, v, w}], [srcSmem], numBytes, [mbar], mdesc;
+
+<a id="fabric-instructions-try-atom"></a>
+## 9.7.11.5.10. Fabric Instructions: `fabric.try_atom`
+
+`fabric.try_atom`
+
+Asynchronous atomic operation to fabric handle.
+
+Syntax
+
+    // Bitwise operations
+    fabric.try_atom.async.src.completion_mechanism{.level::cache_hint}.sem.sco.redOpBit.typeBit
+        [dstLeId, dstDataOff], [smem_dst], [smem_src], [mbar] {, cache_policy};
+
+    // Exchange / compare-and-swap
+    fabric.try_atom.async.src.completion_mechanism{.level::cache_hint}.sem.sco.redOpExchCas.typeExchCas
+        [dstLeId, dstDataOff], [smem_dst], [smem_src], [mbar] {, cache_policy};
+
+    // Min / max operations
+    fabric.try_atom.async.src.completion_mechanism{.level::cache_hint}.sem.sco.redOpMinMax.typeMinMax
+        [dstLeId, dstDataOff], [smem_dst], [smem_src], [mbar] {, cache_policy};
+
+    // Add operation
+    fabric.try_atom.async.src.completion_mechanism{.level::cache_hint}.sem.sco.redOpAdd.typeAdd
+        [dstLeId, dstDataOff], [smem_dst], [smem_src], [mbar] {, cache_policy};
+
+    .src                    = { .shared::cta };
+    .completion_mechanism   = { .mbarrier::complete_tx::16B.mbarrier::report::fabric };
+    .level::cache_hint      = { .L2::cache_hint };
+    .sem.sco                = { .relaxed.sys };
+
+    .redOpBit               = { .and, .xor, .or };
+    .typeBit                = { .b32, .b64 };
+
+    .redOpExchCas           = { .exch, .cas };
+    .typeExchCas            = { .b32, .b64, .b128 };
+
+    .redOpMinMax            = { .min, .max };
+    .typeMinMax             = { .u32, .u64, .f16x2, .bf16x2 };
+
+    .redOpAdd               = { .add };
+    .typeAdd                = { .u32, .u64, .f16x2, .bf16x2, .f32, .f64 };
+
+Description
+
+Atomically loads the original value at location `[dstLeId,`` ``dstDataOff]` into destination shared memory location `[smem_dst]`, performs a reduction operation with the data at shared memory location `[smem_src]` and the value in location `[dstLeId,`` ``dstDataOff]`, and stores the result of the specified operation at location `[dstLeId,`` ``dstDataOff]`, overwriting the original value.
+
+For the `.cas` (compare-and-swap) operation, the lower 16 bytes at the location `[smem_src]` is the compare value and the upper 16 bytes at the location `[smem_src]` is the swap value. The operation compares the value at location `[dstLeId,`` ``dstDataOff]` with the compare value; if they are equal, it stores swap value at location `[dstLeId,`` ``dstDataOff]`, otherwise it leaves the value at location `[dstLeId,`` ``dstDataOff]` unchanged.
+
+The operation is performed on 16 bytes. The source range `[smem_src,`` ``smem_src`` ``+`` ``15]` must be in bounds of the source memory space. For the `.cas` operation, the source range `[smem_src,`` ``smem_src`` ``+`` ``31]` must be in bounds of the source memory space. The pointers `smem_src` and `smem_dst` must be 16B aligned.
+
+For types `.f16x2`, `.bf16x2`, `.b32`, `.f32`, and `.u32`, `dstDataOff` must be 4B aligned. For types `.b64`, `.f64`, and `.u64`, `dstDataOff` must be 8B aligned. For type `.b128`, `dstDataOff` must be 16B aligned.
+
+The element-wide input and output of the atomic operation are selected as follows. Let `smemOffset` be the distance between `dstDataOff` and its lower 16B alignment boundary (`dstDataOff`` ``&`` ``0xF`). The input element is read at `smem_src`` ``+`` ``smemOffset`, and the output element is written at `smem_dst`` ``+`` ``smemOffset`. This operation writes unspecified values to the byte ranges `[smem_dst,`` ``smem_dst`` ``+`` ``smemOffset)` and `[smem_dst`` ``+`` ``smemOffset`` ``+`` ``elementWidth,`` ``smem_dst`` ``+`` ``16)`.
+
+If `.src` is `.shared::cta`, then the source of the copy `[smem_src]` and the barrier `[mbar]` refer to the local CTA’s shared memory.
+
+The `mbarrier` object `mbar` must be initialized with `.layout::v1` (see [Layouts of the mbarrier object](../../instructions/15-parallel-synchronization-and-communication-instructions/16-mbarrier.md#parallel-synchronization-and-communication-instructions-mbarrier-object-layout)). Qualifier `.mbarrier::complete_tx::16B` specifies that the complete-tx operation will be performed on `mbar` with completion count equal to the number of bytes copied divided by 16; that is, the count is incremented by 1 for every 16 bytes copied. Note that instructions `fabric.try_get` and `fabric.try_get.async.tensor` use a different completion mechanism in which the complete-tx operation is performed with completion count equal to the number of bytes copied. For any thread to observe completion of fabric operations via an `mbarrier` object, the issuing thread is required to submit those operations before the barrier phase tracking these operations advances.
+
+Refer to [Fabric Reporting Mechanism](../../instructions/11-fabric-instructions/04-completion-mechanisms-of-fabric-operations.md#fabric-reporting-mechanism) for the description of `.mbarrier::report::fabric`.
+
+When the optional argument `cache_policy` is specified, the qualifier `.level::cache_hint` is required. The 64-bit operand `cache_policy` specifies the cache eviction policy that may be used during the memory access. `cache_policy` is a hint to the cache subsystem and may not always be respected. It is treated as a performance hint only and does not change the memory consistency behavior of the program.
+
+This instruction reads and updates the data at the location specified by the handle operands through the fabric-proxy, reads and updates the data at the source `.shared::cta` through the async-proxy, and it updates the `mbarrier` object in `.shared::cta` through the generic-proxy.
+
+The completion of this operation may be observed by waiting at the barrier via *CTA-scope* operations. Threads must submit `fabric` operations and wait for their completion before grid exit; otherwise, the behavior is undefined.
+
+This operation has `.relaxed.sys` memory-order semantics as described in the [Memory Consistency Model](../../08-memory-consistency-model.md#memory-consistency-model). Accesses to the source and destination shared memory are with weak memory-order semantics.
+
+Semantics
+
+    atomic {
+        [smem_dst] = [dstLeId, dstDataOff];            // copy as the prev value
+        if (operation == cas) {                         // smem_src must be 32B aligned
+            b = lower16Bytes([smem_src]);               // smem_src value to be compared
+            c = upper16Bytes([smem_src]);               // swap value
+            [dstLeId, dstDataOff] = cas([dstLeId, dstDataOff], b, c);
+        } else {
+            [dstLeId, dstDataOff] = operation([dstLeId, dstDataOff], [smem_src]);
+        }
+    }
+
+    exch(r, s) = s;
+    cas(r, s, t) = (r == s) ? t : r;
+
+PTX ISA Notes
+
+Introduced in PTX ISA version 9.4.
+
+Target ISA Notes
+
+Requires `sm_100` or higher.
+
+Examples
+
+    fabric.try_atom.async.shared::cta.mbarrier::complete_tx::16B.mbarrier::report::fabric.relaxed.sys.and.b32 [dstLeId, dstLeOffData], [dstSmem], [srcSmem], [mbar];
+
+    fabric.try_atom.async.shared::cta.mbarrier::complete_tx::16B.mbarrier::report::fabric.relaxed.sys.add.bf16x2 [dstLeId, dstLeOffData], [dstSmem], [srcSmem], [mbar];
+
+    fabric.try_atom.async.shared::cta.L2::cache_hint.mbarrier::complete_tx::16B.mbarrier::report::fabric.relaxed.sys.xor.b64 [dstLeId, dstLeOffData], [dstSmem], [srcSmem], [mbar], mdesc;
+

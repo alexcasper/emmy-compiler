@@ -1,0 +1,18 @@
+<!-- Generated from https://docs.nvidia.com/cuda/parallel-thread-execution/index.html by tools/build_ptx.py; do not edit. -->
+
+<a id="cft-handles-overview"></a>
+# 9.7.11.2. CFT Handles Overview
+
+All fabric operations:
+
+- May fail and report a status that identifies success or potential failure of the operation, enabling applications to react accordingly.
+
+- Are asynchronous operations, enabling the operation to make progress in the background.
+
+- Perform some CFT Handle resource accesses via the fabric-proxy. Most fabric operations perform multiple accesses: CFT Handle resource accesses via fabric-proxy, and multiple pointer-based accesses via often multiple different proxies.
+
+<a id="fabric-proxy"></a>
+## 9.7.11.2.1. Fabric Proxy
+
+Fabric operation accesses to CFT Handle resources are performed through the fabric-proxy. Cross-proxy fences between fabric-proxy and generic-proxy are available.
+

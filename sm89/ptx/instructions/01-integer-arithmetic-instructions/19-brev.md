@@ -1,0 +1,39 @@
+<!-- Generated from https://docs.nvidia.com/cuda/parallel-thread-execution/index.html by tools/build_ptx.py; do not edit. -->
+
+<a id="integer-arithmetic-instructions-brev"></a>
+# 9.7.1.19. Integer Arithmetic Instructions: `brev`
+
+`brev`
+
+Bit reverse.
+
+Syntax
+
+    brev.type  d, a;
+
+    .type = { .b32, .b64 };
+
+Description
+
+Perform bitwise reversal of input.
+
+Semantics
+
+    msb = (.type==.b32) ? 31 : 63;
+
+    for (i=0; i<=msb; i++) {
+        d[i] = a[msb-i];
+    }
+
+PTX ISA Notes
+
+Introduced in PTX ISA version 2.0.
+
+Target ISA Notes
+
+`brev` requires `sm_20` or higher.
+
+Examples
+
+    brev.b32  d, a;
+

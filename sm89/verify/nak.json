@@ -1,0 +1,1126 @@
+{
+ "commit": "e7371b0711bb1cd38c39d1c05e5578c445cc6bca",
+ "ops": {
+  "AL2P": {
+   "status": "agree",
+   "nak": [
+    "0x920"
+   ],
+   "site": [
+    "0x920"
+   ],
+   "ref": "https://gitlab.freedesktop.org/mesa/mesa/-/blob/e7371b0711bb1cd38c39d1c05e5578c445cc6bca/src/nouveau/compiler/nak/sm70_encode.rs#L3915"
+  },
+  "ALD": {
+   "status": "agree",
+   "nak": [
+    "0x321"
+   ],
+   "site": [
+    "0x321",
+    "0x521"
+   ],
+   "ref": "https://gitlab.freedesktop.org/mesa/mesa/-/blob/e7371b0711bb1cd38c39d1c05e5578c445cc6bca/src/nouveau/compiler/nak/sm70_encode.rs#L3932"
+  },
+  "ATOM": {
+   "status": "NAK op maps to ATOMG/ATOMS/RED",
+   "nak": [
+    "0x38c",
+    "0x38d",
+    "0x3a8",
+    "0x3a9",
+    "0x98c",
+    "0x98e",
+    "0x9a3",
+    "0x9a6",
+    "0x9a8"
+   ],
+   "site": [
+    "0x38a",
+    "0x38b",
+    "0x98a"
+   ],
+   "ref": "https://gitlab.freedesktop.org/mesa/mesa/-/blob/e7371b0711bb1cd38c39d1c05e5578c445cc6bca/src/nouveau/compiler/nak/sm70_encode.rs#L3777"
+  },
+  "BAR": {
+   "status": "agree",
+   "nak": [
+    "0x31d",
+    "0xb1d"
+   ],
+   "site": [
+    "0x31d",
+    "0x91d",
+    "0xb1d"
+   ],
+   "ref": "https://gitlab.freedesktop.org/mesa/mesa/-/blob/e7371b0711bb1cd38c39d1c05e5578c445cc6bca/src/nouveau/compiler/nak/sm70_encode.rs#L4245"
+  },
+  "BMOV": {
+   "status": "agree",
+   "nak": [
+    "0x355",
+    "0x356"
+   ],
+   "site": [
+    "0x355",
+    "0x356",
+    "0x357",
+    "0x956",
+    "0x957",
+    "0xb56",
+    "0xb57",
+    "0xf56"
+   ],
+   "ref": "https://gitlab.freedesktop.org/mesa/mesa/-/blob/e7371b0711bb1cd38c39d1c05e5578c445cc6bca/src/nouveau/compiler/nak/sm70_encode.rs#L4128"
+  },
+  "BMSK": {
+   "status": "agree",
+   "nak": [
+    "0x1b",
+    "0x9b"
+   ],
+   "site": [
+    "0x21b",
+    "0x81b",
+    "0xa1b",
+    "0xc1b"
+   ],
+   "ref": "https://gitlab.freedesktop.org/mesa/mesa/-/blob/e7371b0711bb1cd38c39d1c05e5578c445cc6bca/src/nouveau/compiler/nak/sm70_encode.rs#L1518"
+  },
+  "BRA": {
+   "status": "agree",
+   "nak": [
+    "0x547",
+    "0x947"
+   ],
+   "site": [
+    "0x947"
+   ],
+   "ref": "https://gitlab.freedesktop.org/mesa/mesa/-/blob/e7371b0711bb1cd38c39d1c05e5578c445cc6bca/src/nouveau/compiler/nak/sm70_encode.rs#L4191"
+  },
+  "BREAK": {
+   "status": "agree",
+   "nak": [
+    "0x942"
+   ],
+   "site": [
+    "0x942"
+   ],
+   "ref": "https://gitlab.freedesktop.org/mesa/mesa/-/blob/e7371b0711bb1cd38c39d1c05e5578c445cc6bca/src/nouveau/compiler/nak/sm70_encode.rs#L4152"
+  },
+  "BREV": {
+   "status": "agree",
+   "nak": [
+    "0xbe",
+    "0x101"
+   ],
+   "site": [
+    "0x301",
+    "0x901",
+    "0xb01",
+    "0xd01"
+   ],
+   "ref": "https://gitlab.freedesktop.org/mesa/mesa/-/blob/e7371b0711bb1cd38c39d1c05e5578c445cc6bca/src/nouveau/compiler/nak/sm70_encode.rs#L1547"
+  },
+  "BSSY": {
+   "status": "agree",
+   "nak": [
+    "0x945"
+   ],
+   "site": [
+    "0x945"
+   ],
+   "ref": "https://gitlab.freedesktop.org/mesa/mesa/-/blob/e7371b0711bb1cd38c39d1c05e5578c445cc6bca/src/nouveau/compiler/nak/sm70_encode.rs#L4165"
+  },
+  "BSYNC": {
+   "status": "agree",
+   "nak": [
+    "0x941"
+   ],
+   "site": [
+    "0x941"
+   ],
+   "ref": "https://gitlab.freedesktop.org/mesa/mesa/-/blob/e7371b0711bb1cd38c39d1c05e5578c445cc6bca/src/nouveau/compiler/nak/sm70_encode.rs#L4179"
+  },
+  "CCTL": {
+   "status": "agree",
+   "nak": [
+    "0x98f"
+   ],
+   "site": [
+    "0x98f"
+   ],
+   "ref": "https://gitlab.freedesktop.org/mesa/mesa/-/blob/e7371b0711bb1cd38c39d1c05e5578c445cc6bca/src/nouveau/compiler/nak/sm70_encode.rs#L4033"
+  },
+  "CS2R": {
+   "status": "agree",
+   "nak": [
+    "0x805"
+   ],
+   "site": [
+    "0x805"
+   ],
+   "ref": "https://gitlab.freedesktop.org/mesa/mesa/-/blob/e7371b0711bb1cd38c39d1c05e5578c445cc6bca/src/nouveau/compiler/nak/sm70_encode.rs#L4273"
+  },
+  "DADD": {
+   "status": "agree",
+   "nak": [
+    "0x29"
+   ],
+   "site": [
+    "0x229",
+    "0x429",
+    "0x629",
+    "0xe29"
+   ],
+   "ref": "https://gitlab.freedesktop.org/mesa/mesa/-/blob/e7371b0711bb1cd38c39d1c05e5578c445cc6bca/src/nouveau/compiler/nak/sm70_encode.rs#L1215"
+  },
+  "DFMA": {
+   "status": "agree",
+   "nak": [
+    "0x2b"
+   ],
+   "site": [
+    "0x22b",
+    "0x42b",
+    "0x62b",
+    "0x82b",
+    "0xa2b",
+    "0xc2b",
+    "0xe2b"
+   ],
+   "ref": "https://gitlab.freedesktop.org/mesa/mesa/-/blob/e7371b0711bb1cd38c39d1c05e5578c445cc6bca/src/nouveau/compiler/nak/sm70_encode.rs#L1235"
+  },
+  "DMUL": {
+   "status": "agree",
+   "nak": [
+    "0x28"
+   ],
+   "site": [
+    "0x228",
+    "0x828",
+    "0xa28",
+    "0xc28"
+   ],
+   "ref": "https://gitlab.freedesktop.org/mesa/mesa/-/blob/e7371b0711bb1cd38c39d1c05e5578c445cc6bca/src/nouveau/compiler/nak/sm70_encode.rs#L1256"
+  },
+  "DSETP": {
+   "status": "agree",
+   "nak": [
+    "0x2a"
+   ],
+   "site": [
+    "0x22a",
+    "0x42a",
+    "0x62a",
+    "0xe2a"
+   ],
+   "ref": "https://gitlab.freedesktop.org/mesa/mesa/-/blob/e7371b0711bb1cd38c39d1c05e5578c445cc6bca/src/nouveau/compiler/nak/sm70_encode.rs#L1276"
+  },
+  "EXIT": {
+   "status": "agree",
+   "nak": [
+    "0x94d"
+   ],
+   "site": [
+    "0x94d"
+   ],
+   "ref": "https://gitlab.freedesktop.org/mesa/mesa/-/blob/e7371b0711bb1cd38c39d1c05e5578c445cc6bca/src/nouveau/compiler/nak/sm70_encode.rs#L4218"
+  },
+  "F2F": {
+   "status": "agree",
+   "nak": [
+    "0x5b",
+    "0x104",
+    "0x110"
+   ],
+   "site": [
+    "0x310",
+    "0x910",
+    "0xb10",
+    "0xd10"
+   ],
+   "ref": "https://gitlab.freedesktop.org/mesa/mesa/-/blob/e7371b0711bb1cd38c39d1c05e5578c445cc6bca/src/nouveau/compiler/nak/sm70_encode.rs#L2189"
+  },
+  "F2FP": {
+   "status": "agree",
+   "nak": [
+    "0x3e",
+    "0xba"
+   ],
+   "site": [
+    "0x23e",
+    "0x43e",
+    "0x63e",
+    "0x83e",
+    "0xa3e",
+    "0xc3e",
+    "0xe3e"
+   ],
+   "ref": "https://gitlab.freedesktop.org/mesa/mesa/-/blob/e7371b0711bb1cd38c39d1c05e5578c445cc6bca/src/nouveau/compiler/nak/sm70_encode.rs#L2237"
+  },
+  "F2I": {
+   "status": "agree",
+   "nak": [
+    "0x5c",
+    "0x105",
+    "0x111"
+   ],
+   "site": [
+    "0x305",
+    "0x311",
+    "0x905",
+    "0x911",
+    "0xb05",
+    "0xb11",
+    "0xd11"
+   ],
+   "ref": "https://gitlab.freedesktop.org/mesa/mesa/-/blob/e7371b0711bb1cd38c39d1c05e5578c445cc6bca/src/nouveau/compiler/nak/sm70_encode.rs#L2282"
+  },
+  "FADD": {
+   "status": "agree",
+   "nak": [
+    "0x21",
+    "0x54"
+   ],
+   "site": [
+    "0x221",
+    "0x421",
+    "0x621",
+    "0xe21"
+   ],
+   "ref": "https://gitlab.freedesktop.org/mesa/mesa/-/blob/e7371b0711bb1cd38c39d1c05e5578c445cc6bca/src/nouveau/compiler/nak/sm70_encode.rs#L849"
+  },
+  "FFMA": {
+   "status": "agree",
+   "nak": [
+    "0x23",
+    "0x55"
+   ],
+   "site": [
+    "0x223",
+    "0x423",
+    "0x623",
+    "0x823",
+    "0xa23",
+    "0xc23",
+    "0xe23"
+   ],
+   "ref": "https://gitlab.freedesktop.org/mesa/mesa/-/blob/e7371b0711bb1cd38c39d1c05e5578c445cc6bca/src/nouveau/compiler/nak/sm70_encode.rs#L890"
+  },
+  "FLO": {
+   "status": "agree",
+   "nak": [
+    "0xbd",
+    "0x100"
+   ],
+   "site": [
+    "0x300",
+    "0x900",
+    "0xb00",
+    "0xd00"
+   ],
+   "ref": "https://gitlab.freedesktop.org/mesa/mesa/-/blob/e7371b0711bb1cd38c39d1c05e5578c445cc6bca/src/nouveau/compiler/nak/sm70_encode.rs#L1561"
+  },
+  "FMNMX": {
+   "status": "agree",
+   "nak": [
+    "0x9",
+    "0x50"
+   ],
+   "site": [
+    "0x209",
+    "0x809",
+    "0xa09",
+    "0xc09"
+   ],
+   "ref": "https://gitlab.freedesktop.org/mesa/mesa/-/blob/e7371b0711bb1cd38c39d1c05e5578c445cc6bca/src/nouveau/compiler/nak/sm70_encode.rs#L925"
+  },
+  "FMUL": {
+   "status": "agree",
+   "nak": [
+    "0x20",
+    "0x56"
+   ],
+   "site": [
+    "0x220",
+    "0x820",
+    "0xa20",
+    "0xc20"
+   ],
+   "ref": "https://gitlab.freedesktop.org/mesa/mesa/-/blob/e7371b0711bb1cd38c39d1c05e5578c445cc6bca/src/nouveau/compiler/nak/sm70_encode.rs#L963"
+  },
+  "FRND": {
+   "status": "agree",
+   "nak": [
+    "0x5d",
+    "0x107",
+    "0x113"
+   ],
+   "site": [
+    "0x313",
+    "0x913",
+    "0xb13",
+    "0xd13"
+   ],
+   "ref": "https://gitlab.freedesktop.org/mesa/mesa/-/blob/e7371b0711bb1cd38c39d1c05e5578c445cc6bca/src/nouveau/compiler/nak/sm70_encode.rs#L2371"
+  },
+  "FSET": {
+   "status": "agree",
+   "nak": [
+    "0xa",
+    "0x52"
+   ],
+   "site": [
+    "0x20a",
+    "0x80a",
+    "0xa0a",
+    "0xc0a"
+   ],
+   "ref": "https://gitlab.freedesktop.org/mesa/mesa/-/blob/e7371b0711bb1cd38c39d1c05e5578c445cc6bca/src/nouveau/compiler/nak/sm70_encode.rs#L1052"
+  },
+  "FSETP": {
+   "status": "agree",
+   "nak": [
+    "0xb",
+    "0x53"
+   ],
+   "site": [
+    "0x20b",
+    "0x80b",
+    "0xa0b",
+    "0xc0b"
+   ],
+   "ref": "https://gitlab.freedesktop.org/mesa/mesa/-/blob/e7371b0711bb1cd38c39d1c05e5578c445cc6bca/src/nouveau/compiler/nak/sm70_encode.rs#L1089"
+  },
+  "FSWZADD": {
+   "status": "agree",
+   "nak": [
+    "0x822"
+   ],
+   "site": [
+    "0x822"
+   ],
+   "ref": "https://gitlab.freedesktop.org/mesa/mesa/-/blob/e7371b0711bb1cd38c39d1c05e5578c445cc6bca/src/nouveau/compiler/nak/sm70_encode.rs#L1132"
+  },
+  "HADD2": {
+   "status": "agree",
+   "nak": [
+    "0x30"
+   ],
+   "site": [
+    "0x230",
+    "0x430",
+    "0x630",
+    "0xe30"
+   ],
+   "ref": "https://gitlab.freedesktop.org/mesa/mesa/-/blob/e7371b0711bb1cd38c39d1c05e5578c445cc6bca/src/nouveau/compiler/nak/sm70_encode.rs#L1316"
+  },
+  "HFMA2": {
+   "status": "agree",
+   "nak": [
+    "0x31"
+   ],
+   "site": [
+    "0x231",
+    "0x431",
+    "0x631",
+    "0x831",
+    "0xa31",
+    "0xc31",
+    "0xe31"
+   ],
+   "ref": "https://gitlab.freedesktop.org/mesa/mesa/-/blob/e7371b0711bb1cd38c39d1c05e5578c445cc6bca/src/nouveau/compiler/nak/sm70_encode.rs#L1350"
+  },
+  "HMMA": {
+   "status": "agree",
+   "nak": [
+    "0x23c"
+   ],
+   "site": [
+    "0x23c"
+   ],
+   "ref": "https://gitlab.freedesktop.org/mesa/mesa/-/blob/e7371b0711bb1cd38c39d1c05e5578c445cc6bca/src/nouveau/compiler/nak/sm70_encode.rs#L4577"
+  },
+  "HMNMX2": {
+   "status": "agree",
+   "nak": [
+    "0x40"
+   ],
+   "site": [
+    "0x240",
+    "0x840",
+    "0xa40",
+    "0xc40"
+   ],
+   "ref": "https://gitlab.freedesktop.org/mesa/mesa/-/blob/e7371b0711bb1cd38c39d1c05e5578c445cc6bca/src/nouveau/compiler/nak/sm70_encode.rs#L1488"
+  },
+  "HMUL2": {
+   "status": "agree",
+   "nak": [
+    "0x32"
+   ],
+   "site": [
+    "0x232",
+    "0x832",
+    "0xa32",
+    "0xc32"
+   ],
+   "ref": "https://gitlab.freedesktop.org/mesa/mesa/-/blob/e7371b0711bb1cd38c39d1c05e5578c445cc6bca/src/nouveau/compiler/nak/sm70_encode.rs#L1377"
+  },
+  "HSET2": {
+   "status": "agree",
+   "nak": [
+    "0x33"
+   ],
+   "site": [
+    "0x233",
+    "0x433",
+    "0x633",
+    "0xe33"
+   ],
+   "ref": "https://gitlab.freedesktop.org/mesa/mesa/-/blob/e7371b0711bb1cd38c39d1c05e5578c445cc6bca/src/nouveau/compiler/nak/sm70_encode.rs#L1403"
+  },
+  "HSETP2": {
+   "status": "agree",
+   "nak": [
+    "0x34"
+   ],
+   "site": [
+    "0x234",
+    "0x434",
+    "0x634",
+    "0xe34"
+   ],
+   "ref": "https://gitlab.freedesktop.org/mesa/mesa/-/blob/e7371b0711bb1cd38c39d1c05e5578c445cc6bca/src/nouveau/compiler/nak/sm70_encode.rs#L1445"
+  },
+  "I2F": {
+   "status": "agree",
+   "nak": [
+    "0x5a",
+    "0x106",
+    "0x112"
+   ],
+   "site": [
+    "0x306",
+    "0x312",
+    "0x906",
+    "0x912",
+    "0xb06",
+    "0xb12",
+    "0xd06",
+    "0xd12"
+   ],
+   "ref": "https://gitlab.freedesktop.org/mesa/mesa/-/blob/e7371b0711bb1cd38c39d1c05e5578c445cc6bca/src/nouveau/compiler/nak/sm70_encode.rs#L2329"
+  },
+  "IABS": {
+   "status": "agree",
+   "nak": [
+    "0x13",
+    "0x4d"
+   ],
+   "site": [
+    "0x213",
+    "0x813",
+    "0xa13",
+    "0xc13"
+   ],
+   "ref": "https://gitlab.freedesktop.org/mesa/mesa/-/blob/e7371b0711bb1cd38c39d1c05e5578c445cc6bca/src/nouveau/compiler/nak/sm70_encode.rs#L1580"
+  },
+  "IADD3": {
+   "status": "agree",
+   "nak": [
+    "0x10",
+    "0x90"
+   ],
+   "site": [
+    "0x210",
+    "0x810",
+    "0xa10",
+    "0xc10"
+   ],
+   "ref": "https://gitlab.freedesktop.org/mesa/mesa/-/blob/e7371b0711bb1cd38c39d1c05e5578c445cc6bca/src/nouveau/compiler/nak/sm70_encode.rs#L1595"
+  },
+  "IMAD": {
+   "status": "agree",
+   "nak": [
+    "0x24",
+    "0xa4"
+   ],
+   "site": [
+    "0x224",
+    "0x225",
+    "0x424",
+    "0x624",
+    "0x625",
+    "0x824",
+    "0x825",
+    "0xa24",
+    "0xa25",
+    "0xc24",
+    "0xc25",
+    "0xe24",
+    "0xe25"
+   ],
+   "ref": "https://gitlab.freedesktop.org/mesa/mesa/-/blob/e7371b0711bb1cd38c39d1c05e5578c445cc6bca/src/nouveau/compiler/nak/sm70_encode.rs#L1751"
+  },
+  "IMMA": {
+   "status": "agree",
+   "nak": [
+    "0x237"
+   ],
+   "site": [
+    "0x237"
+   ],
+   "ref": "https://gitlab.freedesktop.org/mesa/mesa/-/blob/e7371b0711bb1cd38c39d1c05e5578c445cc6bca/src/nouveau/compiler/nak/sm70_encode.rs#L4520"
+  },
+  "IMNMX": {
+   "status": "agree",
+   "nak": [
+    "0x17",
+    "0x85"
+   ],
+   "site": [
+    "0x217",
+    "0x817",
+    "0xa17",
+    "0xc17"
+   ],
+   "ref": "https://gitlab.freedesktop.org/mesa/mesa/-/blob/e7371b0711bb1cd38c39d1c05e5578c445cc6bca/src/nouveau/compiler/nak/sm70_encode.rs#L1815"
+  },
+  "IPA": {
+   "status": "agree",
+   "nak": [
+    "0x326"
+   ],
+   "site": [
+    "0x326",
+    "0x526",
+    "0x926",
+    "0xb26"
+   ],
+   "ref": "https://gitlab.freedesktop.org/mesa/mesa/-/blob/e7371b0711bb1cd38c39d1c05e5578c445cc6bca/src/nouveau/compiler/nak/sm70_encode.rs#L3974"
+  },
+  "ISBERD": {
+   "status": "agree",
+   "nak": [
+    "0x923"
+   ],
+   "site": [
+    "0x923"
+   ],
+   "ref": "https://gitlab.freedesktop.org/mesa/mesa/-/blob/e7371b0711bb1cd38c39d1c05e5578c445cc6bca/src/nouveau/compiler/nak/sm70_encode.rs#L4286"
+  },
+  "ISETP": {
+   "status": "agree",
+   "nak": [
+    "0xc",
+    "0x8c"
+   ],
+   "site": [
+    "0x20c",
+    "0x80c",
+    "0xa0c",
+    "0xc0c"
+   ],
+   "ref": "https://gitlab.freedesktop.org/mesa/mesa/-/blob/e7371b0711bb1cd38c39d1c05e5578c445cc6bca/src/nouveau/compiler/nak/sm70_encode.rs#L1866"
+  },
+  "LD": {
+   "status": "NAK op maps to LDG/LDL/LDS",
+   "nak": [
+    "0x381",
+    "0x981",
+    "0x983",
+    "0x984"
+   ],
+   "site": [
+    "0x980"
+   ],
+   "ref": "https://gitlab.freedesktop.org/mesa/mesa/-/blob/e7371b0711bb1cd38c39d1c05e5578c445cc6bca/src/nouveau/compiler/nak/sm70_encode.rs#L3428"
+  },
+  "LDC": {
+   "status": "agree",
+   "nak": [
+    "0x582",
+    "0x7ac",
+    "0xab9",
+    "0xb82",
+    "0xbac"
+   ],
+   "site": [
+    "0x582",
+    "0xb82"
+   ],
+   "ref": "https://gitlab.freedesktop.org/mesa/mesa/-/blob/e7371b0711bb1cd38c39d1c05e5578c445cc6bca/src/nouveau/compiler/nak/sm70_encode.rs#L3505"
+  },
+  "LDSM": {
+   "status": "agree",
+   "nak": [
+    "0x83b"
+   ],
+   "site": [
+    "0x83b"
+   ],
+   "ref": "https://gitlab.freedesktop.org/mesa/mesa/-/blob/e7371b0711bb1cd38c39d1c05e5578c445cc6bca/src/nouveau/compiler/nak/sm70_encode.rs#L4622"
+  },
+  "LDTRAM": {
+   "status": "agree",
+   "nak": [
+    "0x3ad"
+   ],
+   "site": [
+    "0x3ad"
+   ],
+   "ref": "https://gitlab.freedesktop.org/mesa/mesa/-/blob/e7371b0711bb1cd38c39d1c05e5578c445cc6bca/src/nouveau/compiler/nak/sm70_encode.rs#L4015"
+  },
+  "LEA": {
+   "status": "agree",
+   "nak": [
+    "0x11",
+    "0x91"
+   ],
+   "site": [
+    "0x211",
+    "0x411",
+    "0x811",
+    "0xa11",
+    "0xc11"
+   ],
+   "ref": "https://gitlab.freedesktop.org/mesa/mesa/-/blob/e7371b0711bb1cd38c39d1c05e5578c445cc6bca/src/nouveau/compiler/nak/sm70_encode.rs#L1923"
+  },
+  "LOP3": {
+   "status": "agree",
+   "nak": [
+    "0x12",
+    "0x92"
+   ],
+   "site": [
+    "0x212",
+    "0x812",
+    "0xa12",
+    "0xc12"
+   ],
+   "ref": "https://gitlab.freedesktop.org/mesa/mesa/-/blob/e7371b0711bb1cd38c39d1c05e5578c445cc6bca/src/nouveau/compiler/nak/sm70_encode.rs#L2064"
+  },
+  "MATCH": {
+   "status": "agree",
+   "nak": [
+    "0x3a1"
+   ],
+   "site": [
+    "0x3a1"
+   ],
+   "ref": "https://gitlab.freedesktop.org/mesa/mesa/-/blob/e7371b0711bb1cd38c39d1c05e5578c445cc6bca/src/nouveau/compiler/nak/sm70_encode.rs#L4493"
+  },
+  "MEMBAR": {
+   "status": "agree",
+   "nak": [
+    "0x992"
+   ],
+   "site": [
+    "0x992"
+   ],
+   "ref": "https://gitlab.freedesktop.org/mesa/mesa/-/blob/e7371b0711bb1cd38c39d1c05e5578c445cc6bca/src/nouveau/compiler/nak/sm70_encode.rs#L4063"
+  },
+  "MOV": {
+   "status": "agree",
+   "nak": [
+    "0x2",
+    "0xc82"
+   ],
+   "site": [
+    "0x202",
+    "0x802",
+    "0xa02",
+    "0xc02"
+   ],
+   "ref": "https://gitlab.freedesktop.org/mesa/mesa/-/blob/e7371b0711bb1cd38c39d1c05e5578c445cc6bca/src/nouveau/compiler/nak/sm70_encode.rs#L2417"
+  },
+  "MOVM": {
+   "status": "agree",
+   "nak": [
+    "0x23a"
+   ],
+   "site": [
+    "0x23a"
+   ],
+   "ref": "https://gitlab.freedesktop.org/mesa/mesa/-/blob/e7371b0711bb1cd38c39d1c05e5578c445cc6bca/src/nouveau/compiler/nak/sm70_encode.rs#L4663"
+  },
+  "MUFU": {
+   "status": "agree",
+   "nak": [
+    "0x108"
+   ],
+   "site": [
+    "0x308",
+    "0x908",
+    "0xb08",
+    "0xd08"
+   ],
+   "ref": "https://gitlab.freedesktop.org/mesa/mesa/-/blob/e7371b0711bb1cd38c39d1c05e5578c445cc6bca/src/nouveau/compiler/nak/sm70_encode.rs#L1168"
+  },
+  "NANOSLEEP": {
+   "status": "agree",
+   "nak": [
+    "0x15d"
+   ],
+   "site": [
+    "0x35d",
+    "0x95d",
+    "0xb5d"
+   ],
+   "ref": "https://gitlab.freedesktop.org/mesa/mesa/-/blob/e7371b0711bb1cd38c39d1c05e5578c445cc6bca/src/nouveau/compiler/nak/sm70_encode.rs#L4679"
+  },
+  "NOP": {
+   "status": "agree",
+   "nak": [
+    "0x918"
+   ],
+   "site": [
+    "0x0",
+    "0x918"
+   ],
+   "ref": "https://gitlab.freedesktop.org/mesa/mesa/-/blob/e7371b0711bb1cd38c39d1c05e5578c445cc6bca/src/nouveau/compiler/nak/sm70_encode.rs#L4371"
+  },
+  "OUT": {
+   "status": "agree",
+   "nak": [
+    "0x124"
+   ],
+   "site": [
+    "0x324",
+    "0x924",
+    "0xd24"
+   ],
+   "ref": "https://gitlab.freedesktop.org/mesa/mesa/-/blob/e7371b0711bb1cd38c39d1c05e5578c445cc6bca/src/nouveau/compiler/nak/sm70_encode.rs#L4421"
+  },
+  "PIXLD": {
+   "status": "agree",
+   "nak": [
+    "0x925"
+   ],
+   "site": [
+    "0x925"
+   ],
+   "ref": "https://gitlab.freedesktop.org/mesa/mesa/-/blob/e7371b0711bb1cd38c39d1c05e5578c445cc6bca/src/nouveau/compiler/nak/sm70_encode.rs#L4381"
+  },
+  "PLOP3": {
+   "status": "agree",
+   "nak": [
+    "0x81c",
+    "0x89c"
+   ],
+   "site": [
+    "0x21d",
+    "0x21e",
+    "0x21f",
+    "0x81c",
+    "0xa1d",
+    "0xa1e",
+    "0xa1f",
+    "0xc1d",
+    "0xc1e",
+    "0xc1f"
+   ],
+   "ref": "https://gitlab.freedesktop.org/mesa/mesa/-/blob/e7371b0711bb1cd38c39d1c05e5578c445cc6bca/src/nouveau/compiler/nak/sm70_encode.rs#L2616"
+  },
+  "POPC": {
+   "status": "agree",
+   "nak": [
+    "0xbf",
+    "0x109"
+   ],
+   "site": [
+    "0x309",
+    "0x909",
+    "0xb09",
+    "0xd09"
+   ],
+   "ref": "https://gitlab.freedesktop.org/mesa/mesa/-/blob/e7371b0711bb1cd38c39d1c05e5578c445cc6bca/src/nouveau/compiler/nak/sm70_encode.rs#L2124"
+  },
+  "PRMT": {
+   "status": "agree",
+   "nak": [
+    "0x16",
+    "0x96"
+   ],
+   "site": [
+    "0x216",
+    "0x416",
+    "0x616",
+    "0x816",
+    "0xa16",
+    "0xc16",
+    "0xe16"
+   ],
+   "ref": "https://gitlab.freedesktop.org/mesa/mesa/-/blob/e7371b0711bb1cd38c39d1c05e5578c445cc6bca/src/nouveau/compiler/nak/sm70_encode.rs#L2448"
+  },
+  "R2UR": {
+   "status": "agree",
+   "nak": [
+    "0x2ca",
+    "0x3c2"
+   ],
+   "site": [
+    "0x3c2"
+   ],
+   "ref": "https://gitlab.freedesktop.org/mesa/mesa/-/blob/e7371b0711bb1cd38c39d1c05e5578c445cc6bca/src/nouveau/compiler/nak/sm70_encode.rs#L2688"
+  },
+  "REDUX": {
+   "status": "agree",
+   "nak": [
+    "0x3c4"
+   ],
+   "site": [
+    "0x3c4"
+   ],
+   "ref": "https://gitlab.freedesktop.org/mesa/mesa/-/blob/e7371b0711bb1cd38c39d1c05e5578c445cc6bca/src/nouveau/compiler/nak/sm70_encode.rs#L2705"
+  },
+  "S2R": {
+   "status": "agree",
+   "nak": [
+    "0x919",
+    "0x9c3"
+   ],
+   "site": [
+    "0x919"
+   ],
+   "ref": "https://gitlab.freedesktop.org/mesa/mesa/-/blob/e7371b0711bb1cd38c39d1c05e5578c445cc6bca/src/nouveau/compiler/nak/sm70_encode.rs#L4404"
+  },
+  "SEL": {
+   "status": "agree",
+   "nak": [
+    "0x7",
+    "0x87"
+   ],
+   "site": [
+    "0x207",
+    "0x807",
+    "0xa07",
+    "0xc07"
+   ],
+   "ref": "https://gitlab.freedesktop.org/mesa/mesa/-/blob/e7371b0711bb1cd38c39d1c05e5578c445cc6bca/src/nouveau/compiler/nak/sm70_encode.rs#L2491"
+  },
+  "SGXT": {
+   "status": "agree",
+   "nak": [
+    "0x1a",
+    "0x9a"
+   ],
+   "site": [
+    "0x21a",
+    "0x81a",
+    "0xa1a",
+    "0xc1a"
+   ],
+   "ref": "https://gitlab.freedesktop.org/mesa/mesa/-/blob/e7371b0711bb1cd38c39d1c05e5578c445cc6bca/src/nouveau/compiler/nak/sm70_encode.rs#L2529"
+  },
+  "SHF": {
+   "status": "agree",
+   "nak": [
+    "0x19",
+    "0x99"
+   ],
+   "site": [
+    "0x219",
+    "0x419",
+    "0x619",
+    "0x819",
+    "0xa19",
+    "0xc19",
+    "0xe19"
+   ],
+   "ref": "https://gitlab.freedesktop.org/mesa/mesa/-/blob/e7371b0711bb1cd38c39d1c05e5578c445cc6bca/src/nouveau/compiler/nak/sm70_encode.rs#L2141"
+  },
+  "SHFL": {
+   "status": "agree",
+   "nak": [
+    "0x389",
+    "0x589",
+    "0x989",
+    "0xf89"
+   ],
+   "site": [
+    "0x389",
+    "0x589",
+    "0x989",
+    "0xf89"
+   ],
+   "ref": "https://gitlab.freedesktop.org/mesa/mesa/-/blob/e7371b0711bb1cd38c39d1c05e5578c445cc6bca/src/nouveau/compiler/nak/sm70_encode.rs#L2558"
+  },
+  "ST": {
+   "status": "NAK op maps to STG/STL/STS",
+   "nak": [
+    "0x386",
+    "0x387",
+    "0x388",
+    "0x986",
+    "0x987",
+    "0x988"
+   ],
+   "site": [
+    "0x385",
+    "0x985"
+   ],
+   "ref": "https://gitlab.freedesktop.org/mesa/mesa/-/blob/e7371b0711bb1cd38c39d1c05e5578c445cc6bca/src/nouveau/compiler/nak/sm70_encode.rs#L3625"
+  },
+  "SUATOM": {
+   "status": "agree",
+   "nak": [
+    "0x394",
+    "0x396",
+    "0x3a0"
+   ],
+   "site": [
+    "0x394",
+    "0x593",
+    "0x595",
+    "0x793",
+    "0x795",
+    "0xf93",
+    "0xf95"
+   ],
+   "ref": "https://gitlab.freedesktop.org/mesa/mesa/-/blob/e7371b0711bb1cd38c39d1c05e5578c445cc6bca/src/nouveau/compiler/nak/sm70_encode.rs#L3391"
+  },
+  "SULD": {
+   "status": "agree",
+   "nak": [
+    "0x998",
+    "0x99a"
+   ],
+   "site": [
+    "0x797",
+    "0x799",
+    "0x998",
+    "0xb97",
+    "0xb99",
+    "0xf97",
+    "0xf99"
+   ],
+   "ref": "https://gitlab.freedesktop.org/mesa/mesa/-/blob/e7371b0711bb1cd38c39d1c05e5578c445cc6bca/src/nouveau/compiler/nak/sm70_encode.rs#L3321"
+  },
+  "SUST": {
+   "status": "agree",
+   "nak": [
+    "0x99c",
+    "0x99e"
+   ],
+   "site": [
+    "0x99c",
+    "0xb9d"
+   ],
+   "ref": "https://gitlab.freedesktop.org/mesa/mesa/-/blob/e7371b0711bb1cd38c39d1c05e5578c445cc6bca/src/nouveau/compiler/nak/sm70_encode.rs#L3359"
+  },
+  "TEX": {
+   "status": "agree",
+   "nak": [
+    "0x361",
+    "0xb60",
+    "0xd61"
+   ],
+   "site": [
+    "0x361",
+    "0xb60",
+    "0xb62",
+    "0xf60"
+   ],
+   "ref": "https://gitlab.freedesktop.org/mesa/mesa/-/blob/e7371b0711bb1cd38c39d1c05e5578c445cc6bca/src/nouveau/compiler/nak/sm70_encode.rs#L2887"
+  },
+  "TLD": {
+   "status": "agree",
+   "nak": [
+    "0x367",
+    "0xb66",
+    "0xd67"
+   ],
+   "site": [
+    "0x367",
+    "0xb66",
+    "0xb68",
+    "0xf66"
+   ],
+   "ref": "https://gitlab.freedesktop.org/mesa/mesa/-/blob/e7371b0711bb1cd38c39d1c05e5578c445cc6bca/src/nouveau/compiler/nak/sm70_encode.rs#L2956"
+  },
+  "TLD4": {
+   "status": "agree",
+   "nak": [
+    "0x364",
+    "0xb63",
+    "0xd64"
+   ],
+   "site": [
+    "0x364",
+    "0xb63",
+    "0xb65",
+    "0xf63"
+   ],
+   "ref": "https://gitlab.freedesktop.org/mesa/mesa/-/blob/e7371b0711bb1cd38c39d1c05e5578c445cc6bca/src/nouveau/compiler/nak/sm70_encode.rs#L3032"
+  },
+  "TMML": {
+   "status": "agree",
+   "nak": [
+    "0x36a",
+    "0xb69"
+   ],
+   "site": [
+    "0x36a",
+    "0xb69",
+    "0xb6b",
+    "0xf69"
+   ],
+   "ref": "https://gitlab.freedesktop.org/mesa/mesa/-/blob/e7371b0711bb1cd38c39d1c05e5578c445cc6bca/src/nouveau/compiler/nak/sm70_encode.rs#L3092"
+  },
+  "TXD": {
+   "status": "agree",
+   "nak": [
+    "0x36d",
+    "0xb6c",
+    "0xd6d"
+   ],
+   "site": [
+    "0x36d",
+    "0xb6c",
+    "0xb6e",
+    "0xf6c"
+   ],
+   "ref": "https://gitlab.freedesktop.org/mesa/mesa/-/blob/e7371b0711bb1cd38c39d1c05e5578c445cc6bca/src/nouveau/compiler/nak/sm70_encode.rs#L3137"
+  },
+  "TXQ": {
+   "status": "agree",
+   "nak": [
+    "0x370",
+    "0xb6f"
+   ],
+   "site": [
+    "0x370",
+    "0xb6f",
+    "0xb71",
+    "0xf6f"
+   ],
+   "ref": "https://gitlab.freedesktop.org/mesa/mesa/-/blob/e7371b0711bb1cd38c39d1c05e5578c445cc6bca/src/nouveau/compiler/nak/sm70_encode.rs#L3198"
+  },
+  "VOTE": {
+   "status": "agree",
+   "nak": [
+    "0x806",
+    "0x886"
+   ],
+   "site": [
+    "0x806"
+   ],
+   "ref": "https://gitlab.freedesktop.org/mesa/mesa/-/blob/e7371b0711bb1cd38c39d1c05e5578c445cc6bca/src/nouveau/compiler/nak/sm70_encode.rs#L4465"
+  },
+  "WARPSYNC": {
+   "status": "agree",
+   "nak": [
+    "0x148"
+   ],
+   "site": [
+    "0x348",
+    "0x948",
+    "0xb48"
+   ],
+   "ref": "https://gitlab.freedesktop.org/mesa/mesa/-/blob/e7371b0711bb1cd38c39d1c05e5578c445cc6bca/src/nouveau/compiler/nak/sm70_encode.rs#L4234"
+  }
+ }
+}
