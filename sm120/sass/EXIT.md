@@ -6,7 +6,7 @@ Notes: kernel exit / ret (category: Control flow)
 
 Opcode cross-check vs Mesa NAK (open-source NVK compiler, mirror commit `837ab0e30740`): **agree**. NAK encodes 0x94d ([source](https://github.com/chaotic-cx/mesa-mirror/blob/837ab0e30740abb9ebb60bcd40a5114c68c673d9/src/nouveau/compiler/nak/sm70_encode.rs#L4218)); see [verify/NAK_CROSSCHECK.md](../verify/NAK_CROSSCHECK.md).
 
-Observed on sm_120: 150 instruction(s) across 149 probe(s).
+Observed on sm_120: 152 instruction(s) across 151 probe(s).
 
 ## Evidence
 
@@ -163,12 +163,14 @@ Emitted by probe(s):
 - `sured`: `sured.b.add.2d.u32.trap`
 - `suq`: `suq.width.b32`
 - `sust`: `sust.b.2d.b32.trap`
+- `uniform_i2f`: `cvt.rn.f64.s32 on a warp-uniform value (uniform FP conversion, UI2F)`
+- `uniform_i2fp`: `cvt.rn.f32.s32 on a warp-uniform constant (uniform FP conversion, UI2F)`
 
 12-bit opcode field (bits 0-11) values observed: `0xb29`.
 
 ## Encoding observations
 
-**Constant bits across all 150 observed instance(s): 122 of 128** (observation-derived and *partial*: there is no fuzzed encoding reference for sm_120, so bits that never varied here may still be modifiers in forms this corpus never compiled; bits 105-125 are the scheduling control code and vary with instruction placement). LSB-first, bit 0 first:
+**Constant bits across all 152 observed instance(s): 122 of 128** (observation-derived and *partial*: there is no fuzzed encoding reference for sm_120, so bits that never varied here may still be modifiers in forms this corpus never compiled; bits 105-125 are the scheduling control code and vary with instruction placement). LSB-first, bit 0 first:
 
 ```
 101100101001....000000000000000000000000000000000000000000000000
@@ -177,7 +179,7 @@ Emitted by probe(s):
 
 1 normalized operand form(s) observed:
 
-### `EXIT` - 150 instance(s)
+### `EXIT` - 152 instance(s)
 
 | instruction | encoding (word0 word1) | probe |
 |---|---|---|
@@ -185,5 +187,5 @@ Emitted by probe(s):
 | `EXIT` | `000000000000794d 000fea0003800000` | ffma |
 | `EXIT` | `000000000000794d 000fea0003800000` | fmul |
 | `EXIT` | `000000000000794d 000fea0003800000` | fminmax |
-| ... 146 more instance(s) in results.json | | |
+| ... 148 more instance(s) in results.json | | |
 

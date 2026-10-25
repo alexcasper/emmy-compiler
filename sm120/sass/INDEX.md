@@ -1,6 +1,6 @@
 # SM120 SASS instruction index
 
-126 distinct SASS opcodes observed on **sm_120** (Blackwell consumer) by compiling 153 PTX probe kernels (PTX `.version 8.8`, `.target sm_120`) with ptxas `Build cuda_12.9.r12.9/compiler.36037853_0` and reading every instruction's raw 128-bit encoding from nvdisasm `Build cuda_12.9.r12.9/compiler.36061206_0` (`-hex -c`). 4112 instructions total.
+126 distinct SASS opcodes observed on **sm_120** (Blackwell consumer) by compiling 155 PTX probe kernels (PTX `.version 8.8`, `.target sm_120`) with ptxas `Build cuda_12.9.r12.9/compiler.36037853_0` and reading every instruction's raw 128-bit encoding from nvdisasm `Build cuda_12.9.r12.9/compiler.36061206_0` (`-hex -c`). 4160 instructions total.
 
 Everything in `sass/` is derived from these probes: there is **no** kuterdinel-style fuzzed encoding reference for sm_120, so per-opcode "fixed bits" are intersect-derived from the corpus and explicitly labelled partial. The probe corpus is deliberately sm_120-native; no sm_89 claims were copied.
 
@@ -24,14 +24,14 @@ Columns: **NVIDIA description** from the Blackwell/Rubin opcode table ([CUDA Bin
 
 | opcode | NVIDIA description | emitted by probes | enc | ops | forms |
 |---|---|---|---|---|---|
-| [`BRA`](BRA.md) | Relative Branch | `fadd`, `ffma`, `fmul` +146 more | 189 | `e29`, `e2a` | 4 |
+| [`BRA`](BRA.md) | Relative Branch | `fadd`, `ffma`, `fmul` +148 more | 191 | `e29`, `e2a` | 4 |
 | [`BRX`](BRX.md) | Relative Branch Indirect | `brx` | 1 | `929` | 1 |
 | [`BSSY`](BSSY.md) | Barrier Set Convergence Synchronization Point | `fdiv_rn`, `diverge`, `brx` +1 more | 7 | `a29` | 3 |
 | [`BSYNC`](BSYNC.md) | Synchronize Threads on a Convergence Barrier | `fdiv_rn`, `diverge`, `brx` +1 more | 7 | `829` | 3 |
 | [`CALL`](CALL.md) | Call Function | `fdiv_rn`, `cp_async_bulk_tma`, `bmma` +1 more | 4 | `229`, `c2c` | 4 |
-| [`EXIT`](EXIT.md) | Exit Program | `fadd`, `ffma`, `fmul` +146 more | 150 | `b29` | 1 |
+| [`EXIT`](EXIT.md) | Exit Program | `fadd`, `ffma`, `fmul` +148 more | 152 | `b29` | 1 |
 | [`NANOSLEEP`](NANOSLEEP.md) | Suspend Execution | `nanosleep` | 1 | `bac` | 1 |
-| [`NOP`](NOP.md) | No Operation | `fadd`, `ffma`, `fmul` +146 more | 1879 | `189` | 1 |
+| [`NOP`](NOP.md) | No Operation | `fadd`, `ffma`, `fmul` +148 more | 1907 | `189` | 1 |
 | [`PREEXIT`](PREEXIT.md) | Dependent Task Launch Hint | `griddepcontrol` | 1 | `b41` | 1 |
 | [`RET`](RET.md) | Return From Subroutine | `fdiv_rn`, `bmma`, `call` | 3 | `0a9` | 1 |
 | [`WARPSYNC`](WARPSYNC.md) | Synchronize Threads in Warp | `warpsync` | 1 | `12c` | 1 |
@@ -43,7 +43,7 @@ Columns: **NVIDIA description** from the Blackwell/Rubin opcode table ([CUDA Bin
 | [`F2F`](F2F.md) | Floating Point To Floating Point Conversion | `f2f` | 1 | `08c` | 1 |
 | [`F2FP`](F2FP.md) | *not in NVIDIA Blackwell/Rubin table* | `f2fp_f16`, `f2fp_bf16`, `f2fp_e4m3` +1 more | 5 | `7c4` | 4 |
 | [`F2I`](F2I.md) | Floating Point To Integer Conversion | `f2i`, `f2ip` | 2 | `a0c` | 2 |
-| [`I2F`](I2F.md) | Integer To Floating Point Conversion | `i2f` | 1 | `48c` | 1 |
+| [`I2F`](I2F.md) | Integer To Floating Point Conversion | `i2f`, `uniform_i2f` | 2 | `48b`, `48c` | 2 |
 | [`I2FP`](I2FP.md) | Integer to FP32 Convert and Pack | `i2fp` | 1 | `a24` | 1 |
 | [`I2I`](I2I.md) | Integer To Integer Conversion | `i2i` | 1 | `1c4` | 1 |
 | [`I2IP`](I2IP.md) | Integer To Integer Conversion and Packing | `i2ip` | 1 | `9c4` | 1 |
@@ -61,7 +61,7 @@ Columns: **NVIDIA description** from the Blackwell/Rubin opcode table ([CUDA Bin
 
 | opcode | NVIDIA description | emitted by probes | enc | ops | forms |
 |---|---|---|---|---|---|
-| [`FADD`](FADD.md) | FP32 Add | `fadd`, `fsetp_selp`, `fdiv_rn` +10 more | 14 | `842`, `844` | 5 |
+| [`FADD`](FADD.md) | FP32 Add | `fadd`, `fsetp_selp`, `fdiv_rn` +11 more | 15 | `842`, `844` | 6 |
 | [`FCHK`](FCHK.md) | Floating-point Range Check | `fdiv_rn` | 1 | `40c` | 1 |
 | [`FFMA`](FFMA.md) | FP32 Fused Multiply and Add | `ffma`, `fdiv_rn` | 18 | `c41`, `c42`, `c44` | 8 |
 | [`FMNMX`](FMNMX.md) | FP32 Minimum/Maximum | `fminmax`, `fminmax_nan`, `fminmax_xorsign` | 5 | `904` | 5 |
@@ -91,7 +91,7 @@ Columns: **NVIDIA description** from the Blackwell/Rubin opcode table ([CUDA Bin
 | [`IADD`](IADD.md) | Integer Addition | `iadd64`, `vabsdiff`, `uniform_txq` | 3 | `ac3`, `ac4` | 3 |
 | [`IADD3`](IADD3.md) | 3-input Integer Addition | `fdiv_rn`, `iadd`, `isetp_pred` +18 more | 65 | `081`, `083`, `084` | 10 |
 | [`IDP`](IDP.md) | Integer Dot Product and Accumulate | `idp`, `vabsdiff4` | 2 | `643`, `644` | 2 |
-| [`IMAD`](IMAD.md) | Integer Multiply And Add | `fadd`, `ffma`, `fmul` +144 more | 157 | `241`, `244`, `a41`, `a44`, `e44` | 8 |
+| [`IMAD`](IMAD.md) | Integer Multiply And Add | `fadd`, `ffma`, `fmul` +146 more | 159 | `241`, `244`, `a41`, `a44`, `e44` | 8 |
 | [`ISETP`](ISETP.md) | Integer Compare And Set Predicate | `fdiv_rn`, `isetp_pred`, `vabsdiff` +10 more | 38 | `301`, `303`, `304` | 24 |
 | [`LEA`](LEA.md) | LOAD Effective Address | `fdiv_rn`, `lea`, `lea64` +8 more | 12 | `881`, `883`, `884` | 6 |
 | [`LOP3`](LOP3.md) | Logic Operation | `fdiv_rn`, `isetp_pred`, `imnmx_from_selp` +8 more | 39 | `481`, `483`, `484` | 5 |
@@ -110,8 +110,8 @@ Columns: **NVIDIA description** from the Blackwell/Rubin opcode table ([CUDA Bin
 | [`CCTL`](CCTL.md) | Cache Control | `cctl`, `cluster_barrier`, `fence_cluster` +2 more | 5 | `f19` | 2 |
 | [`CCTLL`](CCTLL.md) | Cache Control | `cctll` | 1 | `099` | 1 |
 | [`LD`](LD.md) | Load from generic Memory | `ld_generic` | 1 | `019` | 1 |
-| [`LDC`](LDC.md) | Load Constant | `fadd`, `ffma`, `fmul` +146 more | 302 | `41d` | 4 |
-| [`LDG`](LDG.md) | Load from Global Memory | `fadd`, `ffma`, `fmul` +129 more | 258 | `819` | 8 |
+| [`LDC`](LDC.md) | Load Constant | `fadd`, `ffma`, `fmul` +148 more | 306 | `41d` | 4 |
+| [`LDG`](LDG.md) | Load from Global Memory | `fadd`, `ffma`, `fmul` +130 more | 259 | `819` | 8 |
 | [`LDGDEPBAR`](LDGDEPBAR.md) | Global Load Dependency Barrier | `cp_async` | 1 | `f59` | 1 |
 | [`LDGSTS`](LDGSTS.md) | Asynchronous Global to Shared Memcopy | `cp_async` | 1 | `75f` | 1 |
 | [`LDL`](LDL.md) | Load within Local Memory Window | `ldl_stl`, `cctll` | 2 | `c19` | 1 |
@@ -120,7 +120,7 @@ Columns: **NVIDIA description** from the Blackwell/Rubin opcode table ([CUDA Bin
 | [`QSPC`](QSPC.md) | Query Space | `qspc` | 1 | `55c` | 1 |
 | [`ST`](ST.md) | Store to Generic Memory | `st_generic` | 1 | `a19` | 1 |
 | [`STAS`](STAS.md) | Asynchronous Store to Distributed Shared Memory With Explicit Synchronization | `st_async` | 1 | `bdb` | 1 |
-| [`STG`](STG.md) | Store to Global Memory | `fadd`, `ffma`, `fmul` +135 more | 142 | `619` | 4 |
+| [`STG`](STG.md) | Store to Global Memory | `fadd`, `ffma`, `fmul` +137 more | 144 | `619` | 4 |
 | [`STL`](STL.md) | Store to Local Memory | `ldl_stl`, `cctll` | 2 | `e1c` | 1 |
 | [`STS`](STS.md) | Store to Shared Memory | `lds_sts`, `ldsm`, `ldsm_trans` | 3 | `11c` | 1 |
 | [`STSM`](STSM.md) | Store Matrix to Shared Memory | `stmatrix`, `stmatrix_x4` | 2 | `221` | 2 |
@@ -144,7 +144,7 @@ Columns: **NVIDIA description** from the Blackwell/Rubin opcode table ([CUDA Bin
 | [`MOV`](MOV.md) | Move | `fdiv_rn`, `vabsdiff`, `vabsdiff2` +22 more | 106 | `401`, `403`, `404` | 4 |
 | [`MOVM`](MOVM.md) | Move Matrix with Transposition or Expansion | `movm`, `bmma` | 13 | `5c4` | 2 |
 | [`R2UR`](R2UR.md) | Move from Vector Register to a Uniform Register | `cp_async_bulk_tma`, `cp_async_bulk_prefetch` | 4 | `534` | 3 |
-| [`S2R`](S2R.md) | Move Special Register to Register | `fadd`, `ffma`, `fmul` +145 more | 157 | `989` | 1 |
+| [`S2R`](S2R.md) | Move Special Register to Register | `fadd`, `ffma`, `fmul` +147 more | 159 | `989` | 1 |
 | [`S2UR`](S2UR.md) | Move Special Register to Uniform Register | `lds_sts`, `cp_async`, `ldsm` +7 more | 10 | `c39` | 1 |
 | [`SEL`](SEL.md) | Select Source with Predicate | `fset`, `fdiv_rn`, `hsetp2` +2 more | 6 | `e01`, `e04` | 2 |
 | [`SHFL`](SHFL.md) | Warp Wide Register Shuffle | `shfl`, `atoms`, `bssy_bsync` +1 more | 10 | `919`, `91a`, `91f` | 4 |
@@ -197,7 +197,7 @@ Columns: **NVIDIA description** from the Blackwell/Rubin opcode table ([CUDA Bin
 
 | opcode | NVIDIA description | emitted by probes | enc | ops | forms |
 |---|---|---|---|---|---|
-| [`LDCU`](LDCU.md) | Load a Value from Constant Memory into a Uniform Register | `fadd`, `ffma`, `fmul` +144 more | 160 | `35e` | 2 |
+| [`LDCU`](LDCU.md) | Load a Value from Constant Memory into a Uniform Register | `fadd`, `ffma`, `fmul` +146 more | 163 | `35e` | 2 |
 | [`UBREV`](UBREV.md) | Uniform Bit Reverse | `uniform_alu` | 1 | `7d4` | 1 |
 | [`UFLO`](UFLO.md) | Uniform Find Leading One | `agg_red` | 1 | `bd4` | 1 |
 | [`UIADD3`](UIADD3.md) | Uniform Integer Addition | `cp_async_bulk_tma`, `mbarrier_red`, `st_async` +2 more | 7 | `091` | 3 |
@@ -213,7 +213,7 @@ Columns: **NVIDIA description** from the Blackwell/Rubin opcode table ([CUDA Bin
 
 ## Divergence vs the SM89 knowledge base
 
-sm89/sass documents 151 opcodes (kuterdinel.com fuzzed encoding pages for Ada). This corpus observed 126 opcodes on sm_120. Both directions are *observations*, not exhaustive ISA statements: an opcode absent here was simply never emitted by these 158 probe kernels.
+sm89/sass documents 151 opcodes (kuterdinel.com fuzzed encoding pages for Ada). This corpus observed 126 opcodes on sm_120. Both directions are *observations*, not exhaustive ISA statements: an opcode absent here was simply never emitted by these 160 probe kernels.
 
 ### Observed on sm_120, not in the sm89 opcode set
 

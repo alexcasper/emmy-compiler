@@ -367,7 +367,8 @@
    ],
    "observed": [
     "0x112",
-    "0x312"
+    "0x312",
+    "0xd12"
    ],
    "ref": "https://github.com/chaotic-cx/mesa-mirror/blob/837ab0e30740abb9ebb60bcd40a5114c68c673d9/src/nouveau/compiler/nak/sm70_encode.rs#L2329"
   },

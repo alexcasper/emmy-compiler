@@ -6,7 +6,7 @@ Notes: constant-bank load; on sm_120 also the plain register-init form: prologue
 
 Opcode cross-check vs Mesa NAK (open-source NVK compiler, mirror commit `837ab0e30740`): **agree**. NAK encodes 0x582, 0x7ac, 0xab9, 0xb82, 0xbac ([source](https://github.com/chaotic-cx/mesa-mirror/blob/837ab0e30740abb9ebb60bcd40a5114c68c673d9/src/nouveau/compiler/nak/sm70_encode.rs#L3505)); see [verify/NAK_CROSSCHECK.md](../verify/NAK_CROSSCHECK.md).
 
-Observed on sm_120: 302 instruction(s) across 149 probe(s).
+Observed on sm_120: 306 instruction(s) across 151 probe(s).
 
 ## Evidence
 
@@ -163,12 +163,14 @@ Emitted by probe(s):
 - `sured`: `sured.b.add.2d.u32.trap`
 - `suq`: `suq.width.b32`
 - `sust`: `sust.b.2d.b32.trap`
+- `uniform_i2f`: `cvt.rn.f64.s32 on a warp-uniform value (uniform FP conversion, UI2F)`
+- `uniform_i2fp`: `cvt.rn.f32.s32 on a warp-uniform constant (uniform FP conversion, UI2F)`
 
 12-bit opcode field (bits 0-11) values observed: `0x41d`.
 
 ## Encoding observations
 
-**Constant bits across all 302 observed instance(s): 97 of 128** (observation-derived and *partial*: there is no fuzzed encoding reference for sm_120, so bits that never varied here may still be modifiers in forms this corpus never compiled; bits 105-125 are the scheduling control code and vary with instruction placement). LSB-first, bit 0 first:
+**Constant bits across all 306 observed instance(s): 97 of 128** (observation-derived and *partial*: there is no fuzzed encoding reference for sm_120, so bits that never varied here may still be modifiers in forms this corpus never compiled; bits 105-125 are the scheduling control code and vary with instruction placement). LSB-first, bit 0 first:
 
 ```
 0100000111011110...0.000........00000000........000000...0000000
@@ -177,7 +179,7 @@ Emitted by probe(s):
 
 4 normalized operand form(s) observed:
 
-### `LDC.IMM R, c[][]` - 150 instance(s)
+### `LDC.IMM R, c[][]` - 152 instance(s)
 
 | instruction | encoding (word0 word1) | probe |
 |---|---|---|
@@ -185,9 +187,9 @@ Emitted by probe(s):
 | `LDC.64 R2, c[0x0][0x380]` | `0000e000ff027b82 000e220000000a00` | ffma |
 | `LDC.64 R2, c[0x0][0x380]` | `0000e000ff027b82 000e220000000a00` | fmul |
 | `LDC.64 R2, c[0x0][0x380]` | `0000e000ff027b82 000e220000000a00` | fminmax |
-| ... 146 more instance(s) in results.json | | |
+| ... 148 more instance(s) in results.json | | |
 
-### `LDC R, c[][]` - 149 instance(s)
+### `LDC R, c[][]` - 151 instance(s)
 
 | instruction | encoding (word0 word1) | probe |
 |---|---|---|
@@ -195,7 +197,7 @@ Emitted by probe(s):
 | `LDC R1, c[0x0][0x37c]` | `0000df00ff017b82 000fe20000000800` | ffma |
 | `LDC R1, c[0x0][0x37c]` | `0000df00ff017b82 000fe20000000800` | fmul |
 | `LDC R1, c[0x0][0x37c]` | `0000df00ff017b82 000fe20000000800` | fminmax |
-| ... 145 more instance(s) in results.json | | |
+| ... 147 more instance(s) in results.json | | |
 
 ### `LDC R, c[IMM][R]` - 2 instance(s)
 

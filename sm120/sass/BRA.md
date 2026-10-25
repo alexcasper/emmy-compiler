@@ -6,7 +6,7 @@ Notes: relative branch (category: Control flow)
 
 Opcode cross-check vs Mesa NAK (open-source NVK compiler, mirror commit `837ab0e30740`): **agree**. NAK encodes 0x547, 0x947 ([source](https://github.com/chaotic-cx/mesa-mirror/blob/837ab0e30740abb9ebb60bcd40a5114c68c673d9/src/nouveau/compiler/nak/sm70_encode.rs#L4191)); see [verify/NAK_CROSSCHECK.md](../verify/NAK_CROSSCHECK.md).
 
-Observed on sm_120: 189 instruction(s) across 149 probe(s).
+Observed on sm_120: 191 instruction(s) across 151 probe(s).
 
 ## Evidence
 
@@ -163,12 +163,14 @@ Emitted by probe(s):
 - `sured`: `sured.b.add.2d.u32.trap`
 - `suq`: `suq.width.b32`
 - `sust`: `sust.b.2d.b32.trap`
+- `uniform_i2f`: `cvt.rn.f64.s32 on a warp-uniform value (uniform FP conversion, UI2F)`
+- `uniform_i2fp`: `cvt.rn.f32.s32 on a warp-uniform constant (uniform FP conversion, UI2F)`
 
 12-bit opcode field (bits 0-11) values observed: `0xe29`, `0xe2a`.
 
 ## Encoding observations
 
-**Constant bits across all 189 observed instance(s): 52 of 128** (observation-derived and *partial*: there is no fuzzed encoding reference for sm_120, so bits that never varied here may still be modifiers in forms this corpus never compiled; bits 105-125 are the scheduling control code and vary with instruction placement). LSB-first, bit 0 first:
+**Constant bits across all 191 observed instance(s): 52 of 128** (observation-derived and *partial*: there is no fuzzed encoding reference for sm_120, so bits that never varied here may still be modifiers in forms this corpus never compiled; bits 105-125 are the scheduling control code and vary with instruction placement). LSB-first, bit 0 first:
 
 ```
 1110001010......00......000.0000.0..............................
@@ -177,7 +179,7 @@ Emitted by probe(s):
 
 4 normalized operand form(s) observed:
 
-### `BRA (L)` - 181 instance(s)
+### `BRA (L)` - 183 instance(s)
 
 | instruction | encoding (word0 word1) | probe |
 |---|---|---|
@@ -185,7 +187,7 @@ Emitted by probe(s):
 | `BRA (.L_x_0)` | `fffffffc00fc7947 000fc0000383ffff` | ffma |
 | `BRA (.L_x_0)` | `fffffffc00fc7947 000fc0000383ffff` | fmul |
 | `BRA (.L_x_0)` | `fffffffc00fc7947 000fc0000383ffff` | fminmax |
-| ... 177 more instance(s) in results.json | | |
+| ... 179 more instance(s) in results.json | | |
 
 ### `BRA.U !UP, (L)` - 5 instance(s)
 

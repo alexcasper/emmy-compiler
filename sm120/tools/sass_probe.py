@@ -320,6 +320,12 @@ probe("uniform_alu", "integer ops on a kernel parameter (warp-uniform)",
       " add.s32 r13, r12, r1;" + STI.format("r13"))
 probe("uniform_txq", "txq.num_mipmap_levels (handle arithmetic on uniform datapath)",
       " ld.param.u64 rd4, [t]; txq.num_mipmap_levels.b32 r4, [rd4];" + STI.format("r4"))
+# Gap found by tools/trace.py: tracing compile.py output showed ptxas putting
+# int->float conversion of warp-uniform values on the uniform datapath (UI2F).
+probe("uniform_i2f", "cvt.rn.f64.s32 on a warp-uniform value (uniform FP conversion, UI2F)",
+      " ld.param.u64 rd4, [t]; cvt.u32.u64 r5, rd4; cvt.rn.f64.s32 d3, r5; st.global.f64 [rd1], d3;")
+probe("uniform_i2fp", "cvt.rn.f32.s32 on a warp-uniform constant (uniform FP conversion, UI2F)",
+      " mov.u32 r5, 1024; cvt.rn.f32.s32 f4, r5; add.f32 f5, f4, f1;" + ST.format("f5"))
 probe("cctll", "prefetch.local.L1",
       " .local .align 4 .b8 la[64]; mov.u64 rd4, la; prefetch.local.L1 [rd4]; st.local.u32 [rd4], r1;"
       " and.b32 r5, r2, 15; mul.wide.u32 rd5, r5, 4; add.s64 rd6, rd4, rd5; ld.local.u32 r4, [rd6];" + STI.format("r4"))

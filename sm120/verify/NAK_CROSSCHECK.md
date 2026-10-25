@@ -35,7 +35,7 @@ Reference: Mesa NAK `sm70_encode.rs` at mirror commit `837ab0e30740` (<https://g
 | HMNMX2 | agree | 0x40 | 0x240 0x40 | [L1488](https://github.com/chaotic-cx/mesa-mirror/blob/837ab0e30740abb9ebb60bcd40a5114c68c673d9/src/nouveau/compiler/nak/sm70_encode.rs#L1488) |
 | HSET2 | agree | 0x33 | 0x233 0x33 | [L1403](https://github.com/chaotic-cx/mesa-mirror/blob/837ab0e30740abb9ebb60bcd40a5114c68c673d9/src/nouveau/compiler/nak/sm70_encode.rs#L1403) |
 | HSETP2 | agree | 0x34 | 0x234 0x34 | [L1445](https://github.com/chaotic-cx/mesa-mirror/blob/837ab0e30740abb9ebb60bcd40a5114c68c673d9/src/nouveau/compiler/nak/sm70_encode.rs#L1445) |
-| I2F | agree | 0x5a 0x106 0x112 | 0x112 0x312 | [L2329](https://github.com/chaotic-cx/mesa-mirror/blob/837ab0e30740abb9ebb60bcd40a5114c68c673d9/src/nouveau/compiler/nak/sm70_encode.rs#L2329) |
+| I2F | agree | 0x5a 0x106 0x112 | 0x112 0x312 0xd12 | [L2329](https://github.com/chaotic-cx/mesa-mirror/blob/837ab0e30740abb9ebb60bcd40a5114c68c673d9/src/nouveau/compiler/nak/sm70_encode.rs#L2329) |
 | IABS | agree | 0x13 0x4d | 0x13 0x213 | [L1580](https://github.com/chaotic-cx/mesa-mirror/blob/837ab0e30740abb9ebb60bcd40a5114c68c673d9/src/nouveau/compiler/nak/sm70_encode.rs#L1580) |
 | IADD3 | agree | 0x10 0x90 | 0x10 0x210 0x810 0xc10 | [L1595](https://github.com/chaotic-cx/mesa-mirror/blob/837ab0e30740abb9ebb60bcd40a5114c68c673d9/src/nouveau/compiler/nak/sm70_encode.rs#L1595) |
 | IMAD | agree | 0x24 0xa4 | 0x224 0x225 0x227 0x24 0x25 0x27 0x824 0x825 | [L1751](https://github.com/chaotic-cx/mesa-mirror/blob/837ab0e30740abb9ebb60bcd40a5114c68c673d9/src/nouveau/compiler/nak/sm70_encode.rs#L1751) |

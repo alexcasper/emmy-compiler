@@ -6,7 +6,7 @@ Notes: padding / alignment filler (category: Control flow)
 
 Opcode cross-check vs Mesa NAK (open-source NVK compiler, mirror commit `837ab0e30740`): **agree**. NAK encodes 0x918 ([source](https://github.com/chaotic-cx/mesa-mirror/blob/837ab0e30740abb9ebb60bcd40a5114c68c673d9/src/nouveau/compiler/nak/sm70_encode.rs#L4371)); see [verify/NAK_CROSSCHECK.md](../verify/NAK_CROSSCHECK.md).
 
-Observed on sm_120: 1879 instruction(s) across 149 probe(s).
+Observed on sm_120: 1907 instruction(s) across 151 probe(s).
 
 ## Evidence
 
@@ -163,12 +163,14 @@ Emitted by probe(s):
 - `sured`: `sured.b.add.2d.u32.trap`
 - `suq`: `suq.width.b32`
 - `sust`: `sust.b.2d.b32.trap`
+- `uniform_i2f`: `cvt.rn.f64.s32 on a warp-uniform value (uniform FP conversion, UI2F)`
+- `uniform_i2fp`: `cvt.rn.f32.s32 on a warp-uniform constant (uniform FP conversion, UI2F)`
 
 12-bit opcode field (bits 0-11) values observed: `0x189`.
 
 ## Encoding observations
 
-**Constant bits across all 1879 observed instance(s): 123 of 128** (observation-derived and *partial*: there is no fuzzed encoding reference for sm_120, so bits that never varied here may still be modifiers in forms this corpus never compiled; bits 105-125 are the scheduling control code and vary with instruction placement). LSB-first, bit 0 first:
+**Constant bits across all 1907 observed instance(s): 123 of 128** (observation-derived and *partial*: there is no fuzzed encoding reference for sm_120, so bits that never varied here may still be modifiers in forms this corpus never compiled; bits 105-125 are the scheduling control code and vary with instruction placement). LSB-first, bit 0 first:
 
 ```
 0001100010011110000000000000000000000000000000000000000000000000
@@ -177,7 +179,7 @@ Emitted by probe(s):
 
 1 normalized operand form(s) observed:
 
-### `NOP` - 1879 instance(s)
+### `NOP` - 1907 instance(s)
 
 | instruction | encoding (word0 word1) | probe |
 |---|---|---|
@@ -185,5 +187,5 @@ Emitted by probe(s):
 | `NOP` | `0000000000007918 000fc00000000000` | ffma |
 | `NOP` | `0000000000007918 000fc00000000000` | fmul |
 | `NOP` | `0000000000007918 000fc00000000000` | fminmax |
-| ... 1875 more instance(s) in results.json | | |
+| ... 1903 more instance(s) in results.json | | |
 

@@ -4,7 +4,7 @@
 
 Notes: global load, .E/.E.64/.E.128 widths, desc[UR4] descriptor addressing (category: Load / store)
 
-Observed on sm_120: 258 instruction(s) across 132 probe(s).
+Observed on sm_120: 259 instruction(s) across 133 probe(s).
 
 ## Evidence
 
@@ -144,12 +144,13 @@ Emitted by probe(s):
 - `txd`: `tex.grad.2d.v4.f32.f32`
 - `sured`: `sured.b.add.2d.u32.trap`
 - `sust`: `sust.b.2d.b32.trap`
+- `uniform_i2fp`: `cvt.rn.f32.s32 on a warp-uniform constant (uniform FP conversion, UI2F)`
 
 12-bit opcode field (bits 0-11) values observed: `0x819`.
 
 ## Encoding observations
 
-**Constant bits across all 258 observed instance(s): 94 of 128** (observation-derived and *partial*: there is no fuzzed encoding reference for sm_120, so bits that never varied here may still be modifiers in forms this corpus never compiled; bits 105-125 are the scheduling control code and vary with instruction placement). LSB-first, bit 0 first:
+**Constant bits across all 259 observed instance(s): 94 of 128** (observation-derived and *partial*: there is no fuzzed encoding reference for sm_120, so bits that never varied here may still be modifiers in forms this corpus never compiled; bits 105-125 are the scheduling control code and vary with instruction placement). LSB-first, bit 0 first:
 
 ```
 100000011001...0....00000..0.0000...000000....000000000000000000
@@ -158,7 +159,7 @@ Emitted by probe(s):
 
 8 normalized operand form(s) observed:
 
-### `LDG.E R, desc[UR][R.IMM+IMM]` - 144 instance(s)
+### `LDG.E R, desc[UR][R.IMM+IMM]` - 145 instance(s)
 
 | instruction | encoding (word0 word1) | probe |
 |---|---|---|
@@ -166,7 +167,7 @@ Emitted by probe(s):
 | `LDG.E R0, desc[UR4][R2.64+0xc]` | `00000c0402007981 002ea8000c1e1900` | ffma |
 | `LDG.E R0, desc[UR4][R2.64+0xc]` | `00000c0402007981 002ea8000c1e1900` | fmul |
 | `LDG.E R0, desc[UR4][R2.64+0xc]` | `00000c0402007981 002ea8000c1e1900` | fminmax |
-| ... 140 more instance(s) in results.json | | |
+| ... 141 more instance(s) in results.json | | |
 
 ### `LDG.E R, desc[UR][R.IMM]` - 84 instance(s)
 

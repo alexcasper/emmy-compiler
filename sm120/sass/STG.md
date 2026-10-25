@@ -4,7 +4,7 @@
 
 Notes: global store (category: Load / store)
 
-Observed on sm_120: 142 instruction(s) across 138 probe(s).
+Observed on sm_120: 144 instruction(s) across 140 probe(s).
 
 ## Evidence
 
@@ -150,12 +150,14 @@ Emitted by probe(s):
 - `tld`: `tex.1d.v4.s32.s32 (integer coords)`
 - `txd`: `tex.grad.2d.v4.f32.f32`
 - `suq`: `suq.width.b32`
+- `uniform_i2f`: `cvt.rn.f64.s32 on a warp-uniform value (uniform FP conversion, UI2F)`
+- `uniform_i2fp`: `cvt.rn.f32.s32 on a warp-uniform constant (uniform FP conversion, UI2F)`
 
 12-bit opcode field (bits 0-11) values observed: `0x619`.
 
 ## Encoding observations
 
-**Constant bits across all 142 observed instance(s): 108 of 128** (observation-derived and *partial*: there is no fuzzed encoding reference for sm_120, so bits that never varied here may still be modifiers in forms this corpus never compiled; bits 105-125 are the scheduling control code and vary with instruction placement). LSB-first, bit 0 first:
+**Constant bits across all 144 observed instance(s): 108 of 128** (observation-derived and *partial*: there is no fuzzed encoding reference for sm_120, so bits that never varied here may still be modifiers in forms this corpus never compiled; bits 105-125 are the scheduling control code and vary with instruction placement). LSB-first, bit 0 first:
 
 ```
 0110000110011110000000000..0.000....000000.000.00000000000000000
@@ -164,7 +166,7 @@ Emitted by probe(s):
 
 4 normalized operand form(s) observed:
 
-### `STG.E desc[UR][R.IMM], R` - 126 instance(s)
+### `STG.E desc[UR][R.IMM], R` - 127 instance(s)
 
 | instruction | encoding (word0 word1) | probe |
 |---|---|---|
@@ -172,9 +174,9 @@ Emitted by probe(s):
 | `STG.E desc[UR4][R2.64], R5` | `0000000502007986 000fe2000c101904` | ffma |
 | `STG.E desc[UR4][R2.64], R5` | `0000000502007986 000fe2000c101904` | fmul |
 | `STG.E desc[UR4][R2.64], R5` | `0000000502007986 000fe2000c101904` | fminmax |
-| ... 122 more instance(s) in results.json | | |
+| ... 123 more instance(s) in results.json | | |
 
-### `STG.E.IMM desc[UR][R.IMM], R` - 12 instance(s)
+### `STG.E.IMM desc[UR][R.IMM], R` - 13 instance(s)
 
 | instruction | encoding (word0 word1) | probe |
 |---|---|---|
@@ -182,7 +184,7 @@ Emitted by probe(s):
 | `STG.E.64 desc[UR4][R2.64], R6` | `0000000602007986 001fe2000c101b04` | dfma |
 | `STG.E.64 desc[UR4][R2.64], R4` | `0000000402007986 001fe2000c101b04` | dmul |
 | `STG.E.64 desc[UR4][R2.64], R4` | `0000000402007986 000fe2000c101b04` | dsetp |
-| ... 8 more instance(s) in results.json | | |
+| ... 9 more instance(s) in results.json | | |
 
 ### `STG.E desc[UR][R.IMM+IMM], R` - 3 instance(s)
 

@@ -49,10 +49,20 @@ Full evidence in [verify/RESULTS.md](verify/RESULTS.md) "sm_89 → sm_120 diverg
 
 - **Renamed:** IMNMX → **VIMNMX**; RED → **REDG** (with explicit memory-order/scope qualifiers like `.STRONG.GPU`); STM → **STSM.16** (stmatrix); ULDC → **LDCU**; elect.sync → **ELECT**; st.async → **STAS**; cp.async.bulk → **UBLKCP** (+ **UBLKPF** prefetch, **SYNCS** group sync); barrier.cluster → **UCGABAR_ARV/UCGABAR_WAIT**; griddepcontrol → **ACQBULK** / **PREEXIT**.
 - **Removed:** HADD2/HMUL2 (folded into HFMA2), BMMA (b1 `mma.sync` CALLs an internal sm_10x routine built from IMMA.16832 + new MOVM.U4TO8), VABSDIFF4 (emulated via VIMNMX.U8x4 + VIADD.U8x4 + IDP.4A), ULDC (replaced by LDCU).
-- **New:** IADD.64 (single 64-bit add; sm_89 used an IADD3 carry pair) plus a distinct 2-input **IADD** alongside IADD3, UMEMSETS.64 (st.bulk), BRA.U (uniform-predicate branch), VOTEU.ANY, BAR.SYNC.DEFER_BLOCKING, MOVM.U4TO8.M832, CGAERRBAR, descriptor-based global addressing.
+- **New:** IADD.64 (single 64-bit add; sm_89 used an IADD3 carry pair) plus a distinct 2-input **IADD** alongside IADD3, UMEMSETS.64 (st.bulk), BRA.U (uniform-predicate branch), VOTEU.ANY, BAR.SYNC.DEFER_BLOCKING, MOVM.U4TO8.M832, CGAERRBAR, descriptor-based global addressing, and mixed-datapath forms (`I2F.F64 R, UR6` — vector opcode consuming a uniform-register source [probe: uniform_i2f]).
 - **Accepted on sm_120 that sm_89 rejected:** `stmatrix`, `elect.sync`, `mapa` (trivial forms fold to S2UR/PRMT), `cp.async.bulk`/mbarrier, `griddepcontrol`.
 - **Still rejected under `-arch=sm_120`:** sm_90a-only `wgmma`; sm_100a-family `tcgen05.*` (`.cta_group` not supported), `redux.sync.*.f32`, FP4 `cvt.rn.satfinite.e2m1x2`, and `setmaxnreg` — but **`setmaxnreg` is accepted under `-arch=sm_120a`** [probe: sass_probe corpus], i.e. the `a`-suffix feature gate applies to it on Blackwell consumer.
 - **Unchanged:** the scheduling control-code layout (stall/yield/write-barrier 110-112/read-barrier 113-115/wait-mask 116-121 over the two 64-bit words) — the sm_89 layout hypothesis held on every probed opcode class [probe: RESULTS.md "Control-code scoreboard fields"; sass/INDEX.md "Control-code layout" -O0/-O3 diff].
+- **Found by the tracer, not yet in the probe corpus:** `UI2F.U32.RP UR, imm` — ptxas materializes small-integer float constants (1.0, 16.0, 32.0, ...) on the uniform datapath as UI2F of the integer, feeding uniform MUFU.RCP (the 1/N normalizations in our kernels). Observed in 8 of the 16 traced compile.py outputs (e.g. [traces/f01_rmsnorm](../traces/f01_rmsnorm/README.md)); every standalone uniform-rcp probe stayed on the vector pipe, so the promotion heuristic needs the whole downstream chain to be uniform. The tracer's "not in KB corpus" flag on these pages is the KB-gap marker working as designed.
+
+## Live decode pipeline
+
+`tools/trace.py` turns this KB (and the sm89 KB) into a live decode pipeline for our own
+compiler output: it runs any `compile.py` artifact through `ptxas -arch=sm_89` and
+`ptxas -arch=sm_120`, decodes both with nvdisasm, maps every emitted opcode to its KB
+page, and writes a per-input cross-ref plus an sm_89/sm_120 divergence summary to
+`traces/`. See [traces/INDEX.md](../traces/INDEX.md) (16 inputs: all 15 problems + the
+hand-written example; the sm_120 side gates on this KB's `sass/INDEX.md` existing).
 
 ## References
 

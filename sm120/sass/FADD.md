@@ -6,7 +6,7 @@ Notes: FP32 add (also the tail of emulated fp ops) (category: FP32)
 
 Opcode cross-check vs Mesa NAK (open-source NVK compiler, mirror commit `837ab0e30740`): **agree**. NAK encodes 0x21, 0x54 ([source](https://github.com/chaotic-cx/mesa-mirror/blob/837ab0e30740abb9ebb60bcd40a5114c68c673d9/src/nouveau/compiler/nak/sm70_encode.rs#L849)); see [verify/NAK_CROSSCHECK.md](../verify/NAK_CROSSCHECK.md).
 
-Observed on sm_120: 14 instruction(s) across 13 probe(s).
+Observed on sm_120: 15 instruction(s) across 14 probe(s).
 
 ## Evidence
 
@@ -27,19 +27,20 @@ Emitted by probe(s):
 - `hmma_tf32`: `mma.sync.aligned.m16n8k8.row.col.f32.tf32.tf32.f32`
 - `qmma_e4m3`: `mma.sync.aligned.m16n8k32.row.col.f32.e4m3.e4m3.f32 (FP8)`
 - `qmma_e5m2`: `mma.sync.aligned.m16n8k32.row.col.f32.e5m2.e5m2.f32 (FP8)`
+- `uniform_i2fp`: `cvt.rn.f32.s32 on a warp-uniform constant (uniform FP conversion, UI2F)`
 
 12-bit opcode field (bits 0-11) values observed: `0x842`, `0x844`.
 
 ## Encoding observations
 
-**Constant bits across all 14 observed instance(s): 93 of 128** (observation-derived and *partial*: there is no fuzzed encoding reference for sm_120, so bits that never varied here may still be modifiers in forms this corpus never compiled; bits 105-125 are the scheduling control code and vary with instruction placement). LSB-first, bit 0 first:
+**Constant bits across all 15 observed instance(s): 92 of 128** (observation-derived and *partial*: there is no fuzzed encoding reference for sm_120, so bits that never varied here may still be modifiers in forms this corpus never compiled; bits 105-125 are the scheduling control code and vary with instruction placement). LSB-first, bit 0 first:
 
 ```
-100001000..0....1...0000.0..0000........00000000000000...00000..
+100001000..0....1...0000.0..0000........00000000000000...0.000..
 00000000.0000000.000000000000000000000000...0.111111.0..00.00000
 ```
 
-5 normalized operand form(s) observed:
+6 normalized operand form(s) observed:
 
 ### `FADD R, R, R` - 10 instance(s)
 
@@ -74,4 +75,10 @@ Emitted by probe(s):
 | instruction | encoding (word0 word1) | probe |
 |---|---|---|
 | `@!P0 FADD R5, R5, -24` | `c1c0000005058421 001fca0000000000` | mufu_lg2 |
+
+### `FADD R, R, IMM` - 1 instance(s)
+
+| instruction | encoding (word0 word1) | probe |
+|---|---|---|
+| `FADD R5, R0, 1024` | `4480000000057421 004fca0000000000` | uniform_i2fp |
 

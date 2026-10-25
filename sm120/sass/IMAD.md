@@ -6,7 +6,7 @@ Notes: integer multiply-add (.WIDE 64-bit, .HI, and .MOV/IADD move idioms) (cate
 
 Opcode cross-check vs Mesa NAK (open-source NVK compiler, mirror commit `837ab0e30740`): **agree**. NAK encodes 0x24, 0xa4 ([source](https://github.com/chaotic-cx/mesa-mirror/blob/837ab0e30740abb9ebb60bcd40a5114c68c673d9/src/nouveau/compiler/nak/sm70_encode.rs#L1751)); see [verify/NAK_CROSSCHECK.md](../verify/NAK_CROSSCHECK.md).
 
-Observed on sm_120: 157 instruction(s) across 147 probe(s).
+Observed on sm_120: 159 instruction(s) across 149 probe(s).
 
 ## Evidence
 
@@ -161,12 +161,14 @@ Emitted by probe(s):
 - `sured`: `sured.b.add.2d.u32.trap`
 - `suq`: `suq.width.b32`
 - `sust`: `sust.b.2d.b32.trap`
+- `uniform_i2f`: `cvt.rn.f64.s32 on a warp-uniform value (uniform FP conversion, UI2F)`
+- `uniform_i2fp`: `cvt.rn.f32.s32 on a warp-uniform constant (uniform FP conversion, UI2F)`
 
 12-bit opcode field (bits 0-11) values observed: `0x241`, `0x244`, `0xa41`, `0xa44`, `0xe44`.
 
 ## Encoding observations
 
-**Constant bits across all 157 observed instance(s): 84 of 128** (observation-derived and *partial*: there is no fuzzed encoding reference for sm_120, so bits that never varied here may still be modifiers in forms this corpus never compiled; bits 105-125 are the scheduling control code and vary with instruction placement). LSB-first, bit 0 first:
+**Constant bits across all 159 observed instance(s): 84 of 128** (observation-derived and *partial*: there is no fuzzed encoding reference for sm_120, so bits that never varied here may still be modifiers in forms this corpus never compiled; bits 105-125 are the scheduling control code and vary with instruction placement). LSB-first, bit 0 first:
 
 ```
 ..1001000.0.1110...0.000...00000.0.000.000.000000000000.........
@@ -175,7 +177,7 @@ Emitted by probe(s):
 
 8 normalized operand form(s) observed:
 
-### `IMAD.WIDE.U32 R, R, IMM, R` - 148 instance(s)
+### `IMAD.WIDE.U32 R, R, IMM, R` - 150 instance(s)
 
 | instruction | encoding (word0 word1) | probe |
 |---|---|---|
@@ -183,7 +185,7 @@ Emitted by probe(s):
 | `IMAD.WIDE.U32 R2, R5, 0x40, R2` | `0000004005027825 001fca00078e0002` | ffma |
 | `IMAD.WIDE.U32 R2, R5, 0x40, R2` | `0000004005027825 001fca00078e0002` | fmul |
 | `IMAD.WIDE.U32 R2, R5, 0x40, R2` | `0000004005027825 001fca00078e0002` | fminmax |
-| ... 144 more instance(s) in results.json | | |
+| ... 146 more instance(s) in results.json | | |
 
 ### `IMAD R, R, IMM, R` - 2 instance(s)
 
