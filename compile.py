@@ -53,6 +53,12 @@ DEFAULT_TUNING = {
     "div": "rn",         # "rn" | "approx" | "approx.ftz"
     "sqrt": "rn",        # "rn" | "approx"
     "rcp": "rn",         # "rn" | "approx"
+    "pow2_shift": True,  # div/mod by power-of-2 constant -> shr/and instead of
+                         # div.s32/rem.s32 (ptxas expands those to MUFU
+                         # float-reciprocal sequences; indices are non-negative)
+    "hoist_invariants": True,  # hoist loop-invariant address subexpressions to
+                               # loop preheaders instead of recomputing the
+                               # full address math every iteration
 }
 
 
@@ -76,6 +82,8 @@ def clamp_tuning(t: dict) -> dict:
     out["div"] = out.get("div") if out.get("div") in ("rn", "approx", "approx.ftz") else "rn"
     out["sqrt"] = out.get("sqrt") if out.get("sqrt") in ("rn", "approx") else "rn"
     out["rcp"] = out.get("rcp") if out.get("rcp") in ("rn", "approx") else "rn"
+    out["pow2_shift"] = bool(out.get("pow2_shift", True))
+    out["hoist_invariants"] = bool(out.get("hoist_invariants", True))
     return out
 
 # ---------------------------------------------------------------------------
@@ -381,6 +389,11 @@ class Compiler:
             outermost = i == 0
             if inner == 1 and outermost:
                 e.emit(f"mov.u32 {r}, {gid};")
+            elif self.tuning["pow2_shift"] and inner > 1 and inner & (inner - 1) == 0 \
+                    and extent & (extent - 1) == 0:
+                # same MUFU-avoidance as binary_expr, for the axis decode
+                e.emit(f"shr.u32 {r}, {gid}, {inner.bit_length() - 1};")
+                e.emit(f"and.b32 {r}, {r}, {extent - 1};")
             else:
                 e.emit(f"div.u32 {r}, {gid}, {inner};")
                 e.emit(f"rem.u32 {r}, {r}, {extent};")
@@ -559,6 +572,7 @@ class Compiler:
         axis_name = st.axis.name
         self.loop_axis_stack = getattr(self, "loop_axis_stack", [])
         self.loop_axis_stack.append(axis_name)
+        self._hoist_for_loop(st)
         if not getattr(st, "seed", True):
             return
         # Seed in body-walk order (NOT set order): set iteration varies with the
@@ -586,6 +600,8 @@ class Compiler:
 
     def exit_loop(self):
         self.loop_axis_stack.pop()
+        if getattr(self, "hoist_stack", None):
+            self.hoist_stack.pop()
 
     def visit_cond(self, st):
         pred = self.compile_pred(st.cond)
@@ -707,6 +723,110 @@ class Compiler:
     def visit_cpasyncwait(self, st):
         self.e.emit(f"cp.async.wait_group {st.group};")
 
+    # -- loop-invariant hoisting -------------------------------------------------
+    #
+    # Our emitted PTX recomputed every address from scratch each iteration;
+    # ptxas does not strength-reduce it (measured: m01's inner loop was 4 FFMA
+    # vs 86 integer ops). Before entering a loop, walk the body's address /
+    # predicate expression trees, split them into maximal subtrees that do not
+    # depend on the loop axis or on any per-iteration-defined name, compile
+    # those once into the loop preheader, and serve them from a cache while
+    # emitting the body. Purely syntactic analysis: names defined by
+    # per-iteration statements (loads, lets, accums, nested axes) are never
+    # hoisted, so no value read can change under a cached register.
+
+    @staticmethod
+    def _ex_dict(ex):
+        k = type(ex).__name__
+        if k == "Var":
+            return {"k": "V", "n": ex.name}
+        if k == "Literal":
+            return {"k": "L", "v": getattr(ex, "value", None),
+                    "d": str(getattr(ex, "dtype", ""))}
+        if k == "BinaryExpr":
+            return {"k": "B", "op": ex.op,
+                    "l": Compiler._ex_dict(ex.left), "r": Compiler._ex_dict(ex.right)}
+        if k == "TernaryExpr":
+            return {"k": "T", "c": Compiler._ex_dict(ex.cond),
+                    "a": Compiler._ex_dict(ex.if_true),
+                    "b": Compiler._ex_dict(ex.if_false)}
+        # unknown kind: unique key -> never shared
+        return {"k": "?" + k, "id": id(ex)}
+
+    @classmethod
+    def _ex_key(cls, ex):
+        return json.dumps(cls._ex_dict(ex), sort_keys=True)
+
+    @staticmethod
+    def _ex_deps(ex, out):
+        k = type(ex).__name__
+        if k == "Var":
+            out.add(ex.name)
+        elif k == "BinaryExpr":
+            Compiler._ex_deps(ex.left, out)
+            Compiler._ex_deps(ex.right, out)
+        elif k == "TernaryExpr":
+            Compiler._ex_deps(ex.cond, out)
+            Compiler._ex_deps(ex.if_true, out)
+            Compiler._ex_deps(ex.if_false, out)
+
+    @classmethod
+    def _collect_units(cls, ex, forbidden, units):
+        """Register maximal subtrees of ex whose deps avoid `forbidden`."""
+        deps = set()
+        cls._ex_deps(ex, deps)
+        if not (deps & forbidden):
+            units[cls._ex_key(ex)] = ex
+            return
+        k = type(ex).__name__
+        if k == "BinaryExpr":
+            cls._collect_units(ex.left, forbidden, units)
+            cls._collect_units(ex.right, forbidden, units)
+        elif k == "TernaryExpr":
+            cls._collect_units(ex.cond, forbidden, units)
+            cls._collect_units(ex.if_true, forbidden, units)
+            cls._collect_units(ex.if_false, forbidden, units)
+
+    @staticmethod
+    def _stmt_exprs(st):
+        """Yield the expression trees a statement feeds to expr() for addressing."""
+        k = type(st).__name__
+        if k == "Load":
+            yield from st.index
+        elif k == "Write":
+            yield from st.index
+        elif k == "CpAsyncCopy":
+            yield from st.src_index
+            yield from st.smem_index
+            if st.lane_index is not None:
+                yield from st.lane_index
+        elif k == "Cond":
+            yield st.cond
+
+    def _hoist_for_loop(self, st):
+        """Precompute loop-invariant expression units into the preheader."""
+        if not self.tuning.get("hoist_invariants"):
+            self.hoist_stack = getattr(self, "hoist_stack", [])
+            self.hoist_stack.append({})
+            return
+        forbidden = {st.axis.name}
+        for sub in st.body.iter():
+            k = type(sub).__name__
+            if k in ("Load", "Let", "Init", "Assign", "Accum"):
+                for nm in (sub.names if k == "Load" else [sub.name]):
+                    forbidden.add(nm)
+            elif k in ("Loop", "StridedLoop"):
+                forbidden.add(sub.axis.name)
+        units = {}
+        for sub in st.body.iter():
+            for ex in self._stmt_exprs(sub):
+                self._collect_units(ex, forbidden, units)
+        cache = {}
+        for key, ex in units.items():
+            cache[key] = self.expr(ex)
+        self.hoist_stack = getattr(self, "hoist_stack", [])
+        self.hoist_stack.append(cache)
+
     # -- expressions -----------------------------------------------------------
 
     def buffer_desc(self, name):
@@ -762,6 +882,11 @@ class Compiler:
 
     def expr(self, ex):
         """Compile an expression -> (reg, kind) with kind in {'r','f','p'}."""
+        if getattr(self, "hoist_stack", None):
+            key = self._ex_key(ex)
+            for cache in reversed(self.hoist_stack):
+                if key in cache:
+                    return cache[key]
         kind = type(ex).__name__
         if kind == "Var":
             if ex.name in self.env:
@@ -794,6 +919,18 @@ class Compiler:
         right, rk = self.expr(ex.right)
         if op in INT_OPS and lk == "r" and rk == "r":
             d = self.e.reg("r")
+            # `/`|`%` by a power-of-2 constant: ptxas expands div.s32/rem.s32
+            # into float-reciprocal sequences (MUFU/I2F/F2I) per emission site.
+            # Address math is non-negative, so unsigned shift/mask is exact.
+            if (self.tuning["pow2_shift"] and op in ("/", "%")
+                    and type(ex.right).__name__ == "Literal"):
+                c = int(ex.right.value)
+                if c > 0 and c & (c - 1) == 0:
+                    if op == "/":
+                        self.e.emit(f"shr.u32 {d}, {left}, {c.bit_length() - 1};")
+                    else:
+                        self.e.emit(f"and.b32 {d}, {left}, {c - 1};")
+                    return (d, "r")
             self.e.emit(f"{INT_OPS[op]} {d}, {left}, {right};")
             return (d, "r")
         if op in self.float_ops and lk == "f" and rk == "f":
