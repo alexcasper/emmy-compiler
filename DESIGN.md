@@ -141,3 +141,28 @@ the Z.ai coding-plan API.
 **Conclusion:** compile-time instruction-selection variants are exhausted;
 remaining speedup, if any, must come from codegen changes (vectorized
 access, scheduling), not knob flipping. `main` stays all-default.
+
+## SASS probe — the deterministic test environment
+
+The runner compiles our PTX with ptxas before executing, so SASS is the real
+machine code. `bench/sass_probe.py` reproduces that compilation locally
+(ptxas 12.9 from the pip wheel + nvdisasm from NVIDIA's redist tarballs in
+`.tools/`, no GPU or CUDA install needed) and extracts structural metrics
+that are byte-identical across runs: register count, spills, opcode mix,
+memory-op widths, and the hot-loop (innermost backward branch) profile.
+
+First calibration, baseline compiler, all 15 problems deterministic:
+
+- **a01/a02 attention: hot loop 1367 instrs, 272 FFMA vs 672 integer ops.**
+- **m01 matmul: hot loop 95 instrs, 4 FFMA vs 86 integer ops** — and MUFU/I2F/F2I
+  in the loop: our PTX's `/` and `%` on the loop index become float-reciprocal
+  division per iteration. ptxas does not strength-reduce our address math.
+- reductions: ~19-instr loops, 0 FFMA (adds are FADD), address math ~10 ops/iter.
+- pointwise: fully unrolled, no loop, 32-48 instrs — nothing to win.
+- no register spills anywhere; 16-56 regs — pressure is a non-issue.
+
+Conclusion: the compiler's headroom is integer-address elimination (loop-
+invariant hoisting, pointer increment instead of recompute, avoiding `/`/`%`
+on loop indices in emitted PTX). Any GEPA codegen candidate is pre-screened
+with this probe before spending L4/runner time: assemble-fail, spills, or a
+hot-loop regression vs baseline kills the candidate deterministically.

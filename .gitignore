@@ -5,3 +5,5 @@ out.ptx
 *.pyc
 gen/out/
 gen/out_flint/
+sm89/.cache/
+.tools/
