@@ -246,3 +246,31 @@ fuse+CSE OFF (falsified). Geomean so far: 26.8 -> ~24-25us class.
 Refinement (interleaved judge-runner A/B, 3 rounds): StridedLoop reductions
 also win from unrolling — r02 41 -> 30us (-27%), 3/3 rounds — so "auto"
 unrolls StridedLoop always and gates only Loop-kind bodies on cp.async.
+
+## GEPA round 3 (z.ai / GLM-5.3-flash, 40-eval budget over the full 8-knob surface)
+
+`gen/gepa_l4.py` re-run with a much larger budget (160 metric calls, 31 distinct
+configs measured on the L4 lane) over the expanded surface — the four round-1 knobs
+plus `pow2_shift`, `hoist_invariants`, and the reworked `fuse_loops`/`load_cse`.
+Proposer doc updated to the current defaults; pre-flight confirmed the worktree
+compiler green on all 15 problems and the lane healthy.
+
+**Outcome: falsified again — and this time the outlier was caught in the act.**
+
+- GEPA's max-trial pick was `nc_loads=true + hoist_invariants=true` (over defaults
+  that already ship `fuse_loops=true, load_cse=true`): one lane call scored it
+  38548 vs baseline 20531 (~1.88x, a01 245.8 -> 77.8 us) — an a01-only 3.2x.
+- Interleaved A/B x3 on a01: defaults 245.76/245.76/245.76; champion
+  359.42/357.86/358.40. The "win" is 46% SLOWER, deterministic, and did not
+  reproduce. The single 77.82 was a transient on the shared Colab L4.
+- The trial table is otherwise mechanistically informative: fuse=true+cse=false
+  is still bad on attention (~412 us), cse alone neutral, nothing beats defaults
+  anywhere (all 30 non-outlier configs: 19859-24459, i.e. at-or-below baseline).
+- Structure of the search: the proposer converged to disciplined OFAT around the
+  champion within ~10 measured configs, then spent the remaining budget re-measuring
+  cached/known configs — the proposal loop, not the metric, is the limiting factor
+  on a 1152-config surface.
+
+**Conclusion stands, now at triple-replication strength: the EMMY_TUNING knob
+surface is exhausted. Defaults are optimal on the L4; the knob search is closed
+unless a new knob (i.e. new codegen) is added.**
