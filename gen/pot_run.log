@@ -1,0 +1,5 @@
+2026/10/26 18:55:43 WARNING dspy.clients.model_metadata: Model metadata refresh failed (URLError); using bundled snapshot.
+[round 1] wrote /mnt/d/ops/emmy/gen/out/pot_candidate_r1.py (1905 chars)
+[round 1] p00 FAILED: ptxas input.ptx, line 26; error   : Unexpected instruction types specified for 'mul.wide' | ptxas input.ptx, line 28; fatal   : Parsing error near '.align': syntax error | ptxas fatal   : Ptx assembly aborted due to errors
+[round 2] wrote /mnt/d/ops/emmy/gen/out/pot_candidate_r2.py (1507 chars)
+[round 2] p00 FAILED: [k_add_pointwise] ptxas rejected it: | ptxas input.ptx, line 8; fatal   : Parsing error near '.reg': syntax error | ptxas fatal   : Ptx assembly aborted due to errors
