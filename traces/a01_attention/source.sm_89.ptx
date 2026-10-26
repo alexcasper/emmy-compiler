@@ -31,12 +31,12 @@
         add.u32 %r5, %r5, %r1;
         setp.ge.u32 %p1, %r5, 512;
         @%p1 bra GUARD_END_1;
-        div.u32 %r6, %r5, 256;
-        rem.u32 %r6, %r6, 2;
-        div.u32 %r7, %r5, 128;
-        rem.u32 %r7, %r7, 2;
-        div.u32 %r8, %r5, 16;
-        rem.u32 %r8, %r8, 8;
+        shr.u32 %r6, %r5, 8;
+        and.b32 %r6, %r6, 1;
+        shr.u32 %r7, %r5, 7;
+        and.b32 %r7, %r7, 1;
+        shr.u32 %r8, %r5, 4;
+        and.b32 %r8, %r8, 7;
         div.u32 %r9, %r5, 1;
         rem.u32 %r9, %r9, 16;
         mov.u32 %r10, 0;

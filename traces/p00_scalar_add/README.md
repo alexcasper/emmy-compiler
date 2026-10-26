@@ -1,7 +1,7 @@
 # Trace: p00_scalar_add
 
-- Source: task/problems/p00_scalar_add
-- Generated: 2026-10-25 20:05 UTC
+- Source: gen/trace_src/base/p00_scalar_add.ptx
+- Generated: 2026-10-26 03:40 UTC
 - Tools: ptxas `Cuda compilation tools, release 12.9, V12.9.86`, nvdisasm `Cuda compilation tools, release 12.9, V12.9.88`, both `-O3`
 - The sm_120 stage consumes a header-retargeted copy of the same PTX (`.target sm_120`, `.version` bumped to >= 8.7); the body is untouched.
 

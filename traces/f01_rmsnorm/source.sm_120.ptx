@@ -33,8 +33,8 @@
         add.u32 %r6, %r6, %r1;
         setp.ge.u32 %p1, %r6, 8192;
         @%p1 bra GUARD_END_1;
-        div.u32 %r7, %r6, 128;
-        rem.u32 %r7, %r7, 64;
+        shr.u32 %r7, %r6, 7;
+        and.b32 %r7, %r7, 63;
         div.u32 %r8, %r6, 1;
         rem.u32 %r8, %r8, 128;
         mov.f32 %f1, 0f00000000;

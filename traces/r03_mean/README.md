@@ -1,7 +1,7 @@
 # Trace: r03_mean
 
-- Source: task/problems/r03_mean
-- Generated: 2026-10-25 20:05 UTC
+- Source: gen/trace_src/base/r03_mean.ptx
+- Generated: 2026-10-26 03:40 UTC
 - Tools: ptxas `Cuda compilation tools, release 12.9, V12.9.86`, nvdisasm `Cuda compilation tools, release 12.9, V12.9.88`, both `-O3`
 - The sm_120 stage consumes a header-retargeted copy of the same PTX (`.target sm_120`, `.version` bumped to >= 8.7); the body is untouched.
 

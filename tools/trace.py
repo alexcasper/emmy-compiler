@@ -303,10 +303,14 @@ def trace(name: str, ptx: str, origin: str):
 
 
 def main():
+    global TRACES
     ap = argparse.ArgumentParser()
     ap.add_argument("--ptx")
     ap.add_argument("--problem")
+    ap.add_argument("--out", default=str(TRACES),
+                    help="output traces root (default traces/); use e.g. traces-gepa/ for candidate sets")
     args = ap.parse_args()
+    TRACES = pathlib.Path(args.out)
 
     inputs = []
     if args.ptx or args.problem:
@@ -340,7 +344,7 @@ def main():
                 f"{len(s120 - s89)} sm_120-only" if a89["status"] == a120["status"] == "ok" else "—")
         lines.append(f"| [{s['name']}](README.md → `{s['name']}/`) | {cell(a89)} | {cell(a120)} | {head} |")
     (TRACES / "INDEX.md").write_text("\n".join(lines) + "\n")
-    print(f"{len(summary)} inputs traced -> traces/ ; see traces/INDEX.md")
+    print(f"{len(summary)} inputs traced -> {TRACES} ; see {TRACES}/INDEX.md")
     for s in summary:
         for arch, d in s["by_arch"].items():
             if d["status"] != "ok":
