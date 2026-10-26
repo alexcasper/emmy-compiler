@@ -28,6 +28,7 @@ from __future__ import annotations
 import json
 import math
 import os
+import dataclasses
 import re
 import struct
 import sys
@@ -64,6 +65,16 @@ DEFAULT_TUNING = {
                          # cp.async-free kernels (attention) where the long-
                          # lived hoisted bases cost ptxas load scheduling.
                          # "auto" = hoist iff the kernel body has cp.async.
+    "fuse_loops": False,  # merge consecutive sibling loops with identical trip
+                         # counts and no cross-references into one loop.
+                         # FALSIFIED on hardware: a01 fused = 3x smaller SASS
+                         # (1696->560 instrs, LDG 322->22) but 68% SLOWER on
+                         # L4 (246->413us) — the removed "redundant" kt loads
+                         # were free L1 hits that provided memory-level
+                         # parallelism. Kept searchable, default off.
+    "load_cse": False,   # reuse one LDG register for identical read-only
+                         # global loads within a straight-line body (see
+                         # fuse_loops — same falsification)
 }
 
 
@@ -90,6 +101,8 @@ def clamp_tuning(t: dict) -> dict:
     out["pow2_shift"] = bool(out.get("pow2_shift", True))
     h = out.get("hoist_invariants", "auto")
     out["hoist_invariants"] = h if h in (True, False, "auto") else "auto"
+    out["fuse_loops"] = bool(out.get("fuse_loops", False))
+    out["load_cse"] = bool(out.get("load_cse", False))
     return out
 
 # ---------------------------------------------------------------------------
@@ -204,6 +217,8 @@ class Compiler:
                                       for s in op.body[0].body.iter())
         else:
             self._hoist_enabled = bool(mode)
+        # per-body emission cache for read-only load CSE (see visit_load)
+        self._load_cse: dict = {}
 
     # -- setup ---------------------------------------------------------------
 
@@ -424,6 +439,9 @@ class Compiler:
     # -- statements ---------------------------------------------------------------
 
     def stmts(self, body):
+        if self.tuning.get("fuse_loops", True) and len(body) >= 2:
+            self._stmts_fused(body)
+            return
         for st in body:
             self.stmt(st)
 
@@ -436,6 +454,19 @@ class Compiler:
 
     def visit_load(self, st):
         buf = st.input
+        # read-only global loads: identical address -> one LDG serves all names
+        # (attention IR re-loads the same kt element across fused siblings).
+        # Valid only within one straight-line body emission: the map is cleared
+        # at every control-flow boundary (loops, branches, sync).
+        cse = self.tuning.get("load_cse", True) and buf in self.readonly_buffers
+        key = None
+        if cse:
+            key = (buf, tuple(self._ex_key(ix) for ix in st.index), len(st.names))
+            hit = self._load_cse.get(key)
+            if hit is not None:
+                for name, reg in zip(st.names, hit):
+                    self.env[name] = (reg, "f")
+                return
         desc = self.buffer_desc(buf)
         addr = self.flat_addr(buf, st.index)
         dtype = getattr(st.dtype, "name", None) or "f32"
@@ -455,6 +486,8 @@ class Compiler:
                 self.env[name] = (reg, "f")
         else:
             raise CompileError(f"unsupported load width: {len(st.names)} names")
+        if key is not None:
+            self._load_cse[key] = [self.env[n][0] for n in st.names]
 
     def visit_let(self, st):
         v = st.value
@@ -587,6 +620,7 @@ class Compiler:
         axis_name = st.axis.name
         self.loop_axis_stack = getattr(self, "loop_axis_stack", [])
         self.loop_axis_stack.append(axis_name)
+        self._load_cse.clear()
         self._hoist_for_loop(st)
         if not getattr(st, "seed", True):
             return
@@ -617,8 +651,10 @@ class Compiler:
         self.loop_axis_stack.pop()
         if getattr(self, "hoist_stack", None):
             self.hoist_stack.pop()
+        self._load_cse.clear()
 
     def visit_cond(self, st):
+        self._load_cse.clear()
         pred = self.compile_pred(st.cond)
         if st.else_body:
             else_label = self.fresh_label("ELSE")
@@ -841,6 +877,88 @@ class Compiler:
             cache[key] = self.expr(ex)
         self.hoist_stack = getattr(self, "hoist_stack", [])
         self.hoist_stack.append(cache)
+
+    # -- sibling-loop fusion -----------------------------------------------------
+    #
+    # The attention IR (category 5) runs N sibling dot-product loops per
+    # softmax step, each re-loading the same kt column from global memory.
+    # Fusing consecutive Loop statements with identical trip counts into one
+    # loop lets load_cse serve the repeated loads from a single register.
+    # Conservative fusability: same axis name + extent, bodies restricted to
+    # straight-line statement kinds, and no later body reads any name an
+    # earlier sibling defines.
+
+    _FUSE_BODY_KINDS = {"Load", "Let", "Init", "Assign", "Accum", "Write"}
+
+    @classmethod
+    def _stmt_reads(cls, st):
+        """Names a statement reads: env lookups + index-expression deps."""
+        k = type(st).__name__
+        reads = set()
+        if k == "Load":
+            for ix in st.index:
+                cls._ex_deps(ix, reads)
+        elif k == "Write":
+            for ix in st.index:
+                cls._ex_deps(ix, reads)
+            reads.update(st.values)
+        elif k == "Assign":
+            reads.update(st.args)
+        elif k == "Accum":
+            reads.add(st.value)
+            if st.base is not None:
+                reads.add(st.base)
+        elif k == "Cond":
+            cls._ex_deps(st.cond, reads)
+        return reads
+
+    @classmethod
+    def _stmt_defs(cls, st):
+        k = type(st).__name__
+        if k == "Load":
+            return set(st.names)
+        if k in ("Let", "Init", "Assign", "Accum"):
+            return {st.name}
+        return set()
+
+    def _fusable_pair(self, a, b):
+        if self.tuning.get("fuse_loops") is False:
+            return False
+        if type(a).__name__ != "Loop" or type(b).__name__ != "Loop":
+            return False
+        if a.axis.name != b.axis.name:
+            return False
+        if dim_int(a.axis.extent) != dim_int(b.axis.extent):
+            return False
+        for st in (a, b):
+            for sub in st.body.iter():
+                if type(sub).__name__ not in self._FUSE_BODY_KINDS:
+                    return False
+        # cross-references: later sibling must not read earlier siblings' defs
+        defs_a = set()
+        for sub in a.body.iter():
+            defs_a |= self._stmt_defs(sub)
+        reads_b = set()
+        for sub in b.body.iter():
+            reads_b |= self._stmt_reads(sub)
+        return not (reads_b & defs_a)
+
+    def _stmts_fused(self, body):
+        """Yield statements with fusable sibling-loop runs merged into the first."""
+        i, n = 0, len(body)
+        while i < n:
+            st = body[i]
+            if type(st).__name__ == "Loop":
+                j = i + 1
+                while j < n and self._fusable_pair(st, body[j]):
+                    # IR nodes are frozen dataclasses; Body concatenates
+                    st = dataclasses.replace(st, body=st.body + body[j].body)
+                    j += 1
+                self.stmt(st)
+                i = j
+                continue
+            self.stmt(st)
+            i += 1
 
     # -- expressions -----------------------------------------------------------
 

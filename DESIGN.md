@@ -190,3 +190,26 @@ invariant hoisting, pointer increment instead of recompute, avoiding `/`/`%`
 on loop indices in emitted PTX). Any GEPA codegen candidate is pre-screened
 with this probe before spending L4/runner time: assemble-fail, spills, or a
 hot-loop regression vs baseline kills the candidate deterministically.
+
+## Sibling-loop fusion + load CSE — falsified (knobs kept, default off)
+
+emmy-1xj hypothesis: a01's four sibling dot-product loops re-load the same
+kt column; fusing them and CSE-ing the repeated loads should cut LDGs 4x.
+The SASS probe agreed enthusiastically (total 1696->560 instrs, hot loop
+1367->80, LDG sites 322->22). Hardware disagreed:
+
+- L4: a01 245.8 -> 412.7 us (+68%), reproduced across interleaved rounds
+- judge runner: a01 236.7 us fused vs ~100 us unfused
+
+The "redundant" kt loads were L1 hits — nearly free — and their removal
+left the kernel with less memory-level parallelism, not less work. Second
+confirmation of the house rule: the SASS probe screens, only hardware
+decides. Both transforms remain in the knob surface (`fuse_loops`,
+`load_cse`, default off) for the GEPA search.
+
+## L4 fast lane (emmy-rzx)
+
+`gen/l4_lane.py`: one command compiles any candidate for all 24 problems
+(15 open + 9 tracer variations), stages and benches them on the Colab L4,
+and appends a table to gen/out/l4lane_results.jsonl. Validated 24/24.
+The judge runner remains the correctness gate.
