@@ -242,3 +242,7 @@ but the occupancy gain is swamped by the scheduling loss.
 Running tally of transform verdicts, all judge-runner or L4 measured:
 pow2_shift ON, hoist ON (cp.async-gated), unroll ON (cp.async-gated),
 fuse+CSE OFF (falsified). Geomean so far: 26.8 -> ~24-25us class.
+
+Refinement (interleaved judge-runner A/B, 3 rounds): StridedLoop reductions
+also win from unrolling — r02 41 -> 30us (-27%), 3/3 rounds — so "auto"
+unrolls StridedLoop always and gates only Loop-kind bodies on cp.async.

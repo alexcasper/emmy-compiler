@@ -231,13 +231,15 @@ class Compiler:
                                       for s in op.body[0].body.iter())
         else:
             self._hoist_enabled = bool(mode)
-        # unroll policy: "auto" enables unrolling only for cp.async-staged
-        # kernels (same discriminator as hoisting — judge-runner measured)
+        # unroll policy: "auto" = U=4; Loop-kind bodies (dot products) unroll
+        # only in cp.async kernels — judge-runner measured a01 100->191us
+        # otherwise. StridedLoop bodies (reductions) unroll always: r02
+        # 41->30us (-27%), 3/3 interleaved rounds on the judge runner.
         umode = self.tuning["unroll_inner"]
         if umode == "auto":
-            self._unroll_enabled = self._hoist_enabled  # same cp.async check
+            self._unroll_u, self._unroll_auto = 4, True
         else:
-            self._unroll_enabled = int(umode)
+            self._unroll_u, self._unroll_auto = int(umode), False
         # per-body emission cache for read-only load CSE (see visit_load)
         self._load_cse: dict = {}
 
@@ -637,10 +639,13 @@ class Compiler:
         self.exit_loop()
 
     def _unroll_factor(self, st, step):
-        """U>=2 if the loop body is straight-line, unrolling is enabled, and
-        the trip count divides evenly by U; else 0."""
-        u = self._unroll_enabled if isinstance(self._unroll_enabled, int) else 0
+        """U>=2 if unrolling is enabled for this loop kind, the body is
+        straight-line, and the trip count divides evenly by U; else 0."""
+        u = self._unroll_u
         if u < 2:
+            return 0
+        if self._unroll_auto and type(st).__name__ != "StridedLoop" \
+                and not self._hoist_enabled:
             return 0
         for sub in st.body.iter():
             if type(sub).__name__ not in self._FUSE_BODY_KINDS:
