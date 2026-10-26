@@ -213,3 +213,32 @@ decides. Both transforms remain in the knob surface (`fuse_loops`,
 (15 open + 9 tracer variations), stages and benches them on the Colab L4,
 and appends a table to gen/out/l4lane_results.jsonl. Validated 24/24.
 The judge runner remains the correctness gate.
+
+## The judge runner is Blackwell (sm_120) — probe recalibrated
+
+Register calibration against the runner's /compile (emmy-k1l) exposed that
+the default flow compiles our `.target sm_89` PTX **for the server's GPU,
+which is sm_120**: explicit `--arch sm_89` returns a01 = 48 regs (matches
+local ptxas 12.9/12.0/13.0), default and `--arch sm_120` return 128
+(matched register-for-register by ptxas 13.0.88, now in
+`.tools/ptxas13/`). sass_probe defaults to sm_120 (`SASS_ARCH` to override).
+
+Consequences:
+- Attention-class kernels allocate 128 regs at sm_120 (1 block of 512
+  threads/SM) where sm_89 said 48 — L4/sm_89 screens cannot see judge-side
+  occupancy effects. Matmul/reduction/pointwise allocations match closely.
+- `.maxnreg 64` on a01 is honored by the server but 2x slower (195us vs
+  ~100us): the 128 registers are real live state, not allocator slack.
+
+## Inner-loop unrolling (emmy-4ci) — win in cp.async pipelines, gated like hoisting
+
+`unroll_inner` ("auto" default, same cp.async discriminator as hoisting):
+replicate straight-line inner-loop bodies U=4 times (divisibility-checked).
+Judge-runner measurements at U=4: m01 37.7 -> 29.5us (-22%), r02/r04
+neutral, a01 100 -> 191us (+90% — same latency-bound collapse as fusion).
+sm_120 SASS: m01 hot loop 73 -> 32 instrs at 39 regs; a01 128 -> 56 regs,
+but the occupancy gain is swamped by the scheduling loss.
+
+Running tally of transform verdicts, all judge-runner or L4 measured:
+pow2_shift ON, hoist ON (cp.async-gated), unroll ON (cp.async-gated),
+fuse+CSE OFF (falsified). Geomean so far: 26.8 -> ~24-25us class.

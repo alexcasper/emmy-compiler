@@ -75,6 +75,12 @@ DEFAULT_TUNING = {
     "load_cse": False,   # reuse one LDG register for identical read-only
                          # global loads within a straight-line body (see
                          # fuse_loops — same falsification)
+    "unroll_inner": "auto",  # 0/1 = off; 2/4/... = replicate straight-line inner
+                         # loop bodies U times per iteration (extent must
+                         # divide evenly). "auto" = unroll iff the kernel body
+                         # has cp.async — judge-runner measured: m01 37.7->
+                         # 29.5us, but cp.async-free attention kernels are
+                         # latency-bound and collapse (a01 100->191us).
 }
 
 
@@ -103,6 +109,14 @@ def clamp_tuning(t: dict) -> dict:
     out["hoist_invariants"] = h if h in (True, False, "auto") else "auto"
     out["fuse_loops"] = bool(out.get("fuse_loops", False))
     out["load_cse"] = bool(out.get("load_cse", False))
+    u = out.get("unroll_inner", "auto")
+    if u == "auto":
+        out["unroll_inner"] = "auto"
+    else:
+        try:
+            out["unroll_inner"] = max(0, int(u))
+        except (TypeError, ValueError):
+            out["unroll_inner"] = 0
     return out
 
 # ---------------------------------------------------------------------------
@@ -217,6 +231,13 @@ class Compiler:
                                       for s in op.body[0].body.iter())
         else:
             self._hoist_enabled = bool(mode)
+        # unroll policy: "auto" enables unrolling only for cp.async-staged
+        # kernels (same discriminator as hoisting — judge-runner measured)
+        umode = self.tuning["unroll_inner"]
+        if umode == "auto":
+            self._unroll_enabled = self._hoist_enabled  # same cp.async check
+        else:
+            self._unroll_enabled = int(umode)
         # per-body emission cache for read-only load CSE (see visit_load)
         self._load_cse: dict = {}
 
@@ -574,17 +595,20 @@ class Compiler:
             self.e.emit(f"bar.sync {st.barrier_id};")
 
     def visit_stridedloop(self, st):
-        self.enter_loop(st)
+        step = dim_int_or_const(st.step)
         start = self.expr(st.start)[0]
+        u = self._unroll_factor(st, step)
+        if u >= 2:
+            return self._visit_stridedloop_unrolled(st, start, step, u)
+        self.enter_loop(st)
         ivar = self.e.reg("r")
         self.e.emit(f"mov.u32 {ivar}, {start};")
-        step = dim_int_or_const(st.step)
         end = dim_int(st.axis.extent)
         top = self.fresh_label("LOOP")
         bottom = self.fresh_label("LOOP_END")
         self.e.label(top)
         pred = self.e.reg("p")
-        self.e.emit(f"setp.ge.s32 {pred}, {ivar}, {end};")
+        self.e.emit(f"setp.ge.u32 {pred}, {ivar}, {end};")
         self.e.emit(f"@{pred} bra {bottom};")
         self.env[st.axis.name] = (ivar, "r")
         self.stmts(st.body)
@@ -593,22 +617,87 @@ class Compiler:
         self.e.label(bottom)
         self.exit_loop()
 
-    def visit_loop(self, st):
+    def _visit_stridedloop_unrolled(self, st, start, step, u):
+        """Strided version: copies take ivar + k*step; trip count must divide."""
         self.enter_loop(st)
-        ivar = self.e.reg("r")
-        self.e.emit(f"mov.u32 {ivar}, 0;")
         end = dim_int(st.axis.extent)
+        axis = st.axis.name
+
+        def body_fn(ivar):
+            for k in range(u):
+                if k == 0:
+                    self.env[axis] = (ivar, "r")
+                else:
+                    r = self.e.reg("r")
+                    self.e.emit(f"add.u32 {r}, {ivar}, {k * step};")
+                    self.env[axis] = (r, "r")
+                self.stmts(st.body)
+
+        self._emit_loop(st, start, step * u, end, body_fn)
+        self.exit_loop()
+
+    def _unroll_factor(self, st, step):
+        """U>=2 if the loop body is straight-line, unrolling is enabled, and
+        the trip count divides evenly by U; else 0."""
+        u = self._unroll_enabled if isinstance(self._unroll_enabled, int) else 0
+        if u < 2:
+            return 0
+        for sub in st.body.iter():
+            if type(sub).__name__ not in self._FUSE_BODY_KINDS:
+                return 0
+        extent = dim_int(st.axis.extent)
+        iters = extent // step
+        return u if iters >= u and iters % u == 0 else 0
+
+    def _emit_loop(self, st, ivar_init, step, end, body_fn):
+        """Shared loop skeleton: init ivar, while ivar < end: body_fn(ivar_reg)."""
+        ivar = self.e.reg("r")
+        self.e.emit(f"mov.u32 {ivar}, {ivar_init};")
         top = self.fresh_label("LOOP")
         bottom = self.fresh_label("LOOP_END")
         self.e.label(top)
         pred = self.e.reg("p")
-        self.e.emit(f"setp.ge.s32 {pred}, {ivar}, {end};")
+        self.e.emit(f"setp.ge.u32 {pred}, {ivar}, {end};")
         self.e.emit(f"@{pred} bra {bottom};")
-        self.env[st.axis.name] = (ivar, "r")
-        self.stmts(st.body)
-        self.e.emit(f"add.u32 {ivar}, {ivar}, 1;")
+        body_fn(ivar)
+        if step == 1:
+            self.e.emit(f"add.u32 {ivar}, {ivar}, 1;")
+        else:
+            self.e.emit(f"add.u32 {ivar}, {ivar}, {step};")
         self.e.emit(f"bra {top};")
         self.e.label(bottom)
+        return ivar
+
+    def visit_loop(self, st):
+        u = self._unroll_factor(st, 1)
+        if u >= 2:
+            return self._visit_loop_unrolled(st, u)
+
+        self.enter_loop(st)
+        ivar = self._emit_loop(
+            st, 0, 1, dim_int(st.axis.extent),
+            lambda ivar: (self.env.__setitem__(st.axis.name, (ivar, "r")),
+                          self.stmts(st.body)))
+        self.exit_loop()
+
+    def _visit_loop_unrolled(self, st, u):
+        """Replicate a straight-line body U times per iteration; the axis takes
+        ivar..ivar+U-1. Extent divides by U (checked), so no tail guard."""
+        self.enter_loop(st)
+        end = dim_int(st.axis.extent)
+        axis = st.axis.name
+
+        def body_fn(ivar):
+            for k in range(u):
+                if k == 0:
+                    self.env[axis] = (ivar, "r")
+                else:
+                    r = self.e.reg("r")
+                    self.e.emit(f"add.u32 {r}, {ivar}, {k};")
+                    self.env[axis] = (r, "r")
+                self.stmts(st.body)
+
+        self._emit_loop(st, 0, u, end, body_fn)
         self.exit_loop()
 
     def enter_loop(self, st):

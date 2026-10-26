@@ -60,4 +60,22 @@ VARIATIONS = [
          ref=lambda q, kt, v: [(_softmax((q.astype(np.float64) @ kt.astype(np.float64)) / 4.0)
                                 @ v.astype(np.float64)).astype(np.float32)],
          rtol=1e-3, atol=1e-4),
+    # ---- transform stress cases: non-power-of-2 shapes stress pow2_shift's
+    # non-negative index assumption and unroll divisibility fallbacks ----
+    dict(id="gx1_pointwise_333",
+         code="torch.randn(333) * 2.0 + 1.0",
+         ref=lambda x: [(x * np.float32(2.0) + np.float32(1.0)).astype(np.float32)],
+         rtol=0, atol=0),
+    dict(id="gx2_sum_100000",
+         code="torch.randn(100000).sum()",
+         ref=lambda x: [x.astype(np.float64).sum().astype(np.float32)],
+         rtol=1e-3, atol=1e-3, knobs=REDUCE_KNOBS),
+    dict(id="gx3_matmul_233",
+         code="torch.randn(233, 448) @ torch.randn(448, 233)",
+         ref=lambda a, b: [(a.astype(np.float64) @ b.astype(np.float64)).astype(np.float32)],
+         rtol=1e-3, atol=1e-3),
+    dict(id="gx4_softmax_100x300",
+         code="torch.softmax(torch.randn(100, 300), dim=-1)",
+         ref=lambda x: [_softmax(x.astype(np.float64)).astype(np.float32)],
+         rtol=1e-3, atol=1e-5),
 ]
