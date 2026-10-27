@@ -1,9 +1,21 @@
 # Traces — our compiler output, followed all the way down
 
-Per input: `source.<arch>.ptx` -> ptxas (`-O3`) -> nvdisasm (`-hex -c`) -> SASS listing with per-instruction KB refs, plus an opcode->KB cross-ref and an sm_89/sm_120 divergence summary in `README.md`. Regenerate with `python3 tools/trace.py`.
+Every set is produced by `tools/trace.py`: PTX -> `ptxas -O3` -> `nvdisasm -hex -c`
+-> SASS listings with per-instruction KB links, an opcode->KB cross-ref per arch,
+and an sm_89/sm_120 divergence summary per problem.
 
-| input | sm_89 | sm_120 | divergence headline |
-|---|---|---|---|
-| [r04_row_sum](README.md → `r04_row_sum/`) | 136 instr / 25 ops | 144 instr / 30 ops | 23 shared, 2 replaced per KB, 7 sm_120-only |
+| set | what | traced against |
+|---|---|---|
+| [baseline/](baseline/INDEX.md) | all 15 problems + the hand-written example, default tuning | judge-arch compiler at trace time |
+| [gepa-glm/](gepa-glm/INDEX.md) | GEPA glm-best tuning (div approx.ftz, nc_loads, rcp/sqrt approx) | same; see [COMPARISON.md](gepa-glm/COMPARISON.md) |
+| [gepa-flint/](gepa-flint/INDEX.md) | GEPA flint-best tuning (nc_loads only) | same; see [COMPARISON.md](gepa-flint/COMPARISON.md) |
+| [pot/](pot/README.md) | DSPy PoT candidate — negative result (ptxas rejects both rounds) | — |
 
-Compare two trace roots: `python3 tools/trace.py --compare BASELINE CANDIDATE` — writes CANDIDATE/COMPARISON.md (per-problem instruction-count and opcode-set deltas per arch, delta opcodes annotated from the KB divergence maps; see tools/trace_compare.py). Note: mnemonic-level only — modifier-only changes (e.g. LDG.E vs LDG.E.CONSTANT) are invisible; see traces-gepa-flint/COMPARISON.md findings.
+Regenerate:
+- baseline: `python3 tools/trace.py` (writes traces/baseline via --out default)
+- a single PTX: `python3 tools/trace.py --ptx file.ptx --out traces/baseline`
+- compare two sets: `python3 tools/trace.py --compare traces traces-gepa`
+
+Caveats: comparisons are mnemonic-level (modifier-only changes like LDG.E vs
+LDG.E.CONSTANT are invisible); the sm_89 vs sm_120 divergence catalog lives in
+[sm120/verify/RESULTS.md](../sm120/verify/RESULTS.md).

@@ -307,8 +307,8 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--ptx")
     ap.add_argument("--problem")
-    ap.add_argument("--out", default=str(TRACES),
-                    help="output traces root (default traces/); use e.g. traces-gepa/ for candidate sets")
+    ap.add_argument("--out", default=str(ROOT / "traces" / "baseline"),
+                    help="output traces root (default traces/baseline)")
     ap.add_argument("--compare", nargs=2, metavar=("BASELINE", "CANDIDATE"),
                     help="diff two trace roots into CANDIDATE/COMPARISON.md instead of tracing")
     args = ap.parse_args()
