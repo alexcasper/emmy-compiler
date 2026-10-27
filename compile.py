@@ -381,7 +381,7 @@ class Compiler:
     def emit_prologue(self, params, tile):
         e = self.e
         sig = ",\n".join(f"        .param .u64 param_{sanitize(p)}" for p in params)
-        entry_dirs = f" .maxnreg {self.maxnreg}" if self.maxnreg else ""
+        entry_dirs = f" .maxnreg {self.maxnreg} " if self.maxnreg else ""
         e.raw(f".visible .entry {self.kernel_name}{entry_dirs}(")
         e.raw(sig)
         e.raw(")")
