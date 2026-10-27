@@ -7,3 +7,6 @@ gen/out/
 gen/out_flint/
 sm89/.cache/
 .tools/
+toolchain/
+sm120/.cache/
+gen/var_problems/

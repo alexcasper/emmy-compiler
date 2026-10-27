@@ -27,9 +27,9 @@ import torch
 def gen_input(a, convention):
     shape = tuple(a["shape"])
     if convention == "manual_seed":
-        torch.manual_seed(a["seed"])
+        torch.manual_seed(a.get("seed", 0))
         return torch.randn(*shape)
-    g = torch.Generator().manual_seed(a["seed"])
+    g = torch.Generator().manual_seed(a.get("seed", 0))
     return torch.randn(*shape, generator=g)
 
 

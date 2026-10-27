@@ -1,0 +1,847 @@
+{
+ "commit": "837ab0e30740abb9ebb60bcd40a5114c68c673d9",
+ "tools": {
+  "ptxas": "Build cuda_12.9.r12.9/compiler.36037853_0",
+  "nvdisasm": "Build cuda_12.9.r12.9/compiler.36061206_0"
+ },
+ "ops": {
+  "ATOM": {
+   "status": "NAK op maps to ATOMG/ATOMS/REDG",
+   "nak": [
+    "0x38c",
+    "0x38d",
+    "0x3a8",
+    "0x3a9",
+    "0x98c",
+    "0x98e",
+    "0x9a3",
+    "0x9a6",
+    "0x9a8"
+   ],
+   "observed": [
+    "0x18a",
+    "0x98a"
+   ],
+   "ref": "https://github.com/chaotic-cx/mesa-mirror/blob/837ab0e30740abb9ebb60bcd40a5114c68c673d9/src/nouveau/compiler/nak/sm70_encode.rs#L3777"
+  },
+  "BAR": {
+   "status": "agree",
+   "nak": [
+    "0x31d",
+    "0xb1d"
+   ],
+   "observed": [
+    "0x11d",
+    "0xb1d"
+   ],
+   "ref": "https://github.com/chaotic-cx/mesa-mirror/blob/837ab0e30740abb9ebb60bcd40a5114c68c673d9/src/nouveau/compiler/nak/sm70_encode.rs#L4245"
+  },
+  "BMSK": {
+   "status": "agree",
+   "nak": [
+    "0x1b",
+    "0x9b"
+   ],
+   "observed": [
+    "0x1b",
+    "0x21b"
+   ],
+   "ref": "https://github.com/chaotic-cx/mesa-mirror/blob/837ab0e30740abb9ebb60bcd40a5114c68c673d9/src/nouveau/compiler/nak/sm70_encode.rs#L1518"
+  },
+  "BRA": {
+   "status": "agree",
+   "nak": [
+    "0x547",
+    "0x947"
+   ],
+   "observed": [
+    "0x147",
+    "0x547",
+    "0x947"
+   ],
+   "ref": "https://github.com/chaotic-cx/mesa-mirror/blob/837ab0e30740abb9ebb60bcd40a5114c68c673d9/src/nouveau/compiler/nak/sm70_encode.rs#L4191"
+  },
+  "BREV": {
+   "status": "agree",
+   "nak": [
+    "0xbe",
+    "0x101"
+   ],
+   "observed": [
+    "0x101",
+    "0x301"
+   ],
+   "ref": "https://github.com/chaotic-cx/mesa-mirror/blob/837ab0e30740abb9ebb60bcd40a5114c68c673d9/src/nouveau/compiler/nak/sm70_encode.rs#L1547"
+  },
+  "BSSY": {
+   "status": "agree",
+   "nak": [
+    "0x945"
+   ],
+   "observed": [
+    "0x145",
+    "0x945"
+   ],
+   "ref": "https://github.com/chaotic-cx/mesa-mirror/blob/837ab0e30740abb9ebb60bcd40a5114c68c673d9/src/nouveau/compiler/nak/sm70_encode.rs#L4165"
+  },
+  "BSYNC": {
+   "status": "agree",
+   "nak": [
+    "0x941"
+   ],
+   "observed": [
+    "0x141",
+    "0x941"
+   ],
+   "ref": "https://github.com/chaotic-cx/mesa-mirror/blob/837ab0e30740abb9ebb60bcd40a5114c68c673d9/src/nouveau/compiler/nak/sm70_encode.rs#L4179"
+  },
+  "CCTL": {
+   "status": "agree",
+   "nak": [
+    "0x98f"
+   ],
+   "observed": [
+    "0x18f",
+    "0x98f"
+   ],
+   "ref": "https://github.com/chaotic-cx/mesa-mirror/blob/837ab0e30740abb9ebb60bcd40a5114c68c673d9/src/nouveau/compiler/nak/sm70_encode.rs#L4033"
+  },
+  "CS2R": {
+   "status": "agree",
+   "nak": [
+    "0x805"
+   ],
+   "observed": [
+    "0x5",
+    "0x805"
+   ],
+   "ref": "https://github.com/chaotic-cx/mesa-mirror/blob/837ab0e30740abb9ebb60bcd40a5114c68c673d9/src/nouveau/compiler/nak/sm70_encode.rs#L4273"
+  },
+  "DADD": {
+   "status": "agree",
+   "nak": [
+    "0x29"
+   ],
+   "observed": [
+    "0x229",
+    "0x29"
+   ],
+   "ref": "https://github.com/chaotic-cx/mesa-mirror/blob/837ab0e30740abb9ebb60bcd40a5114c68c673d9/src/nouveau/compiler/nak/sm70_encode.rs#L1215"
+  },
+  "DFMA": {
+   "status": "agree",
+   "nak": [
+    "0x2b"
+   ],
+   "observed": [
+    "0x22b",
+    "0x2b"
+   ],
+   "ref": "https://github.com/chaotic-cx/mesa-mirror/blob/837ab0e30740abb9ebb60bcd40a5114c68c673d9/src/nouveau/compiler/nak/sm70_encode.rs#L1235"
+  },
+  "DMUL": {
+   "status": "agree",
+   "nak": [
+    "0x28"
+   ],
+   "observed": [
+    "0x228",
+    "0x28"
+   ],
+   "ref": "https://github.com/chaotic-cx/mesa-mirror/blob/837ab0e30740abb9ebb60bcd40a5114c68c673d9/src/nouveau/compiler/nak/sm70_encode.rs#L1256"
+  },
+  "DSETP": {
+   "status": "agree",
+   "nak": [
+    "0x2a"
+   ],
+   "observed": [
+    "0x22a",
+    "0x2a"
+   ],
+   "ref": "https://github.com/chaotic-cx/mesa-mirror/blob/837ab0e30740abb9ebb60bcd40a5114c68c673d9/src/nouveau/compiler/nak/sm70_encode.rs#L1276"
+  },
+  "EXIT": {
+   "status": "agree",
+   "nak": [
+    "0x94d"
+   ],
+   "observed": [
+    "0x14d",
+    "0x94d"
+   ],
+   "ref": "https://github.com/chaotic-cx/mesa-mirror/blob/837ab0e30740abb9ebb60bcd40a5114c68c673d9/src/nouveau/compiler/nak/sm70_encode.rs#L4218"
+  },
+  "F2F": {
+   "status": "agree",
+   "nak": [
+    "0x5b",
+    "0x104",
+    "0x110"
+   ],
+   "observed": [
+    "0x110",
+    "0x310"
+   ],
+   "ref": "https://github.com/chaotic-cx/mesa-mirror/blob/837ab0e30740abb9ebb60bcd40a5114c68c673d9/src/nouveau/compiler/nak/sm70_encode.rs#L2189"
+  },
+  "F2FP": {
+   "status": "agree",
+   "nak": [
+    "0x3e",
+    "0xba"
+   ],
+   "observed": [
+    "0x23e",
+    "0x3e"
+   ],
+   "ref": "https://github.com/chaotic-cx/mesa-mirror/blob/837ab0e30740abb9ebb60bcd40a5114c68c673d9/src/nouveau/compiler/nak/sm70_encode.rs#L2237"
+  },
+  "F2I": {
+   "status": "agree",
+   "nak": [
+    "0x5c",
+    "0x105",
+    "0x111"
+   ],
+   "observed": [
+    "0x105",
+    "0x305"
+   ],
+   "ref": "https://github.com/chaotic-cx/mesa-mirror/blob/837ab0e30740abb9ebb60bcd40a5114c68c673d9/src/nouveau/compiler/nak/sm70_encode.rs#L2282"
+  },
+  "FADD": {
+   "status": "agree",
+   "nak": [
+    "0x21",
+    "0x54"
+   ],
+   "observed": [
+    "0x21",
+    "0x221",
+    "0x421"
+   ],
+   "ref": "https://github.com/chaotic-cx/mesa-mirror/blob/837ab0e30740abb9ebb60bcd40a5114c68c673d9/src/nouveau/compiler/nak/sm70_encode.rs#L849"
+  },
+  "FFMA": {
+   "status": "agree",
+   "nak": [
+    "0x23",
+    "0x55"
+   ],
+   "observed": [
+    "0x223",
+    "0x23",
+    "0x423",
+    "0x823"
+   ],
+   "ref": "https://github.com/chaotic-cx/mesa-mirror/blob/837ab0e30740abb9ebb60bcd40a5114c68c673d9/src/nouveau/compiler/nak/sm70_encode.rs#L890"
+  },
+  "FLO": {
+   "status": "agree",
+   "nak": [
+    "0xbd",
+    "0x100"
+   ],
+   "observed": [
+    "0x100",
+    "0x300",
+    "0xd00"
+   ],
+   "ref": "https://github.com/chaotic-cx/mesa-mirror/blob/837ab0e30740abb9ebb60bcd40a5114c68c673d9/src/nouveau/compiler/nak/sm70_encode.rs#L1561"
+  },
+  "FMNMX": {
+   "status": "agree",
+   "nak": [
+    "0x9",
+    "0x50"
+   ],
+   "observed": [
+    "0x209",
+    "0x9"
+   ],
+   "ref": "https://github.com/chaotic-cx/mesa-mirror/blob/837ab0e30740abb9ebb60bcd40a5114c68c673d9/src/nouveau/compiler/nak/sm70_encode.rs#L925"
+  },
+  "FMUL": {
+   "status": "agree",
+   "nak": [
+    "0x20",
+    "0x56"
+   ],
+   "observed": [
+    "0x20",
+    "0x220",
+    "0x820"
+   ],
+   "ref": "https://github.com/chaotic-cx/mesa-mirror/blob/837ab0e30740abb9ebb60bcd40a5114c68c673d9/src/nouveau/compiler/nak/sm70_encode.rs#L963"
+  },
+  "FRND": {
+   "status": "agree",
+   "nak": [
+    "0x5d",
+    "0x107",
+    "0x113"
+   ],
+   "observed": [
+    "0x107",
+    "0x307"
+   ],
+   "ref": "https://github.com/chaotic-cx/mesa-mirror/blob/837ab0e30740abb9ebb60bcd40a5114c68c673d9/src/nouveau/compiler/nak/sm70_encode.rs#L2371"
+  },
+  "FSETP": {
+   "status": "agree",
+   "nak": [
+    "0xb",
+    "0x53"
+   ],
+   "observed": [
+    "0x20b",
+    "0x80b",
+    "0xb"
+   ],
+   "ref": "https://github.com/chaotic-cx/mesa-mirror/blob/837ab0e30740abb9ebb60bcd40a5114c68c673d9/src/nouveau/compiler/nak/sm70_encode.rs#L1089"
+  },
+  "HFMA2": {
+   "status": "agree",
+   "nak": [
+    "0x31"
+   ],
+   "observed": [
+    "0x231",
+    "0x31",
+    "0x431",
+    "0x831"
+   ],
+   "ref": "https://github.com/chaotic-cx/mesa-mirror/blob/837ab0e30740abb9ebb60bcd40a5114c68c673d9/src/nouveau/compiler/nak/sm70_encode.rs#L1350"
+  },
+  "HMMA": {
+   "status": "agree",
+   "nak": [
+    "0x23c"
+   ],
+   "observed": [
+    "0x23c",
+    "0x3c"
+   ],
+   "ref": "https://github.com/chaotic-cx/mesa-mirror/blob/837ab0e30740abb9ebb60bcd40a5114c68c673d9/src/nouveau/compiler/nak/sm70_encode.rs#L4577"
+  },
+  "HMNMX2": {
+   "status": "agree",
+   "nak": [
+    "0x40"
+   ],
+   "observed": [
+    "0x240",
+    "0x40"
+   ],
+   "ref": "https://github.com/chaotic-cx/mesa-mirror/blob/837ab0e30740abb9ebb60bcd40a5114c68c673d9/src/nouveau/compiler/nak/sm70_encode.rs#L1488"
+  },
+  "HSET2": {
+   "status": "agree",
+   "nak": [
+    "0x33"
+   ],
+   "observed": [
+    "0x233",
+    "0x33"
+   ],
+   "ref": "https://github.com/chaotic-cx/mesa-mirror/blob/837ab0e30740abb9ebb60bcd40a5114c68c673d9/src/nouveau/compiler/nak/sm70_encode.rs#L1403"
+  },
+  "HSETP2": {
+   "status": "agree",
+   "nak": [
+    "0x34"
+   ],
+   "observed": [
+    "0x234",
+    "0x34"
+   ],
+   "ref": "https://github.com/chaotic-cx/mesa-mirror/blob/837ab0e30740abb9ebb60bcd40a5114c68c673d9/src/nouveau/compiler/nak/sm70_encode.rs#L1445"
+  },
+  "I2F": {
+   "status": "agree",
+   "nak": [
+    "0x5a",
+    "0x106",
+    "0x112"
+   ],
+   "observed": [
+    "0x112",
+    "0x312",
+    "0xd12"
+   ],
+   "ref": "https://github.com/chaotic-cx/mesa-mirror/blob/837ab0e30740abb9ebb60bcd40a5114c68c673d9/src/nouveau/compiler/nak/sm70_encode.rs#L2329"
+  },
+  "IABS": {
+   "status": "agree",
+   "nak": [
+    "0x13",
+    "0x4d"
+   ],
+   "observed": [
+    "0x13",
+    "0x213"
+   ],
+   "ref": "https://github.com/chaotic-cx/mesa-mirror/blob/837ab0e30740abb9ebb60bcd40a5114c68c673d9/src/nouveau/compiler/nak/sm70_encode.rs#L1580"
+  },
+  "IADD3": {
+   "status": "agree",
+   "nak": [
+    "0x10",
+    "0x90"
+   ],
+   "observed": [
+    "0x10",
+    "0x210",
+    "0x810",
+    "0xc10"
+   ],
+   "ref": "https://github.com/chaotic-cx/mesa-mirror/blob/837ab0e30740abb9ebb60bcd40a5114c68c673d9/src/nouveau/compiler/nak/sm70_encode.rs#L1595"
+  },
+  "IMAD": {
+   "status": "agree",
+   "nak": [
+    "0x24",
+    "0xa4"
+   ],
+   "observed": [
+    "0x224",
+    "0x225",
+    "0x227",
+    "0x24",
+    "0x25",
+    "0x27",
+    "0x824",
+    "0x825"
+   ],
+   "ref": "https://github.com/chaotic-cx/mesa-mirror/blob/837ab0e30740abb9ebb60bcd40a5114c68c673d9/src/nouveau/compiler/nak/sm70_encode.rs#L1751"
+  },
+  "IMMA": {
+   "status": "agree",
+   "nak": [
+    "0x237"
+   ],
+   "observed": [
+    "0x237",
+    "0x37"
+   ],
+   "ref": "https://github.com/chaotic-cx/mesa-mirror/blob/837ab0e30740abb9ebb60bcd40a5114c68c673d9/src/nouveau/compiler/nak/sm70_encode.rs#L4520"
+  },
+  "ISETP": {
+   "status": "agree",
+   "nak": [
+    "0xc",
+    "0x8c"
+   ],
+   "observed": [
+    "0x20c",
+    "0x80c",
+    "0xc",
+    "0xc0c"
+   ],
+   "ref": "https://github.com/chaotic-cx/mesa-mirror/blob/837ab0e30740abb9ebb60bcd40a5114c68c673d9/src/nouveau/compiler/nak/sm70_encode.rs#L1866"
+  },
+  "LD": {
+   "status": "NAK op maps to LDG/LDL/LDS",
+   "nak": [
+    "0x381",
+    "0x981",
+    "0x983",
+    "0x984"
+   ],
+   "observed": [
+    "0x180",
+    "0x980"
+   ],
+   "ref": "https://github.com/chaotic-cx/mesa-mirror/blob/837ab0e30740abb9ebb60bcd40a5114c68c673d9/src/nouveau/compiler/nak/sm70_encode.rs#L3428"
+  },
+  "LDC": {
+   "status": "agree",
+   "nak": [
+    "0x582",
+    "0x7ac",
+    "0xab9",
+    "0xb82",
+    "0xbac"
+   ],
+   "observed": [
+    "0x182",
+    "0xb82"
+   ],
+   "ref": "https://github.com/chaotic-cx/mesa-mirror/blob/837ab0e30740abb9ebb60bcd40a5114c68c673d9/src/nouveau/compiler/nak/sm70_encode.rs#L3505"
+  },
+  "LDSM": {
+   "status": "agree",
+   "nak": [
+    "0x83b"
+   ],
+   "observed": [
+    "0x3b",
+    "0x83b"
+   ],
+   "ref": "https://github.com/chaotic-cx/mesa-mirror/blob/837ab0e30740abb9ebb60bcd40a5114c68c673d9/src/nouveau/compiler/nak/sm70_encode.rs#L4622"
+  },
+  "LEA": {
+   "status": "agree",
+   "nak": [
+    "0x11",
+    "0x91"
+   ],
+   "observed": [
+    "0x11",
+    "0x211",
+    "0x811",
+    "0xc11"
+   ],
+   "ref": "https://github.com/chaotic-cx/mesa-mirror/blob/837ab0e30740abb9ebb60bcd40a5114c68c673d9/src/nouveau/compiler/nak/sm70_encode.rs#L1923"
+  },
+  "LOP3": {
+   "status": "agree",
+   "nak": [
+    "0x12",
+    "0x92"
+   ],
+   "observed": [
+    "0x12",
+    "0x212",
+    "0x812",
+    "0xc12"
+   ],
+   "ref": "https://github.com/chaotic-cx/mesa-mirror/blob/837ab0e30740abb9ebb60bcd40a5114c68c673d9/src/nouveau/compiler/nak/sm70_encode.rs#L2064"
+  },
+  "MATCH": {
+   "status": "agree",
+   "nak": [
+    "0x3a1"
+   ],
+   "observed": [
+    "0x1a1",
+    "0x3a1"
+   ],
+   "ref": "https://github.com/chaotic-cx/mesa-mirror/blob/837ab0e30740abb9ebb60bcd40a5114c68c673d9/src/nouveau/compiler/nak/sm70_encode.rs#L4493"
+  },
+  "MEMBAR": {
+   "status": "agree",
+   "nak": [
+    "0x992"
+   ],
+   "observed": [
+    "0x192",
+    "0x992"
+   ],
+   "ref": "https://github.com/chaotic-cx/mesa-mirror/blob/837ab0e30740abb9ebb60bcd40a5114c68c673d9/src/nouveau/compiler/nak/sm70_encode.rs#L4063"
+  },
+  "MOV": {
+   "status": "agree",
+   "nak": [
+    "0x2",
+    "0xc82"
+   ],
+   "observed": [
+    "0x2",
+    "0x202",
+    "0x802",
+    "0xc02"
+   ],
+   "ref": "https://github.com/chaotic-cx/mesa-mirror/blob/837ab0e30740abb9ebb60bcd40a5114c68c673d9/src/nouveau/compiler/nak/sm70_encode.rs#L2417"
+  },
+  "MOVM": {
+   "status": "agree",
+   "nak": [
+    "0x23a"
+   ],
+   "observed": [
+    "0x23a",
+    "0x3a"
+   ],
+   "ref": "https://github.com/chaotic-cx/mesa-mirror/blob/837ab0e30740abb9ebb60bcd40a5114c68c673d9/src/nouveau/compiler/nak/sm70_encode.rs#L4663"
+  },
+  "MUFU": {
+   "status": "agree",
+   "nak": [
+    "0x108"
+   ],
+   "observed": [
+    "0x108",
+    "0x308",
+    "0x908"
+   ],
+   "ref": "https://github.com/chaotic-cx/mesa-mirror/blob/837ab0e30740abb9ebb60bcd40a5114c68c673d9/src/nouveau/compiler/nak/sm70_encode.rs#L1168"
+  },
+  "NANOSLEEP": {
+   "status": "agree",
+   "nak": [
+    "0x15d"
+   ],
+   "observed": [
+    "0x15d",
+    "0x35d"
+   ],
+   "ref": "https://github.com/chaotic-cx/mesa-mirror/blob/837ab0e30740abb9ebb60bcd40a5114c68c673d9/src/nouveau/compiler/nak/sm70_encode.rs#L4679"
+  },
+  "NOP": {
+   "status": "agree",
+   "nak": [
+    "0x918"
+   ],
+   "observed": [
+    "0x118",
+    "0x918"
+   ],
+   "ref": "https://github.com/chaotic-cx/mesa-mirror/blob/837ab0e30740abb9ebb60bcd40a5114c68c673d9/src/nouveau/compiler/nak/sm70_encode.rs#L4371"
+  },
+  "PLOP3": {
+   "status": "agree",
+   "nak": [
+    "0x81c",
+    "0x89c"
+   ],
+   "observed": [
+    "0x1c",
+    "0x81c"
+   ],
+   "ref": "https://github.com/chaotic-cx/mesa-mirror/blob/837ab0e30740abb9ebb60bcd40a5114c68c673d9/src/nouveau/compiler/nak/sm70_encode.rs#L2616"
+  },
+  "POPC": {
+   "status": "agree",
+   "nak": [
+    "0xbf",
+    "0x109"
+   ],
+   "observed": [
+    "0x109",
+    "0x309",
+    "0xd09"
+   ],
+   "ref": "https://github.com/chaotic-cx/mesa-mirror/blob/837ab0e30740abb9ebb60bcd40a5114c68c673d9/src/nouveau/compiler/nak/sm70_encode.rs#L2124"
+  },
+  "PRMT": {
+   "status": "agree",
+   "nak": [
+    "0x16",
+    "0x96"
+   ],
+   "observed": [
+    "0x16",
+    "0x816"
+   ],
+   "ref": "https://github.com/chaotic-cx/mesa-mirror/blob/837ab0e30740abb9ebb60bcd40a5114c68c673d9/src/nouveau/compiler/nak/sm70_encode.rs#L2448"
+  },
+  "R2UR": {
+   "status": "agree",
+   "nak": [
+    "0x2ca",
+    "0x3c2"
+   ],
+   "observed": [
+    "0x2ca",
+    "0xca"
+   ],
+   "ref": "https://github.com/chaotic-cx/mesa-mirror/blob/837ab0e30740abb9ebb60bcd40a5114c68c673d9/src/nouveau/compiler/nak/sm70_encode.rs#L2688"
+  },
+  "REDUX": {
+   "status": "agree",
+   "nak": [
+    "0x3c4"
+   ],
+   "observed": [
+    "0x1c4",
+    "0x3c4"
+   ],
+   "ref": "https://github.com/chaotic-cx/mesa-mirror/blob/837ab0e30740abb9ebb60bcd40a5114c68c673d9/src/nouveau/compiler/nak/sm70_encode.rs#L2705"
+  },
+  "S2R": {
+   "status": "agree",
+   "nak": [
+    "0x919",
+    "0x9c3"
+   ],
+   "observed": [
+    "0x119",
+    "0x919"
+   ],
+   "ref": "https://github.com/chaotic-cx/mesa-mirror/blob/837ab0e30740abb9ebb60bcd40a5114c68c673d9/src/nouveau/compiler/nak/sm70_encode.rs#L4404"
+  },
+  "SEL": {
+   "status": "agree",
+   "nak": [
+    "0x7",
+    "0x87"
+   ],
+   "observed": [
+    "0x207",
+    "0x7",
+    "0x807"
+   ],
+   "ref": "https://github.com/chaotic-cx/mesa-mirror/blob/837ab0e30740abb9ebb60bcd40a5114c68c673d9/src/nouveau/compiler/nak/sm70_encode.rs#L2491"
+  },
+  "SGXT": {
+   "status": "agree",
+   "nak": [
+    "0x1a",
+    "0x9a"
+   ],
+   "observed": [
+    "0x1a",
+    "0x21a"
+   ],
+   "ref": "https://github.com/chaotic-cx/mesa-mirror/blob/837ab0e30740abb9ebb60bcd40a5114c68c673d9/src/nouveau/compiler/nak/sm70_encode.rs#L2529"
+  },
+  "SHF": {
+   "status": "agree",
+   "nak": [
+    "0x19",
+    "0x99"
+   ],
+   "observed": [
+    "0x19",
+    "0x219",
+    "0x819"
+   ],
+   "ref": "https://github.com/chaotic-cx/mesa-mirror/blob/837ab0e30740abb9ebb60bcd40a5114c68c673d9/src/nouveau/compiler/nak/sm70_encode.rs#L2141"
+  },
+  "SHFL": {
+   "status": "agree",
+   "nak": [
+    "0x389",
+    "0x589",
+    "0x989",
+    "0xf89"
+   ],
+   "observed": [
+    "0x189",
+    "0x589",
+    "0x989",
+    "0xf89"
+   ],
+   "ref": "https://github.com/chaotic-cx/mesa-mirror/blob/837ab0e30740abb9ebb60bcd40a5114c68c673d9/src/nouveau/compiler/nak/sm70_encode.rs#L2558"
+  },
+  "ST": {
+   "status": "NAK op maps to STG/STL/STS",
+   "nak": [
+    "0x386",
+    "0x387",
+    "0x388",
+    "0x986",
+    "0x987",
+    "0x988"
+   ],
+   "observed": [
+    "0x185",
+    "0x985"
+   ],
+   "ref": "https://github.com/chaotic-cx/mesa-mirror/blob/837ab0e30740abb9ebb60bcd40a5114c68c673d9/src/nouveau/compiler/nak/sm70_encode.rs#L3625"
+  },
+  "SULD": {
+   "status": "differ",
+   "nak": [
+    "0x998",
+    "0x99a"
+   ],
+   "observed": [
+    "0x199",
+    "0xf99"
+   ],
+   "ref": "https://github.com/chaotic-cx/mesa-mirror/blob/837ab0e30740abb9ebb60bcd40a5114c68c673d9/src/nouveau/compiler/nak/sm70_encode.rs#L3321"
+  },
+  "SUST": {
+   "status": "differ",
+   "nak": [
+    "0x99c",
+    "0x99e"
+   ],
+   "observed": [
+    "0x19d",
+    "0xf9d"
+   ],
+   "ref": "https://github.com/chaotic-cx/mesa-mirror/blob/837ab0e30740abb9ebb60bcd40a5114c68c673d9/src/nouveau/compiler/nak/sm70_encode.rs#L3359"
+  },
+  "TEX": {
+   "status": "agree",
+   "nak": [
+    "0x361",
+    "0xb60",
+    "0xd61"
+   ],
+   "observed": [
+    "0x160",
+    "0xf60"
+   ],
+   "ref": "https://github.com/chaotic-cx/mesa-mirror/blob/837ab0e30740abb9ebb60bcd40a5114c68c673d9/src/nouveau/compiler/nak/sm70_encode.rs#L2887"
+  },
+  "TLD": {
+   "status": "agree",
+   "nak": [
+    "0x367",
+    "0xb66",
+    "0xd67"
+   ],
+   "observed": [
+    "0x166",
+    "0xf66"
+   ],
+   "ref": "https://github.com/chaotic-cx/mesa-mirror/blob/837ab0e30740abb9ebb60bcd40a5114c68c673d9/src/nouveau/compiler/nak/sm70_encode.rs#L2956"
+  },
+  "TLD4": {
+   "status": "agree",
+   "nak": [
+    "0x364",
+    "0xb63",
+    "0xd64"
+   ],
+   "observed": [
+    "0x163",
+    "0xf63"
+   ],
+   "ref": "https://github.com/chaotic-cx/mesa-mirror/blob/837ab0e30740abb9ebb60bcd40a5114c68c673d9/src/nouveau/compiler/nak/sm70_encode.rs#L3032"
+  },
+  "TXD": {
+   "status": "agree",
+   "nak": [
+    "0x36d",
+    "0xb6c",
+    "0xd6d"
+   ],
+   "observed": [
+    "0x16c",
+    "0xf6c"
+   ],
+   "ref": "https://github.com/chaotic-cx/mesa-mirror/blob/837ab0e30740abb9ebb60bcd40a5114c68c673d9/src/nouveau/compiler/nak/sm70_encode.rs#L3137"
+  },
+  "TXQ": {
+   "status": "agree",
+   "nak": [
+    "0x370",
+    "0xb6f"
+   ],
+   "observed": [
+    "0x16f",
+    "0xf6f"
+   ],
+   "ref": "https://github.com/chaotic-cx/mesa-mirror/blob/837ab0e30740abb9ebb60bcd40a5114c68c673d9/src/nouveau/compiler/nak/sm70_encode.rs#L3198"
+  },
+  "VOTE": {
+   "status": "agree",
+   "nak": [
+    "0x806",
+    "0x886"
+   ],
+   "observed": [
+    "0x6",
+    "0x806"
+   ],
+   "ref": "https://github.com/chaotic-cx/mesa-mirror/blob/837ab0e30740abb9ebb60bcd40a5114c68c673d9/src/nouveau/compiler/nak/sm70_encode.rs#L4465"
+  },
+  "WARPSYNC": {
+   "status": "agree",
+   "nak": [
+    "0x148"
+   ],
+   "observed": [
+    "0x148",
+    "0x348"
+   ],
+   "ref": "https://github.com/chaotic-cx/mesa-mirror/blob/837ab0e30740abb9ebb60bcd40a5114c68c673d9/src/nouveau/compiler/nak/sm70_encode.rs#L4234"
+  }
+ }
+}

@@ -1,0 +1,33 @@
+<!-- Generated from https://docs.nvidia.com/cuda/archive/12.9.1/parallel-thread-execution/index.html by tools/build_ptx.py; do not edit. -->
+
+<a id="parallel-synchronization-and-communication-instructions-activemask"></a>
+# 9.7.13.11. Parallel Synchronization and Communication Instructions: `activemask`
+
+`activemask`
+
+Queries the active threads within a warp.
+
+Syntax
+
+    activemask.b32 d;
+
+Description
+
+`activemask` queries predicated-on active threads from the executing warp and sets the destination `d` with 32-bit integer mask where bit position in the mask corresponds to the thread’s `laneid`.
+
+Destination `d` is a 32-bit destination register.
+
+An active thread will contribute 1 for its entry in the result and exited or inactive or predicated-off thread will contribute 0 for its entry in the result.
+
+PTX ISA Notes
+
+Introduced in PTX ISA version 6.2.
+
+Target ISA Notes
+
+Requires `sm_30` or higher.
+
+Examples
+
+    activemask.b32  %r1;
+

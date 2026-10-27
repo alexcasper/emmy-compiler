@@ -26,9 +26,10 @@ import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, ".."))
-PTXAS = os.path.join(ROOT, ".venv/lib/python3.12/site-packages/nvidia/cuda_nvcc/bin/ptxas")
+PTXAS = os.path.join(ROOT, ".tools/ptxas13/ptxas")  # 13.0 — matches the judge
+# runner (Blackwell sm_120, verified register-for-register via submit.py)
 NVDISASM = os.path.join(ROOT, ".tools/bin/nvdisasm")
-ARCH = "sm_89"
+ARCH = os.environ.get("SASS_ARCH", "sm_120")
 
 
 def _run(cmd, **kw):

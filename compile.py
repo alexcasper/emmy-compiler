@@ -28,6 +28,7 @@ from __future__ import annotations
 import json
 import math
 import os
+import dataclasses
 import re
 import struct
 import sys
@@ -53,6 +54,40 @@ DEFAULT_TUNING = {
     "div": "rn",         # "rn" | "approx" | "approx.ftz"
     "sqrt": "rn",        # "rn" | "approx"
     "rcp": "rn",         # "rn" | "approx"
+    "pow2_shift": True,  # div/mod by power-of-2 constant -> shr/and instead of
+                         # div.s32/rem.s32 (ptxas expands those to MUFU
+                         # float-reciprocal sequences; indices are non-negative)
+    "stage_column": False,  # stage sibling-loop-shared global columns (e.g. the
+                         # attention kt[a2,a1] column) into per-thread smem once
+                         # per outer iteration; in-loop loads become ld.shared
+    "maxnreg": None,     # int 24-255: emit .maxnreg N (cap ptxas register
+                         # allocation; sm_120 allocates a01 at 128 regs vs 48
+                         # on sm_89 — 3x occupancy cut). None = no directive
+
+    "hoist_invariants": "auto",  # True | False | "auto": hoist loop-invariant
+                         # address subexpressions to loop preheaders. Measured
+                         # (L4 sm_89, open set + tracer variations): a big win
+                         # where the IR stages tiles via cp.async (m01 3.2x on
+                         # the judge runner), a consistent ~8-9% regression in
+                         # cp.async-free kernels (attention) where the long-
+                         # lived hoisted bases cost ptxas load scheduling.
+                         # "auto" = hoist iff the kernel body has cp.async.
+    "fuse_loops": False,  # merge consecutive sibling loops with identical trip
+                         # counts and no cross-references into one loop.
+                         # FALSIFIED on hardware: a01 fused = 3x smaller SASS
+                         # (1696->560 instrs, LDG 322->22) but 68% SLOWER on
+                         # L4 (246->413us) — the removed "redundant" kt loads
+                         # were free L1 hits that provided memory-level
+                         # parallelism. Kept searchable, default off.
+    "load_cse": False,   # reuse one LDG register for identical read-only
+                         # global loads within a straight-line body (see
+                         # fuse_loops — same falsification)
+    "unroll_inner": "auto",  # 0/1 = off; 2/4/... = replicate straight-line inner
+                         # loop bodies U times per iteration (extent must
+                         # divide evenly). "auto" = unroll iff the kernel body
+                         # has cp.async — judge-runner measured: m01 37.7->
+                         # 29.5us, but cp.async-free attention kernels are
+                         # latency-bound and collapse (a01 100->191us).
 }
 
 
@@ -76,6 +111,22 @@ def clamp_tuning(t: dict) -> dict:
     out["div"] = out.get("div") if out.get("div") in ("rn", "approx", "approx.ftz") else "rn"
     out["sqrt"] = out.get("sqrt") if out.get("sqrt") in ("rn", "approx") else "rn"
     out["rcp"] = out.get("rcp") if out.get("rcp") in ("rn", "approx") else "rn"
+    out["pow2_shift"] = bool(out.get("pow2_shift", True))
+    out["stage_column"] = bool(out.get("stage_column", False))
+    mr = out.get("maxnreg")
+    out["maxnreg"] = int(mr) if isinstance(mr, (int, float)) and 24 <= int(mr) <= 255 else None
+    h = out.get("hoist_invariants", "auto")
+    out["hoist_invariants"] = h if h in (True, False, "auto") else "auto"
+    out["fuse_loops"] = bool(out.get("fuse_loops", False))
+    out["load_cse"] = bool(out.get("load_cse", False))
+    u = out.get("unroll_inner", "auto")
+    if u == "auto":
+        out["unroll_inner"] = "auto"
+    else:
+        try:
+            out["unroll_inner"] = max(0, int(u))
+        except (TypeError, ValueError):
+            out["unroll_inner"] = 0
     return out
 
 # ---------------------------------------------------------------------------
@@ -181,6 +232,26 @@ class Compiler:
         }
         # buffers read but never written by this kernel (eligible for ld.global.nc)
         self.readonly_buffers: set[str] = set()
+        # hoist policy: "auto" enables hoisting only for cp.async-staged kernels,
+        # where per-iteration address recompute is the measured bottleneck
+        mode = self.tuning["hoist_invariants"]
+        if mode == "auto":
+            op = self.kernel_node().op
+            self._hoist_enabled = any(type(s).__name__ == "CpAsyncCopy"
+                                      for s in op.body[0].body.iter())
+        else:
+            self._hoist_enabled = bool(mode)
+        # unroll policy: "auto" = U=4; Loop-kind bodies (dot products) unroll
+        # only in cp.async kernels — judge-runner measured a01 100->191us
+        # otherwise. StridedLoop bodies (reductions) unroll always: r02
+        # 41->30us (-27%), 3/3 interleaved rounds on the judge runner.
+        umode = self.tuning["unroll_inner"]
+        if umode == "auto":
+            self._unroll_u, self._unroll_auto = 4, True
+        else:
+            self._unroll_u, self._unroll_auto = int(umode), False
+        # per-body emission cache for read-only load CSE (see visit_load)
+        self._load_cse: dict = {}
 
     # -- setup ---------------------------------------------------------------
 
@@ -226,6 +297,7 @@ class Compiler:
                 self.smem_decls.append(f".shared .align {align} .b8 {name}[{nbytes}];")
                 self.smem_stride[name] = strides_of(extents)
                 self.smem_base[name] = ("static", 0)
+        self._plan_column_stage(tile)
 
     def scan_accums(self, body):
         for st in body.iter():
@@ -244,8 +316,10 @@ class Compiler:
         self.params = list(node.inputs) + [t.name for t in node.outputs]
         tile = op.body[0]
         self.scan_accums(op.body)
-        self.plan_smem(tile)
         self.collect_readonly(tile)
+        self.plan_smem(tile)
+        # emmy-7u0: .maxnreg caps ptxas register allocation (occupancy vs spills)
+        self.maxnreg = self.tuning.get("maxnreg")
 
         self.emit_header()
         self.emit_prologue(params=self.params, tile=tile)
@@ -310,6 +384,8 @@ class Compiler:
         e.raw(f".visible .entry {self.kernel_name}(")
         e.raw(sig)
         e.raw(")")
+        if self.maxnreg:
+            e.raw(f".maxnreg {self.maxnreg}")
         e.raw("{")
 
         for p in params:
@@ -347,6 +423,7 @@ class Compiler:
         extents = [dim_int(a.extent) for a in tile.axes]
         n = math.prod(extents)
         block_threads = tile.block_threads or 256
+        self.block_threads = block_threads
         if tile.aux_threads:
             # warp-specialized producer band appended past the cooperative
             # cells: compute threads decode their cell from the wrapped id.
@@ -381,6 +458,11 @@ class Compiler:
             outermost = i == 0
             if inner == 1 and outermost:
                 e.emit(f"mov.u32 {r}, {gid};")
+            elif self.tuning["pow2_shift"] and inner > 1 and inner & (inner - 1) == 0 \
+                    and extent & (extent - 1) == 0:
+                # same MUFU-avoidance as binary_expr, for the axis decode
+                e.emit(f"shr.u32 {r}, {gid}, {inner.bit_length() - 1};")
+                e.emit(f"and.b32 {r}, {r}, {extent - 1};")
             else:
                 e.emit(f"div.u32 {r}, {gid}, {inner};")
                 e.emit(f"rem.u32 {r}, {r}, {extent};")
@@ -396,6 +478,9 @@ class Compiler:
     # -- statements ---------------------------------------------------------------
 
     def stmts(self, body):
+        if self.tuning.get("fuse_loops", True) and len(body) >= 2:
+            self._stmts_fused(body)
+            return
         for st in body:
             self.stmt(st)
 
@@ -407,7 +492,40 @@ class Compiler:
         method(st)
 
     def visit_load(self, st):
+        # staged column (emmy-604): inside a staged outer iteration, a global
+        # load at (inner-axis, invariant) coordinates reads the thread's smem row
+        stg = getattr(self, "_staged", None)
+        if stg and st.input == stg["buf"] and len(st.index) == 2 and len(st.names) == 1:
+            coord_ix = st.index[stg["coord"]]
+            inv = tuple(self._ex_key(ix) for i, ix in enumerate(st.index) if i != stg["coord"])
+            sample_inv = tuple(self._ex_key(ix) for i, ix in enumerate(stg["sample"].index)
+                               if i != stg["coord"])
+            if type(coord_ix).__name__ == "Var" and coord_ix.name == stg["ax"] \
+                    and inv == sample_inv:
+                ivar = self.env[stg["ax"]][0]
+                off = self.e.reg("r")
+                addr = self.e.reg("r")
+                self.e.emit(f"mul.lo.u32 {off}, {ivar}, 4;")
+                self.e.emit(f"add.u32 {addr}, {self._stage_base}, {off};")
+                d = self.e.reg("f")
+                self.e.emit(f"ld.shared.f32 {d}, [{addr}];")
+                for name in st.names:
+                    self.env[name] = (d, "f")
+                return
         buf = st.input
+        # read-only global loads: identical address -> one LDG serves all names
+        # (attention IR re-loads the same kt element across fused siblings).
+        # Valid only within one straight-line body emission: the map is cleared
+        # at every control-flow boundary (loops, branches, sync).
+        cse = self.tuning.get("load_cse", True) and buf in self.readonly_buffers
+        key = None
+        if cse:
+            key = (buf, tuple(self._ex_key(ix) for ix in st.index), len(st.names))
+            hit = self._load_cse.get(key)
+            if hit is not None:
+                for name, reg in zip(st.names, hit):
+                    self.env[name] = (reg, "f")
+                return
         desc = self.buffer_desc(buf)
         addr = self.flat_addr(buf, st.index)
         dtype = getattr(st.dtype, "name", None) or "f32"
@@ -427,6 +545,8 @@ class Compiler:
                 self.env[name] = (reg, "f")
         else:
             raise CompileError(f"unsupported load width: {len(st.names)} names")
+        if key is not None:
+            self._load_cse[key] = [self.env[n][0] for n in st.names]
 
     def visit_let(self, st):
         v = st.value
@@ -513,17 +633,20 @@ class Compiler:
             self.e.emit(f"bar.sync {st.barrier_id};")
 
     def visit_stridedloop(self, st):
-        self.enter_loop(st)
+        step = dim_int_or_const(st.step)
         start = self.expr(st.start)[0]
+        u = self._unroll_factor(st, step)
+        if u >= 2:
+            return self._visit_stridedloop_unrolled(st, start, step, u)
+        self.enter_loop(st)
         ivar = self.e.reg("r")
         self.e.emit(f"mov.u32 {ivar}, {start};")
-        step = dim_int_or_const(st.step)
         end = dim_int(st.axis.extent)
         top = self.fresh_label("LOOP")
         bottom = self.fresh_label("LOOP_END")
         self.e.label(top)
         pred = self.e.reg("p")
-        self.e.emit(f"setp.ge.s32 {pred}, {ivar}, {end};")
+        self.e.emit(f"setp.ge.u32 {pred}, {ivar}, {end};")
         self.e.emit(f"@{pred} bra {bottom};")
         self.env[st.axis.name] = (ivar, "r")
         self.stmts(st.body)
@@ -532,22 +655,98 @@ class Compiler:
         self.e.label(bottom)
         self.exit_loop()
 
-    def visit_loop(self, st):
+    def _visit_stridedloop_unrolled(self, st, start, step, u):
+        """Strided version: copies take ivar + k*step; trip count must divide."""
         self.enter_loop(st)
-        ivar = self.e.reg("r")
-        self.e.emit(f"mov.u32 {ivar}, 0;")
         end = dim_int(st.axis.extent)
+        axis = st.axis.name
+
+        def body_fn(ivar):
+            for k in range(u):
+                if k == 0:
+                    self.env[axis] = (ivar, "r")
+                else:
+                    r = self.e.reg("r")
+                    self.e.emit(f"add.u32 {r}, {ivar}, {k * step};")
+                    self.env[axis] = (r, "r")
+                self.stmts(st.body)
+
+        self._emit_loop(st, start, step * u, end, body_fn)
+        self.exit_loop()
+
+    def _unroll_factor(self, st, step):
+        """U>=2 if unrolling is enabled for this loop kind, the body is
+        straight-line, and the trip count divides evenly by U; else 0."""
+        u = self._unroll_u
+        if u < 2:
+            return 0
+        if self._unroll_auto and type(st).__name__ != "StridedLoop" \
+                and not self._hoist_enabled:
+            return 0
+        for sub in st.body.iter():
+            if type(sub).__name__ not in self._FUSE_BODY_KINDS:
+                return 0
+        extent = dim_int(st.axis.extent)
+        iters = extent // step
+        return u if iters >= u and iters % u == 0 else 0
+
+    def _emit_loop(self, st, ivar_init, step, end, body_fn):
+        """Shared loop skeleton: init ivar, while ivar < end: body_fn(ivar_reg)."""
+        ivar = self.e.reg("r")
+        self.e.emit(f"mov.u32 {ivar}, {ivar_init};")
         top = self.fresh_label("LOOP")
         bottom = self.fresh_label("LOOP_END")
         self.e.label(top)
         pred = self.e.reg("p")
-        self.e.emit(f"setp.ge.s32 {pred}, {ivar}, {end};")
+        self.e.emit(f"setp.ge.u32 {pred}, {ivar}, {end};")
         self.e.emit(f"@{pred} bra {bottom};")
-        self.env[st.axis.name] = (ivar, "r")
-        self.stmts(st.body)
-        self.e.emit(f"add.u32 {ivar}, {ivar}, 1;")
+        body_fn(ivar)
+        if step == 1:
+            self.e.emit(f"add.u32 {ivar}, {ivar}, 1;")
+        else:
+            self.e.emit(f"add.u32 {ivar}, {ivar}, {step};")
         self.e.emit(f"bra {top};")
         self.e.label(bottom)
+        return ivar
+
+    def visit_loop(self, st):
+        u = self._unroll_factor(st, 1)
+        if u >= 2:
+            return self._visit_loop_unrolled(st, u)
+
+        plan = getattr(self, "_stage_plan", None)
+        staged = plan and plan["parent"] == id(st)
+        self.enter_loop(st)
+
+        def _loop_body(ivar):
+            self.env.__setitem__(st.axis.name, (ivar, "r"))
+            if staged:
+                self._emit_column_stage(plan)
+            self.stmts(st.body)
+            if staged:
+                self._staged = None
+
+        ivar = self._emit_loop(st, 0, 1, dim_int(st.axis.extent), _loop_body)
+        self.exit_loop()
+
+    def _visit_loop_unrolled(self, st, u):
+        """Replicate a straight-line body U times per iteration; the axis takes
+        ivar..ivar+U-1. Extent divides by U (checked), so no tail guard."""
+        self.enter_loop(st)
+        end = dim_int(st.axis.extent)
+        axis = st.axis.name
+
+        def body_fn(ivar):
+            for k in range(u):
+                if k == 0:
+                    self.env[axis] = (ivar, "r")
+                else:
+                    r = self.e.reg("r")
+                    self.e.emit(f"add.u32 {r}, {ivar}, {k};")
+                    self.env[axis] = (r, "r")
+                self.stmts(st.body)
+
+        self._emit_loop(st, 0, u, end, body_fn)
         self.exit_loop()
 
     def enter_loop(self, st):
@@ -559,6 +758,8 @@ class Compiler:
         axis_name = st.axis.name
         self.loop_axis_stack = getattr(self, "loop_axis_stack", [])
         self.loop_axis_stack.append(axis_name)
+        self._load_cse.clear()
+        self._hoist_for_loop(st)
         if not getattr(st, "seed", True):
             return
         # Seed in body-walk order (NOT set order): set iteration varies with the
@@ -586,8 +787,146 @@ class Compiler:
 
     def exit_loop(self):
         self.loop_axis_stack.pop()
+        if getattr(self, "hoist_stack", None):
+            self.hoist_stack.pop()
+        self._load_cse.clear()
+        # note: _staged is deliberately NOT cleared here — the staged outer
+        # loop's inner (sibling) loops exit through this path mid-iteration
+
+    # -- sibling-column smem staging (emmy-604) ---------------------------------
+
+    def _plan_column_stage(self, tile):
+        """If the body contains >=2 consecutive sibling loops over one axis that
+        each re-load the same read-only global column at (inner-axis,
+        outer-invariant) coordinates, reserve per-thread smem to stage that
+        column once per outer iteration.  Per-thread rows are padded by one
+        float so thread t's row starts at bank (t mod 32) — conflict-free both
+        for the staging writes and the in-loop reads.  No barriers: every
+        thread reads only the row it staged."""
+        self._stage_plan = None
+        self._staged = None
+        if not self.tuning.get("stage_column"):
+            return
+        nthreads = getattr(tile, "block_threads", None) or 256
+        found = self._scan_stage_pattern(tile.body)
+
+        def proto_literal(body):
+            for s in body.iter():
+                for ix in (getattr(s, "index", None) or ()):
+                    if type(ix).__name__ == "Literal" and isinstance(ix.value, int) \
+                            and "int" in str(getattr(ix, "dtype", "int")):
+                        return ix
+            return None
+
+        if not found:
+            return
+        outer, buf, coord, ax, extent, sample_load = found
+        lit = proto_literal(tile.body)
+        if lit is None:
+            return
+        stride = extent + 1
+        nbytes = nthreads * stride * 4
+        if nbytes > 45 * 1024:  # static-smem headroom under the 48 KiB cap
+            return
+        self.smem_decls.append(f".shared .align 4 .b8 __emmy_stage[{nbytes}];")
+        self._stage_plan = dict(parent=id(outer), buf=buf, coord=coord, ax=ax,
+                                extent=extent, stride=stride, sample=sample_load,
+                                lit=lit)
+        print(f"[stage_column] staging {buf} dim{coord} ({extent} f32/thread, "
+              f"{nbytes} B smem, {nthreads} threads)", file=sys.stderr)
+
+    def _scan_stage_pattern(self, body):
+        """Depth-first: return (outer_loop, buf, coord_pos, axis, extent,
+        sample_load) for the first sibling-run matching the staging shape."""
+        for st in body:
+            if type(st).__name__ != "Loop":
+                continue
+            nested = self._scan_stage_pattern(st.body)
+            if nested:
+                return nested
+            hit = self._sibling_stage_candidate(st)
+            if hit:
+                return hit
+        return None
+
+    def _sibling_stage_candidate(self, outer):
+        body = list(outer.body)
+        run = []
+        best = None
+        for st in body + [None]:
+            if type(st).__name__ == "Loop":
+                run.append(st)
+                continue
+            if len(run) >= 2:
+                hit = self._sibling_run_candidate(run)
+                if hit:
+                    best = (outer,) + hit
+            run = []
+        return best
+
+    def _sibling_run_candidate(self, run):
+        ax = run[0].axis.name
+        ext = dim_int(run[0].axis.extent)
+        if any(l.axis.name != ax or dim_int(l.axis.extent) != ext for l in run[1:]):
+            return None
+        per = []
+        for l in run:
+            found = set()
+            for s in l.body.iter():
+                if type(s).__name__ != "Load" or s.input not in self.readonly_buffers \
+                        or len(s.index) != 2:
+                    continue
+                deps = (set(), set())
+                for k, ix in enumerate(s.index):
+                    self._ex_deps(ix, deps[k])
+                if sum(ax in d for d in deps) != 1:
+                    continue
+                k = 0 if ax in deps[0] else 1
+                if type(s.index[k]).__name__ != "Var" or s.index[k].name != ax:
+                    continue  # v1: bare inner-axis coordinate only
+                found.add((s.input, k, s, self._ex_key(s.index[1 - k])))
+            if not found:
+                return None
+            per.append(found)
+        # the staged column must be the SAME element sequence in every sibling:
+        # intersect each sibling's qualifying loads, keep one common column
+        common = set.intersection(*[set((p[0], p[1], p[3]) for p in f) for f in per])
+        if len(common) != 1:
+            return None
+        buf, coord, inv_key = next(iter(common))
+        sample = next(s for f in per for (b, k, s, iv) in f
+                      if (b, k, iv) == (buf, coord, inv_key))
+        return buf, coord, ax, ext, sample
+
+    def _emit_column_stage(self, plan):
+        """Per a1 iteration: burst-load the column into this thread's padded
+        smem row, then mark it active so visit_load redirects the sibling
+        loops' loads to ld.shared."""
+        e = self.e
+        base = getattr(self, "_stage_base", None)
+        if base is None:
+            sym = e.reg("r")
+            e.emit(f"mov.u32 {sym}, __emmy_stage;")
+            off = e.reg("r")
+            e.emit(f"mul.lo.u32 {off}, {self.tid}, {plan['stride'] * 4};")
+            base = e.reg("r")
+            e.emit(f"add.u32 {base}, {sym}, {off};")
+            self._stage_base = base
+        sample = plan["sample"]
+        lit = plan["lit"]
+        coord = plan["coord"]
+        for j in range(plan["extent"]):
+            new_index = tuple(dataclasses.replace(lit, value=j) if i == coord else ix
+                              for i, ix in enumerate(sample.index))
+            addr = self.flat_addr(sample.input, new_index)
+            d = e.reg("f")
+            e.emit(f"ld.global.f32 {d}, [{addr}];")
+            e.emit(f"st.shared.f32 [{base}+{j * 4}], {d};")
+        self._staged = plan
+
 
     def visit_cond(self, st):
+        self._load_cse.clear()
         pred = self.compile_pred(st.cond)
         if st.else_body:
             else_label = self.fresh_label("ELSE")
@@ -707,6 +1046,192 @@ class Compiler:
     def visit_cpasyncwait(self, st):
         self.e.emit(f"cp.async.wait_group {st.group};")
 
+    # -- loop-invariant hoisting -------------------------------------------------
+    #
+    # Our emitted PTX recomputed every address from scratch each iteration;
+    # ptxas does not strength-reduce it (measured: m01's inner loop was 4 FFMA
+    # vs 86 integer ops). Before entering a loop, walk the body's address /
+    # predicate expression trees, split them into maximal subtrees that do not
+    # depend on the loop axis or on any per-iteration-defined name, compile
+    # those once into the loop preheader, and serve them from a cache while
+    # emitting the body. Purely syntactic analysis: names defined by
+    # per-iteration statements (loads, lets, accums, nested axes) are never
+    # hoisted, so no value read can change under a cached register.
+
+    @staticmethod
+    def _ex_dict(ex):
+        k = type(ex).__name__
+        if k == "Var":
+            return {"k": "V", "n": ex.name}
+        if k == "Literal":
+            return {"k": "L", "v": getattr(ex, "value", None),
+                    "d": str(getattr(ex, "dtype", ""))}
+        if k == "BinaryExpr":
+            return {"k": "B", "op": ex.op,
+                    "l": Compiler._ex_dict(ex.left), "r": Compiler._ex_dict(ex.right)}
+        if k == "TernaryExpr":
+            return {"k": "T", "c": Compiler._ex_dict(ex.cond),
+                    "a": Compiler._ex_dict(ex.if_true),
+                    "b": Compiler._ex_dict(ex.if_false)}
+        # unknown kind: unique key -> never shared
+        return {"k": "?" + k, "id": id(ex)}
+
+    @classmethod
+    def _ex_key(cls, ex):
+        return json.dumps(cls._ex_dict(ex), sort_keys=True)
+
+    @staticmethod
+    def _ex_deps(ex, out):
+        k = type(ex).__name__
+        if k == "Var":
+            out.add(ex.name)
+        elif k == "BinaryExpr":
+            Compiler._ex_deps(ex.left, out)
+            Compiler._ex_deps(ex.right, out)
+        elif k == "TernaryExpr":
+            Compiler._ex_deps(ex.cond, out)
+            Compiler._ex_deps(ex.if_true, out)
+            Compiler._ex_deps(ex.if_false, out)
+
+    @classmethod
+    def _collect_units(cls, ex, forbidden, units):
+        """Register maximal subtrees of ex whose deps avoid `forbidden`."""
+        deps = set()
+        cls._ex_deps(ex, deps)
+        if not (deps & forbidden):
+            units[cls._ex_key(ex)] = ex
+            return
+        k = type(ex).__name__
+        if k == "BinaryExpr":
+            cls._collect_units(ex.left, forbidden, units)
+            cls._collect_units(ex.right, forbidden, units)
+        elif k == "TernaryExpr":
+            cls._collect_units(ex.cond, forbidden, units)
+            cls._collect_units(ex.if_true, forbidden, units)
+            cls._collect_units(ex.if_false, forbidden, units)
+
+    @staticmethod
+    def _stmt_exprs(st):
+        """Yield the expression trees a statement feeds to expr() for addressing."""
+        k = type(st).__name__
+        if k == "Load":
+            yield from st.index
+        elif k == "Write":
+            yield from st.index
+        elif k == "CpAsyncCopy":
+            yield from st.src_index
+            yield from st.smem_index
+            if st.lane_index is not None:
+                yield from st.lane_index
+        elif k == "Cond":
+            yield st.cond
+
+    def _hoist_for_loop(self, st):
+        """Precompute loop-invariant expression units into the preheader."""
+        if not getattr(self, "_hoist_enabled", None):
+            self.hoist_stack = getattr(self, "hoist_stack", [])
+            self.hoist_stack.append({})
+            return
+        forbidden = {st.axis.name}
+        for sub in st.body.iter():
+            k = type(sub).__name__
+            if k in ("Load", "Let", "Init", "Assign", "Accum"):
+                for nm in (sub.names if k == "Load" else [sub.name]):
+                    forbidden.add(nm)
+            elif k in ("Loop", "StridedLoop"):
+                forbidden.add(sub.axis.name)
+        units = {}
+        for sub in st.body.iter():
+            for ex in self._stmt_exprs(sub):
+                self._collect_units(ex, forbidden, units)
+        cache = {}
+        for key, ex in units.items():
+            cache[key] = self.expr(ex)
+        self.hoist_stack = getattr(self, "hoist_stack", [])
+        self.hoist_stack.append(cache)
+
+    # -- sibling-loop fusion -----------------------------------------------------
+    #
+    # The attention IR (category 5) runs N sibling dot-product loops per
+    # softmax step, each re-loading the same kt column from global memory.
+    # Fusing consecutive Loop statements with identical trip counts into one
+    # loop lets load_cse serve the repeated loads from a single register.
+    # Conservative fusability: same axis name + extent, bodies restricted to
+    # straight-line statement kinds, and no later body reads any name an
+    # earlier sibling defines.
+
+    _FUSE_BODY_KINDS = {"Load", "Let", "Init", "Assign", "Accum", "Write"}
+
+    @classmethod
+    def _stmt_reads(cls, st):
+        """Names a statement reads: env lookups + index-expression deps."""
+        k = type(st).__name__
+        reads = set()
+        if k == "Load":
+            for ix in st.index:
+                cls._ex_deps(ix, reads)
+        elif k == "Write":
+            for ix in st.index:
+                cls._ex_deps(ix, reads)
+            reads.update(st.values)
+        elif k == "Assign":
+            reads.update(st.args)
+        elif k == "Accum":
+            reads.add(st.value)
+            if st.base is not None:
+                reads.add(st.base)
+        elif k == "Cond":
+            cls._ex_deps(st.cond, reads)
+        return reads
+
+    @classmethod
+    def _stmt_defs(cls, st):
+        k = type(st).__name__
+        if k == "Load":
+            return set(st.names)
+        if k in ("Let", "Init", "Assign", "Accum"):
+            return {st.name}
+        return set()
+
+    def _fusable_pair(self, a, b):
+        if self.tuning.get("fuse_loops") is False:
+            return False
+        if type(a).__name__ != "Loop" or type(b).__name__ != "Loop":
+            return False
+        if a.axis.name != b.axis.name:
+            return False
+        if dim_int(a.axis.extent) != dim_int(b.axis.extent):
+            return False
+        for st in (a, b):
+            for sub in st.body.iter():
+                if type(sub).__name__ not in self._FUSE_BODY_KINDS:
+                    return False
+        # cross-references: later sibling must not read earlier siblings' defs
+        defs_a = set()
+        for sub in a.body.iter():
+            defs_a |= self._stmt_defs(sub)
+        reads_b = set()
+        for sub in b.body.iter():
+            reads_b |= self._stmt_reads(sub)
+        return not (reads_b & defs_a)
+
+    def _stmts_fused(self, body):
+        """Yield statements with fusable sibling-loop runs merged into the first."""
+        i, n = 0, len(body)
+        while i < n:
+            st = body[i]
+            if type(st).__name__ == "Loop":
+                j = i + 1
+                while j < n and self._fusable_pair(st, body[j]):
+                    # IR nodes are frozen dataclasses; Body concatenates
+                    st = dataclasses.replace(st, body=st.body + body[j].body)
+                    j += 1
+                self.stmt(st)
+                i = j
+                continue
+            self.stmt(st)
+            i += 1
+
     # -- expressions -----------------------------------------------------------
 
     def buffer_desc(self, name):
@@ -762,6 +1287,11 @@ class Compiler:
 
     def expr(self, ex):
         """Compile an expression -> (reg, kind) with kind in {'r','f','p'}."""
+        if getattr(self, "hoist_stack", None):
+            key = self._ex_key(ex)
+            for cache in reversed(self.hoist_stack):
+                if key in cache:
+                    return cache[key]
         kind = type(ex).__name__
         if kind == "Var":
             if ex.name in self.env:
@@ -794,6 +1324,18 @@ class Compiler:
         right, rk = self.expr(ex.right)
         if op in INT_OPS and lk == "r" and rk == "r":
             d = self.e.reg("r")
+            # `/`|`%` by a power-of-2 constant: ptxas expands div.s32/rem.s32
+            # into float-reciprocal sequences (MUFU/I2F/F2I) per emission site.
+            # Address math is non-negative, so unsigned shift/mask is exact.
+            if (self.tuning["pow2_shift"] and op in ("/", "%")
+                    and type(ex.right).__name__ == "Literal"):
+                c = int(ex.right.value)
+                if c > 0 and c & (c - 1) == 0:
+                    if op == "/":
+                        self.e.emit(f"shr.u32 {d}, {left}, {c.bit_length() - 1};")
+                    else:
+                        self.e.emit(f"and.b32 {d}, {left}, {c - 1};")
+                    return (d, "r")
             self.e.emit(f"{INT_OPS[op]} {d}, {left}, {right};")
             return (d, "r")
         if op in self.float_ops and lk == "f" and rk == "f":
@@ -804,6 +1346,18 @@ class Compiler:
 
     def compile_pred(self, ex):
         kind = type(ex).__name__
+        if kind == "BinaryExpr" and ex.op in ("&&", "and", "And"):
+            lp = self.compile_pred(ex.left)
+            rp = self.compile_pred(ex.right)
+            pred = self.e.reg("p")
+            self.e.emit(f"and.pred {pred}, {lp}, {rp};")
+            return pred
+        if kind == "BinaryExpr" and ex.op in ("||", "or", "Or"):
+            lp = self.compile_pred(ex.left)
+            rp = self.compile_pred(ex.right)
+            pred = self.e.reg("p")
+            self.e.emit(f"or.pred {pred}, {lp}, {rp};")
+            return pred
         if kind == "BinaryExpr" and ex.op in CMP_OPS:
             left, lk = self.expr(ex.left)
             right, rk = self.expr(ex.right)

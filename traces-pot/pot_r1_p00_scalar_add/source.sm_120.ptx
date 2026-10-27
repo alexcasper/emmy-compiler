@@ -1,0 +1,32 @@
+.version 8.7
+.target sm_120
+.address_size 64
+
+.entry kernel(
+  .param .u64 .ptr .global %arg0
+  ,
+  .param .u64 .ptr .global %arg1
+  ,
+  .param .u64 .ptr .global %arg2
+) {
+  .reg .pred  %p0;
+  .reg .u64   %r0;
+  .reg .u32   %r1;
+  .reg .f32   %r2;
+  .reg .u64   %r3;
+  .reg .u32   %r4;
+  .reg .f32   %r5;
+  .reg .f32   %r6;
+
+  mov.u64 %r0, %arg0;
+  mov.u64 %r1, %arg1;
+  mov.u64 %r2, %arg2;
+
+  mov.u32 %r4, tid.x;
+  mul.wide.u64 %r3, %r4, 4;
+  add.u64 %r3, %r3, %r0;
+  ld.global.u32 %r5, .align(4) %r3;
+  ld.global.u32 %r6, .align(4) %r3;
+  add.f32 %r6, %r5, %r6;
+  st.global.f32 %r6, .align(4) %r3;
+}

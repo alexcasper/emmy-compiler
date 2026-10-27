@@ -161,8 +161,201 @@ First calibration, baseline compiler, all 15 problems deterministic:
 - pointwise: fully unrolled, no loop, 32-48 instrs — nothing to win.
 - no register spills anywhere; 16-56 regs — pressure is a non-issue.
 
+## Address-math transforms (pow2_shift + hoist_invariants)
+
+Two emitter transforms landed behind EMMY_TUNING, both driven by the SASS probe:
+
+1. `pow2_shift` (on everywhere): `/`|`%` by a power-of-2 constant emit
+   `shr.u32`/`and.b32` — ptxas expands `div.s32`/`rem.s32` into MUFU
+   float-reciprocal sequences at every emission site, including the axis
+   decode in the prologue. L4-verified neutral-to-positive on every problem.
+2. `hoist_invariants` (`"auto"` by default): maximal loop-invariant address
+   subexpressions are compiled once into loop preheaders. Purely syntactic
+   dep analysis — expressions reading any per-iteration-defined name (loads,
+   lets, accums, nested axes) are never hoisted, so semantics cannot change.
+   
+   **Policy: "auto" = hoist iff the kernel body contains cp.async.** The L4
+   evidence matrix (open set + 9 tracer-generated variations) shows hoisting
+   is a massive win in cp.async-staged matmul pipelines (m01 440->94us on L4,
+   113->35us on the judge runner) and a consistent ~8-9% regression in
+   cp.async-free kernels (a01 246->350us L4, ga1 100->110us) where the long-
+   lived hoisted base registers cost ptxas its load-scheduling freedom.
+
+Judge-runner result with both transforms (auto policy): 15/15 gate PASS,
+geomean 26.8 -> 23.1 us, m01 113 -> 35 us. Attention kernels unchanged
+(a01 back to ~102 us class).
+
 Conclusion: the compiler's headroom is integer-address elimination (loop-
 invariant hoisting, pointer increment instead of recompute, avoiding `/`/`%`
 on loop indices in emitted PTX). Any GEPA codegen candidate is pre-screened
 with this probe before spending L4/runner time: assemble-fail, spills, or a
 hot-loop regression vs baseline kills the candidate deterministically.
+
+## Sibling-loop fusion + load CSE — falsified (knobs kept, default off)
+
+emmy-1xj hypothesis: a01's four sibling dot-product loops re-load the same
+kt column; fusing them and CSE-ing the repeated loads should cut LDGs 4x.
+The SASS probe agreed enthusiastically (total 1696->560 instrs, hot loop
+1367->80, LDG sites 322->22). Hardware disagreed:
+
+- L4: a01 245.8 -> 412.7 us (+68%), reproduced across interleaved rounds
+- judge runner: a01 236.7 us fused vs ~100 us unfused
+
+The "redundant" kt loads were L1 hits — nearly free — and their removal
+left the kernel with less memory-level parallelism, not less work. Second
+confirmation of the house rule: the SASS probe screens, only hardware
+decides. Both transforms remain in the knob surface (`fuse_loops`,
+`load_cse`, default off) for the GEPA search.
+
+## L4 fast lane (emmy-rzx)
+
+`gen/l4_lane.py`: one command compiles any candidate for all 24 problems
+(15 open + 9 tracer variations), stages and benches them on the Colab L4,
+and appends a table to gen/out/l4lane_results.jsonl. Validated 24/24.
+The judge runner remains the correctness gate.
+
+## The judge runner is Blackwell (sm_120) — probe recalibrated
+
+Register calibration against the runner's /compile (emmy-k1l) exposed that
+the default flow compiles our `.target sm_89` PTX **for the server's GPU,
+which is sm_120**: explicit `--arch sm_89` returns a01 = 48 regs (matches
+local ptxas 12.9/12.0/13.0), default and `--arch sm_120` return 128
+(matched register-for-register by ptxas 13.0.88, now in
+`.tools/ptxas13/`). sass_probe defaults to sm_120 (`SASS_ARCH` to override).
+
+Consequences:
+- Attention-class kernels allocate 128 regs at sm_120 (1 block of 512
+  threads/SM) where sm_89 said 48 — L4/sm_89 screens cannot see judge-side
+  occupancy effects. Matmul/reduction/pointwise allocations match closely.
+- `.maxnreg 64` on a01 is honored by the server but 2x slower (195us vs
+  ~100us): the 128 registers are real live state, not allocator slack.
+
+## Inner-loop unrolling (emmy-4ci) — win in cp.async pipelines, gated like hoisting
+
+`unroll_inner` ("auto" default, same cp.async discriminator as hoisting):
+replicate straight-line inner-loop bodies U=4 times (divisibility-checked).
+Judge-runner measurements at U=4: m01 37.7 -> 29.5us (-22%), r02/r04
+neutral, a01 100 -> 191us (+90% — same latency-bound collapse as fusion).
+sm_120 SASS: m01 hot loop 73 -> 32 instrs at 39 regs; a01 128 -> 56 regs,
+but the occupancy gain is swamped by the scheduling loss.
+
+Running tally of transform verdicts, all judge-runner or L4 measured:
+pow2_shift ON, hoist ON (cp.async-gated), unroll ON (cp.async-gated),
+fuse+CSE OFF (falsified). Geomean so far: 26.8 -> ~24-25us class.
+
+Refinement (interleaved judge-runner A/B, 3 rounds): StridedLoop reductions
+also win from unrolling — r02 41 -> 30us (-27%), 3/3 rounds — so "auto"
+unrolls StridedLoop always and gates only Loop-kind bodies on cp.async.
+
+## GEPA round 3 (z.ai / GLM-5.3-flash, 40-eval budget over the full 8-knob surface)
+
+`gen/gepa_l4.py` re-run with a much larger budget (160 metric calls, 31 distinct
+configs measured on the L4 lane) over the expanded surface — the four round-1 knobs
+plus `pow2_shift`, `hoist_invariants`, and the reworked `fuse_loops`/`load_cse`.
+Proposer doc updated to the current defaults; pre-flight confirmed the worktree
+compiler green on all 15 problems and the lane healthy.
+
+**Outcome: falsified again — and this time the outlier was caught in the act.**
+
+- GEPA's max-trial pick was `nc_loads=true + hoist_invariants=true` (over defaults
+  that already ship `fuse_loops=true, load_cse=true`): one lane call scored it
+  38548 vs baseline 20531 (~1.88x, a01 245.8 -> 77.8 us) — an a01-only 3.2x.
+- Interleaved A/B x3 on a01: defaults 245.76/245.76/245.76; champion
+  359.42/357.86/358.40. The "win" is 46% SLOWER, deterministic, and did not
+  reproduce. The single 77.82 was a transient on the shared Colab L4.
+- The trial table is otherwise mechanistically informative: fuse=true+cse=false
+  is still bad on attention (~412 us), cse alone neutral, nothing beats defaults
+  anywhere (all 30 non-outlier configs: 19859-24459, i.e. at-or-below baseline).
+- Structure of the search: the proposer converged to disciplined OFAT around the
+  champion within ~10 measured configs, then spent the remaining budget re-measuring
+  cached/known configs — the proposal loop, not the metric, is the limiting factor
+  on a 1152-config surface.
+
+**Conclusion stands, now at triple-replication strength: the EMMY_TUNING knob
+surface is exhausted. Defaults are optimal on the L4; the knob search is closed
+unless a new knob (i.e. new codegen) is added.**
+
+## Attention: smem-staged kt column (emmy-604) — falsified
+
+The surviving alternative from the sibling-loop CSE falsification: stage the
+kt[a2, a1] column (64 f32) into per-thread smem once per softmax step (a
+burst of 64 independent ld.global + st.shared per thread, conflict-free via
++1-float row padding), and serve the 4 sibling dot loops' kt loads from
+ld.shared. Implemented as the `stage_column` EMMY_TUNING knob (default off):
+generic sibling-run scanner (consecutive same-axis loops, same read-only
+input, one bare inner-axis coordinate, identical invariant coordinate across
+siblings), reserved as static .shared (33 KB at 128 threads).
+
+**Outcome: falsified — a01_attention 319.5 / 321.5 us vs baseline 244.74 us
+(n=200 interleaved, L4; +30.6%, deterministic).** The hypothesis was that the
+staging burst would restore the memory-level parallelism the CSE falsification
+lost while cutting in-loop load latency. It doesn't: the in-loop kt loads were
+L1-resident broadcast hits (all 128 threads read the same 64 addresses), and
+replacing them with a dependent ld.shared (mul + add + load) on the multiply's
+critical path costs more than the burst saves — the same mechanism as the CSE
+falsification, now measured for the staging variant. a02 (extent 128) exceeds
+the 45 KB static-smem guard and is skipped by design. Knob stays default-off
+as the falsified-but-working implementation, alongside fuse_loops/load_cse.
+
+**Attention-load conclusion, triple-falsified:** CSE (removing loads), fusion
+(merging loops), staging (moving loads to smem) — all lose to the default
+4x-sibling-L1-broadcast pattern on both L4 (sm_89) and ptxas-13.0/sm_120 codegen.
+
+## sm_120 perf implications of every open perf hypothesis (emmy-diw)
+
+Method: bench/sass_probe per problem at SASS_ARCH=sm_120 (ptxas 13.0 — the judge
+toolchain) vs SASS_ARCH=sm_89 (same ptxas, arch isolated), all 15 problems, hot-loop
+= innermost backward-branch body. Full data in the sass_probe runs; summary:
+
+| problem | hot loop sm_89→sm_120 | FFMA | int-ops | regs sm_89→sm_120 |
+|---|---|---|---|---|
+| a01_attention | 1367→1368 | 272→272 | 647→647 | **48→128** |
+| a02_attention_128 | 152→153 | 34→34 | 67→67 | 48→56 |
+| f01/f02/f03 | 43/16/28 → 42/15/27 | 0 | 21/5/14 → same | 34/23/34 → 36/25/36 |
+| m01_matmul_512 | 29→32 | 16→16 | 6→9 | 40→39 |
+| m02_matmul_rect | 13→13 | 0 | 11→11 | 32→32 |
+| r01–r04 reductions | 67-68→67-68 | 0 | 33-34→33-34 | 33-34→36 |
+| p00–p03 pointwise | fully unrolled, no loop | — | — | 16-22→16-26 |
+
+Verdicts per hypothesis:
+
+1. **Integer-address bloat (emmy-4e6): unchanged on sm_120.** The hot-loop integer-op
+   counts are identical (a01: 647→647). Blackwell's universal descriptor addressing
+   (`LDG.E desc[UR][R.64]`) did NOT let ptxas shrink our address math. The bloat is
+   emitted by OUR PTX (scalar div/rem in axis decode — largely fixed by pow2_shift)
+   and survives identically. Existing bead work transfers as-is.
+2. **vec_pair / .v2-.v4 (emmy-c8m): half already done by ptxas.** Pointwise stores
+   already emit `STG.E.64`/`STG.E.128` on BOTH arches (ptxas merges our scalar
+   stores); only the LOAD side stays scalar (4-8 LDG.E). Remaining scope = load-side
+   pairing, which needs the scheduling pass scoped in the bead. Note the judge-runner
+   is sm_120, so the pairing work must target ptxas-13/sm_120 SASS (sass_probe does).
+3. **Cross-loop CSE / fusion / smem staging (emmy-1xj, emmy-604): falsified on sm_89
+   with structure-identical sm_120 codegen** — hot loops are instruction-parallel, so
+   the L1-broadcast/MLP mechanism argument transfers; no reason to re-run those
+   falsifications on Blackwell.
+4. **Unrolling (emmy-4ci + landed auto-unroll): already measured on the judge** —
+   4918bdd's r02 −27% was a judge-runner (sm_120) number. Transfers trivially.
+5. **NEW FINDING — register allocation divergence: a01 uses 128 regs/thread on
+   sm_120 vs 48 on sm_89** (a02 48→56; others +2-3). At 128 regs/thread the a01
+   occupancy ceiling is 512 threads/SM (vs 1536 at 48 regs) — a 3x occupancy cut on
+   the heaviest kernel. This is ptxas-13's sm_120 allocation choice on unchanged PTX.
+   Worth a dedicated look (register-pressure knobs, launch-bounds-style limits via
+   ptxas options, or reducing live ranges in our PTX) before any further a01 tuning.
+
+## Register-cap experiment (emmy-7u0) — falsified; ptxas's 128-reg a01 allocation is correct
+
+`maxnreg` knob emits the PTX `.maxnreg` entry directive (placed after the param
+list). Judge-runner timing (sm_120, a01, interleaved, 3x base / 2x cap96 / 3x cap64;
+all PASS, max abs err 6.557e-07 identical):
+
+| maxnreg | regs | judge p50 us |
+|---|---|---|
+| none | 128 | 101.95 / 102.14 / 102.53 |
+| 96 | 96 | 140.67 / 141.09 |
+| 64 | 64 | 197.57 / 196.77 / 196.61 |
+
+Capping is monotonically worse: +38% at 96 regs, +94% at 64. The 128-reg
+allocation costs occupancy (512 threads/SM) but the spills it avoids cost far
+more — a01 is compute/latency-limited in its 1368-instruction softmax-step body,
+not occupancy-limited. ptxas-13's sm_120 allocation stands; the knob ships
+default-off. (96 regs = the knee: 168 B spills already cost 38%.)
