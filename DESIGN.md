@@ -341,3 +341,21 @@ Verdicts per hypothesis:
    the heaviest kernel. This is ptxas-13's sm_120 allocation choice on unchanged PTX.
    Worth a dedicated look (register-pressure knobs, launch-bounds-style limits via
    ptxas options, or reducing live ranges in our PTX) before any further a01 tuning.
+
+## Register-cap experiment (emmy-7u0) — falsified; ptxas's 128-reg a01 allocation is correct
+
+`maxnreg` knob emits the PTX `.maxnreg` entry directive (placed after the param
+list). Judge-runner timing (sm_120, a01, interleaved, 3x base / 2x cap96 / 3x cap64;
+all PASS, max abs err 6.557e-07 identical):
+
+| maxnreg | regs | judge p50 us |
+|---|---|---|
+| none | 128 | 101.95 / 102.14 / 102.53 |
+| 96 | 96 | 140.67 / 141.09 |
+| 64 | 64 | 197.57 / 196.77 / 196.61 |
+
+Capping is monotonically worse: +38% at 96 regs, +94% at 64. The 128-reg
+allocation costs occupancy (512 threads/SM) but the spills it avoids cost far
+more — a01 is compute/latency-limited in its 1368-instruction softmax-step body,
+not occupancy-limited. ptxas-13's sm_120 allocation stands; the knob ships
+default-off. (96 regs = the knee: 168 B spills already cost 38%.)
