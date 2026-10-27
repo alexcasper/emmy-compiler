@@ -309,8 +309,20 @@ def main():
     ap.add_argument("--problem")
     ap.add_argument("--out", default=str(TRACES),
                     help="output traces root (default traces/); use e.g. traces-gepa/ for candidate sets")
+    ap.add_argument("--compare", nargs=2, metavar=("BASELINE", "CANDIDATE"),
+                    help="diff two trace roots into CANDIDATE/COMPARISON.md instead of tracing")
     args = ap.parse_args()
     TRACES = pathlib.Path(args.out)
+
+    if args.compare:
+        base, cand = (pathlib.Path(p) for p in args.compare)
+        sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
+        import trace_compare  # noqa: E402
+        md = trace_compare.compare(base, cand, f"{base} vs {cand}")
+        out = cand / "COMPARISON.md"
+        out.write_text(md)
+        print(f"wrote {out} ({sum(1 for ln in md.splitlines() if ln.startswith('| ') and ' | sm_' in ln)} rows)")
+        return
 
     inputs = []
     if args.ptx or args.problem:

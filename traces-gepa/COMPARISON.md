@@ -1,4 +1,4 @@
-# Trace comparison: HEAD compiler (b230d47, default tuning) vs GEPA-glm best (EMMY_TUNING: div approx.ftz, nc_loads, rcp approx, sqrt approx)
+# Trace comparison: traces vs traces-gepa
 
 - baseline: `traces`
 - candidate: `traces-gepa`
@@ -37,21 +37,3 @@
 | r03_mean | sm_120 | -112 | `FMUL` (no KB rename known (may still exist in the ISA)) | `BRA` (no KB rename known (may still exist in the ISA)), `CALL` (no KB rename known (may still exist in the ISA)), `FADD` (no KB rename known (may still exist in the ISA)), `FCHK` (no KB rename known (may still exist in the ISA)), `FFMA` (no KB rename known (may still exist in the ISA)), `FSETP` (no KB rename known (may still exist in the ISA)), `HFMA2` (no KB rename known (may still exist in the ISA)), `IADD3` (no KB rename known (may still exist in the ISA)), `IMAD` (no KB rename known (may still exist in the ISA)), `ISETP` (no KB rename known (may still exist in the ISA)), `LEA` (no KB rename known (may still exist in the ISA)), `LOP3` (no KB rename known (may still exist in the ISA)), `MOV` (KB note: sm_120 loads kernel params via LDC/LDCU directly (KB: prologue divergence); MOV still exists in the sm_120 ISA but ptxas stops using it here), `MUFU` (no KB rename known (may still exist in the ISA)), `NOP` (no KB rename known (may still exist in the ISA)), `PLOP3` (no KB rename known (may still exist in the ISA)), `RET` (no KB rename known (may still exist in the ISA)), `SEL` (no KB rename known (may still exist in the ISA)), `SHF` (no KB rename known (may still exist in the ISA)) |
 | r04_row_sum | sm_120 | +0 | — | — |
 
-
-## Hand-written findings (emmy-a1n)
-
-- **The GEPA knob effect is parallel on sm_89 and sm_120.** Per-problem instruction deltas match
-  between arches almost exactly (a01 -152/-152, a02 -64/-64, f02 -56/-56, f03 -88/-88). The knobs'
-  SASS-level mechanism — eliminating the div/rcp/sqrt slow-path machinery (CALL, RET, FCHK, MUFU
-  sequences, FSETP guards) — carries over to Blackwell unchanged. No sm_120-specific risk surfaced
-  at the opcode level.
-- **What the knobs buy:** `div.approx.ftz`/`rcp.approx`/`sqrt.approx` remove the correctly-rounded
-  slow-path call sequences; `nc_loads` is invisible at opcode level (LDG vs LDG.NC — same opcode,
-  one modifier bit, see the flint comparison).
-- **nc_loads does not fire on the matmuls** (m01/m02 identical PTX either way): compile.py's
-  `readonly_buffers` analysis doesn't classify the matmul tile buffers as read-only. If nc matters
-  for matmul, the analysis needs extending (note for the perf beads).
-- **Correctness caveat:** the approx knobs passed GEPA's rtol/atol gate on the sm_89 runner. This
-  trace is encode-only (no Blackwell GPU here); numerics on real sm_120 hardware are unverified.
-- Compiler revision for all three trace sets: `b230d47` (HEAD of sm120-kb). The worktree's
-  uncommitted `fuse_loops`/`load_cse` work was deliberately excluded.
