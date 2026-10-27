@@ -274,3 +274,29 @@ compiler green on all 15 problems and the lane healthy.
 **Conclusion stands, now at triple-replication strength: the EMMY_TUNING knob
 surface is exhausted. Defaults are optimal on the L4; the knob search is closed
 unless a new knob (i.e. new codegen) is added.**
+
+## Attention: smem-staged kt column (emmy-604) — falsified
+
+The surviving alternative from the sibling-loop CSE falsification: stage the
+kt[a2, a1] column (64 f32) into per-thread smem once per softmax step (a
+burst of 64 independent ld.global + st.shared per thread, conflict-free via
++1-float row padding), and serve the 4 sibling dot loops' kt loads from
+ld.shared. Implemented as the `stage_column` EMMY_TUNING knob (default off):
+generic sibling-run scanner (consecutive same-axis loops, same read-only
+input, one bare inner-axis coordinate, identical invariant coordinate across
+siblings), reserved as static .shared (33 KB at 128 threads).
+
+**Outcome: falsified — a01_attention 319.5 / 321.5 us vs baseline 244.74 us
+(n=200 interleaved, L4; +30.6%, deterministic).** The hypothesis was that the
+staging burst would restore the memory-level parallelism the CSE falsification
+lost while cutting in-loop load latency. It doesn't: the in-loop kt loads were
+L1-resident broadcast hits (all 128 threads read the same 64 addresses), and
+replacing them with a dependent ld.shared (mul + add + load) on the multiply's
+critical path costs more than the burst saves — the same mechanism as the CSE
+falsification, now measured for the staging variant. a02 (extent 128) exceeds
+the 45 KB static-smem guard and is skipped by design. Knob stays default-off
+as the falsified-but-working implementation, alongside fuse_loops/load_cse.
+
+**Attention-load conclusion, triple-falsified:** CSE (removing loads), fusion
+(merging loops), staging (moving loads to smem) — all lose to the default
+4x-sibling-L1-broadcast pattern on both L4 (sm_89) and ptxas-13.0/sm_120 codegen.

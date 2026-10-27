@@ -57,6 +57,10 @@ DEFAULT_TUNING = {
     "pow2_shift": True,  # div/mod by power-of-2 constant -> shr/and instead of
                          # div.s32/rem.s32 (ptxas expands those to MUFU
                          # float-reciprocal sequences; indices are non-negative)
+    "stage_column": False,  # stage sibling-loop-shared global columns (e.g. the
+                         # attention kt[a2,a1] column) into per-thread smem once
+                         # per outer iteration; in-loop loads become ld.shared
+
     "hoist_invariants": "auto",  # True | False | "auto": hoist loop-invariant
                          # address subexpressions to loop preheaders. Measured
                          # (L4 sm_89, open set + tracer variations): a big win
@@ -105,6 +109,7 @@ def clamp_tuning(t: dict) -> dict:
     out["sqrt"] = out.get("sqrt") if out.get("sqrt") in ("rn", "approx") else "rn"
     out["rcp"] = out.get("rcp") if out.get("rcp") in ("rn", "approx") else "rn"
     out["pow2_shift"] = bool(out.get("pow2_shift", True))
+    out["stage_column"] = bool(out.get("stage_column", False))
     h = out.get("hoist_invariants", "auto")
     out["hoist_invariants"] = h if h in (True, False, "auto") else "auto"
     out["fuse_loops"] = bool(out.get("fuse_loops", False))
@@ -287,6 +292,7 @@ class Compiler:
                 self.smem_decls.append(f".shared .align {align} .b8 {name}[{nbytes}];")
                 self.smem_stride[name] = strides_of(extents)
                 self.smem_base[name] = ("static", 0)
+        self._plan_column_stage(tile)
 
     def scan_accums(self, body):
         for st in body.iter():
@@ -305,8 +311,8 @@ class Compiler:
         self.params = list(node.inputs) + [t.name for t in node.outputs]
         tile = op.body[0]
         self.scan_accums(op.body)
-        self.plan_smem(tile)
         self.collect_readonly(tile)
+        self.plan_smem(tile)
 
         self.emit_header()
         self.emit_prologue(params=self.params, tile=tile)
@@ -408,6 +414,7 @@ class Compiler:
         extents = [dim_int(a.extent) for a in tile.axes]
         n = math.prod(extents)
         block_threads = tile.block_threads or 256
+        self.block_threads = block_threads
         if tile.aux_threads:
             # warp-specialized producer band appended past the cooperative
             # cells: compute threads decode their cell from the wrapped id.
@@ -476,6 +483,26 @@ class Compiler:
         method(st)
 
     def visit_load(self, st):
+        # staged column (emmy-604): inside a staged outer iteration, a global
+        # load at (inner-axis, invariant) coordinates reads the thread's smem row
+        stg = getattr(self, "_staged", None)
+        if stg and st.input == stg["buf"] and len(st.index) == 2 and len(st.names) == 1:
+            coord_ix = st.index[stg["coord"]]
+            inv = tuple(self._ex_key(ix) for i, ix in enumerate(st.index) if i != stg["coord"])
+            sample_inv = tuple(self._ex_key(ix) for i, ix in enumerate(stg["sample"].index)
+                               if i != stg["coord"])
+            if type(coord_ix).__name__ == "Var" and coord_ix.name == stg["ax"] \
+                    and inv == sample_inv:
+                ivar = self.env[stg["ax"]][0]
+                off = self.e.reg("r")
+                addr = self.e.reg("r")
+                self.e.emit(f"mul.lo.u32 {off}, {ivar}, 4;")
+                self.e.emit(f"add.u32 {addr}, {self._stage_base}, {off};")
+                d = self.e.reg("f")
+                self.e.emit(f"ld.shared.f32 {d}, [{addr}];")
+                for name in st.names:
+                    self.env[name] = (d, "f")
+                return
         buf = st.input
         # read-only global loads: identical address -> one LDG serves all names
         # (attention IR re-loads the same kt element across fused siblings).
@@ -678,11 +705,19 @@ class Compiler:
         if u >= 2:
             return self._visit_loop_unrolled(st, u)
 
+        plan = getattr(self, "_stage_plan", None)
+        staged = plan and plan["parent"] == id(st)
         self.enter_loop(st)
-        ivar = self._emit_loop(
-            st, 0, 1, dim_int(st.axis.extent),
-            lambda ivar: (self.env.__setitem__(st.axis.name, (ivar, "r")),
-                          self.stmts(st.body)))
+
+        def _loop_body(ivar):
+            self.env.__setitem__(st.axis.name, (ivar, "r"))
+            if staged:
+                self._emit_column_stage(plan)
+            self.stmts(st.body)
+            if staged:
+                self._staged = None
+
+        ivar = self._emit_loop(st, 0, 1, dim_int(st.axis.extent), _loop_body)
         self.exit_loop()
 
     def _visit_loop_unrolled(self, st, u):
@@ -746,6 +781,140 @@ class Compiler:
         if getattr(self, "hoist_stack", None):
             self.hoist_stack.pop()
         self._load_cse.clear()
+        # note: _staged is deliberately NOT cleared here — the staged outer
+        # loop's inner (sibling) loops exit through this path mid-iteration
+
+    # -- sibling-column smem staging (emmy-604) ---------------------------------
+
+    def _plan_column_stage(self, tile):
+        """If the body contains >=2 consecutive sibling loops over one axis that
+        each re-load the same read-only global column at (inner-axis,
+        outer-invariant) coordinates, reserve per-thread smem to stage that
+        column once per outer iteration.  Per-thread rows are padded by one
+        float so thread t's row starts at bank (t mod 32) — conflict-free both
+        for the staging writes and the in-loop reads.  No barriers: every
+        thread reads only the row it staged."""
+        self._stage_plan = None
+        self._staged = None
+        if not self.tuning.get("stage_column"):
+            return
+        nthreads = getattr(tile, "block_threads", None) or 256
+        found = self._scan_stage_pattern(tile.body)
+
+        def proto_literal(body):
+            for s in body.iter():
+                for ix in (getattr(s, "index", None) or ()):
+                    if type(ix).__name__ == "Literal" and isinstance(ix.value, int) \
+                            and "int" in str(getattr(ix, "dtype", "int")):
+                        return ix
+            return None
+
+        if not found:
+            return
+        outer, buf, coord, ax, extent, sample_load = found
+        lit = proto_literal(tile.body)
+        if lit is None:
+            return
+        stride = extent + 1
+        nbytes = nthreads * stride * 4
+        if nbytes > 45 * 1024:  # static-smem headroom under the 48 KiB cap
+            return
+        self.smem_decls.append(f".shared .align 4 .b8 __emmy_stage[{nbytes}];")
+        self._stage_plan = dict(parent=id(outer), buf=buf, coord=coord, ax=ax,
+                                extent=extent, stride=stride, sample=sample_load,
+                                lit=lit)
+        print(f"[stage_column] staging {buf} dim{coord} ({extent} f32/thread, "
+              f"{nbytes} B smem, {nthreads} threads)", file=sys.stderr)
+
+    def _scan_stage_pattern(self, body):
+        """Depth-first: return (outer_loop, buf, coord_pos, axis, extent,
+        sample_load) for the first sibling-run matching the staging shape."""
+        for st in body:
+            if type(st).__name__ != "Loop":
+                continue
+            nested = self._scan_stage_pattern(st.body)
+            if nested:
+                return nested
+            hit = self._sibling_stage_candidate(st)
+            if hit:
+                return hit
+        return None
+
+    def _sibling_stage_candidate(self, outer):
+        body = list(outer.body)
+        run = []
+        best = None
+        for st in body + [None]:
+            if type(st).__name__ == "Loop":
+                run.append(st)
+                continue
+            if len(run) >= 2:
+                hit = self._sibling_run_candidate(run)
+                if hit:
+                    best = (outer,) + hit
+            run = []
+        return best
+
+    def _sibling_run_candidate(self, run):
+        ax = run[0].axis.name
+        ext = dim_int(run[0].axis.extent)
+        if any(l.axis.name != ax or dim_int(l.axis.extent) != ext for l in run[1:]):
+            return None
+        per = []
+        for l in run:
+            found = set()
+            for s in l.body.iter():
+                if type(s).__name__ != "Load" or s.input not in self.readonly_buffers \
+                        or len(s.index) != 2:
+                    continue
+                deps = (set(), set())
+                for k, ix in enumerate(s.index):
+                    self._ex_deps(ix, deps[k])
+                if sum(ax in d for d in deps) != 1:
+                    continue
+                k = 0 if ax in deps[0] else 1
+                if type(s.index[k]).__name__ != "Var" or s.index[k].name != ax:
+                    continue  # v1: bare inner-axis coordinate only
+                found.add((s.input, k, s, self._ex_key(s.index[1 - k])))
+            if not found:
+                return None
+            per.append(found)
+        # the staged column must be the SAME element sequence in every sibling:
+        # intersect each sibling's qualifying loads, keep one common column
+        common = set.intersection(*[set((p[0], p[1], p[3]) for p in f) for f in per])
+        if len(common) != 1:
+            return None
+        buf, coord, inv_key = next(iter(common))
+        sample = next(s for f in per for (b, k, s, iv) in f
+                      if (b, k, iv) == (buf, coord, inv_key))
+        return buf, coord, ax, ext, sample
+
+    def _emit_column_stage(self, plan):
+        """Per a1 iteration: burst-load the column into this thread's padded
+        smem row, then mark it active so visit_load redirects the sibling
+        loops' loads to ld.shared."""
+        e = self.e
+        base = getattr(self, "_stage_base", None)
+        if base is None:
+            sym = e.reg("r")
+            e.emit(f"mov.u32 {sym}, __emmy_stage;")
+            off = e.reg("r")
+            e.emit(f"mul.lo.u32 {off}, {self.tid}, {plan['stride'] * 4};")
+            base = e.reg("r")
+            e.emit(f"add.u32 {base}, {sym}, {off};")
+            self._stage_base = base
+        sample = plan["sample"]
+        lit = plan["lit"]
+        coord = plan["coord"]
+        for j in range(plan["extent"]):
+            new_index = tuple(dataclasses.replace(lit, value=j) if i == coord else ix
+                              for i, ix in enumerate(sample.index))
+            addr = self.flat_addr(sample.input, new_index)
+            d = e.reg("f")
+            e.emit(f"ld.global.f32 {d}, [{addr}];")
+            e.emit(f"st.shared.f32 [{base}+{j * 4}], {d};")
+        self._staged = plan
+
 
     def visit_cond(self, st):
         self._load_cse.clear()
