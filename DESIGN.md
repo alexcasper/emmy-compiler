@@ -300,3 +300,44 @@ as the falsified-but-working implementation, alongside fuse_loops/load_cse.
 **Attention-load conclusion, triple-falsified:** CSE (removing loads), fusion
 (merging loops), staging (moving loads to smem) — all lose to the default
 4x-sibling-L1-broadcast pattern on both L4 (sm_89) and ptxas-13.0/sm_120 codegen.
+
+## sm_120 perf implications of every open perf hypothesis (emmy-diw)
+
+Method: bench/sass_probe per problem at SASS_ARCH=sm_120 (ptxas 13.0 — the judge
+toolchain) vs SASS_ARCH=sm_89 (same ptxas, arch isolated), all 15 problems, hot-loop
+= innermost backward-branch body. Full data in the sass_probe runs; summary:
+
+| problem | hot loop sm_89→sm_120 | FFMA | int-ops | regs sm_89→sm_120 |
+|---|---|---|---|---|
+| a01_attention | 1367→1368 | 272→272 | 647→647 | **48→128** |
+| a02_attention_128 | 152→153 | 34→34 | 67→67 | 48→56 |
+| f01/f02/f03 | 43/16/28 → 42/15/27 | 0 | 21/5/14 → same | 34/23/34 → 36/25/36 |
+| m01_matmul_512 | 29→32 | 16→16 | 6→9 | 40→39 |
+| m02_matmul_rect | 13→13 | 0 | 11→11 | 32→32 |
+| r01–r04 reductions | 67-68→67-68 | 0 | 33-34→33-34 | 33-34→36 |
+| p00–p03 pointwise | fully unrolled, no loop | — | — | 16-22→16-26 |
+
+Verdicts per hypothesis:
+
+1. **Integer-address bloat (emmy-4e6): unchanged on sm_120.** The hot-loop integer-op
+   counts are identical (a01: 647→647). Blackwell's universal descriptor addressing
+   (`LDG.E desc[UR][R.64]`) did NOT let ptxas shrink our address math. The bloat is
+   emitted by OUR PTX (scalar div/rem in axis decode — largely fixed by pow2_shift)
+   and survives identically. Existing bead work transfers as-is.
+2. **vec_pair / .v2-.v4 (emmy-c8m): half already done by ptxas.** Pointwise stores
+   already emit `STG.E.64`/`STG.E.128` on BOTH arches (ptxas merges our scalar
+   stores); only the LOAD side stays scalar (4-8 LDG.E). Remaining scope = load-side
+   pairing, which needs the scheduling pass scoped in the bead. Note the judge-runner
+   is sm_120, so the pairing work must target ptxas-13/sm_120 SASS (sass_probe does).
+3. **Cross-loop CSE / fusion / smem staging (emmy-1xj, emmy-604): falsified on sm_89
+   with structure-identical sm_120 codegen** — hot loops are instruction-parallel, so
+   the L1-broadcast/MLP mechanism argument transfers; no reason to re-run those
+   falsifications on Blackwell.
+4. **Unrolling (emmy-4ci + landed auto-unroll): already measured on the judge** —
+   4918bdd's r02 −27% was a judge-runner (sm_120) number. Transfers trivially.
+5. **NEW FINDING — register allocation divergence: a01 uses 128 regs/thread on
+   sm_120 vs 48 on sm_89** (a02 48→56; others +2-3). At 128 regs/thread the a01
+   occupancy ceiling is 512 threads/SM (vs 1536 at 48 regs) — a 3x occupancy cut on
+   the heaviest kernel. This is ptxas-13's sm_120 allocation choice on unchanged PTX.
+   Worth a dedicated look (register-pressure knobs, launch-bounds-style limits via
+   ptxas options, or reducing live ranges in our PTX) before any further a01 tuning.
