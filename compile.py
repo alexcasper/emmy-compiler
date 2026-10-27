@@ -1337,6 +1337,18 @@ class Compiler:
 
     def compile_pred(self, ex):
         kind = type(ex).__name__
+        if kind == "BinaryExpr" and ex.op in ("&&", "and", "And"):
+            lp = self.compile_pred(ex.left)
+            rp = self.compile_pred(ex.right)
+            pred = self.e.reg("p")
+            self.e.emit(f"and.pred {pred}, {lp}, {rp};")
+            return pred
+        if kind == "BinaryExpr" and ex.op in ("||", "or", "Or"):
+            lp = self.compile_pred(ex.left)
+            rp = self.compile_pred(ex.right)
+            pred = self.e.reg("p")
+            self.e.emit(f"or.pred {pred}, {lp}, {rp};")
+            return pred
         if kind == "BinaryExpr" and ex.op in CMP_OPS:
             left, lk = self.expr(ex.left)
             right, rk = self.expr(ex.right)
