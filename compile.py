@@ -60,6 +60,9 @@ DEFAULT_TUNING = {
     "stage_column": False,  # stage sibling-loop-shared global columns (e.g. the
                          # attention kt[a2,a1] column) into per-thread smem once
                          # per outer iteration; in-loop loads become ld.shared
+    "maxnreg": None,     # int 24-255: emit .maxnreg N (cap ptxas register
+                         # allocation; sm_120 allocates a01 at 128 regs vs 48
+                         # on sm_89 — 3x occupancy cut). None = no directive
 
     "hoist_invariants": "auto",  # True | False | "auto": hoist loop-invariant
                          # address subexpressions to loop preheaders. Measured
@@ -110,6 +113,8 @@ def clamp_tuning(t: dict) -> dict:
     out["rcp"] = out.get("rcp") if out.get("rcp") in ("rn", "approx") else "rn"
     out["pow2_shift"] = bool(out.get("pow2_shift", True))
     out["stage_column"] = bool(out.get("stage_column", False))
+    mr = out.get("maxnreg")
+    out["maxnreg"] = int(mr) if isinstance(mr, (int, float)) and 24 <= int(mr) <= 255 else None
     h = out.get("hoist_invariants", "auto")
     out["hoist_invariants"] = h if h in (True, False, "auto") else "auto"
     out["fuse_loops"] = bool(out.get("fuse_loops", False))
@@ -313,6 +318,8 @@ class Compiler:
         self.scan_accums(op.body)
         self.collect_readonly(tile)
         self.plan_smem(tile)
+        # emmy-7u0: .maxnreg caps ptxas register allocation (occupancy vs spills)
+        self.maxnreg = self.tuning.get("maxnreg")
 
         self.emit_header()
         self.emit_prologue(params=self.params, tile=tile)
@@ -374,7 +381,8 @@ class Compiler:
     def emit_prologue(self, params, tile):
         e = self.e
         sig = ",\n".join(f"        .param .u64 param_{sanitize(p)}" for p in params)
-        e.raw(f".visible .entry {self.kernel_name}(")
+        entry_dirs = f" .maxnreg {self.maxnreg}" if self.maxnreg else ""
+        e.raw(f".visible .entry {self.kernel_name}{entry_dirs}(")
         e.raw(sig)
         e.raw(")")
         e.raw("{")
