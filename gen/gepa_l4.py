@@ -32,24 +32,33 @@ SUBSET = ["m01_matmul_512", "a01_attention", "a02_attention_128",
           "ga1_attention_32x128"]
 
 KNOB_DOC = """compile.py EMMY_TUNING knobs (JSON). All keys optional; omit = keep default.
-Current compiler defaults: pow2_shift=true, hoist_invariants="auto", fuse_loops=true,
-load_cse=true, nc_loads=false, div/sqrt/rcp="rn". Search space ~1152 configs —
+Current compiler defaults: pow2_shift=true, pow2_shift_softmax=false,
+hoist_invariants="auto", fuse_loops=false, load_cse=false, nc_loads=false,
+div/sqrt/rcp="rn", stage_column=false, maxnreg=null. Search space ~2300 configs —
 propose COMBINATIONS, not single-knob flips; the space is too big for exhaustive sweep.
 - pow2_shift (bool, default true): div/mod by power-of-2 constants emit
   shr/and instead of div.s32/rem.s32 (ptxas expands those into MUFU
-  float-reciprocal sequences per site). L4-verified neutral-to-positive.
+  float-reciprocal sequences per site). Isolated m01 win ~9% (L4 200-rep
+  interleaved), but does NOT apply to softmax-class kernels — see next knob.
+- pow2_shift_softmax (bool, default false): pow2_shift for softmax-class
+  kernels (body contains exp: a01/a02 attention, f02 row_softmax; the IR has
+  no class tag — exp-presence is the structural proxy). FALSIFIED as a
+  default: a02 +78% on sm_89 (67.6->120.3us L4 60-rep x2; hot-region
+  reordering 406/378 instrs; sm_89 regs 56->48, sm_120 holds 56 both ways —
+  judge-side sm_120 timing still pending, bead emmy-712). Default-off lets
+  the judge config re-test it without a rebuild.
 - hoist_invariants (true|false|"auto", default "auto"): hoist loop-invariant
   address subexpressions to preheaders. Measured on L4: huge win in kernels
   whose IR stages via cp.async (m01 440->94us), but ~8-9% REGRESSION in
   cp.async-free kernels (attention) — "auto" restricts it to cp.async kernels;
   propose true/false to re-test that boundary in combination with fuse_loops.
-- fuse_loops (bool, default TRUE in this compiler): merge sibling loops with
-  identical trip counts. An EARLIER implementation was falsified on hardware
-  (a01 SASS 3x smaller but 68% slower — the removed loads were free L1 hits);
-  the current implementation is reworked and shipped as default. Re-measure it,
-  especially fused=true + load_cse=false and both-off.
-- load_cse (bool, default TRUE in this compiler): one LDG for identical
-  read-only loads in a straight-line body. Same history as fuse_loops.
+- fuse_loops (bool, default false): merge sibling loops with
+  identical trip counts. FALSIFIED on hardware twice (a01 SASS 3x smaller but
+  68% slower — the removed loads were free L1 hits providing memory-level
+  parallelism). Kept searchable, default off.
+- load_cse (bool, default false): one LDG for identical
+  read-only loads in a straight-line body. Same falsification history as
+  fuse_loops (a01 -68%).
 - nc_loads (bool, default false): ld.global.nc — measured neutral, but never
   tested in combination with the loop transforms.
 - div ("rn"|"approx"|"approx.ftz"), sqrt ("rn"|"approx"), rcp ("rn"|"approx"):

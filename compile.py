@@ -57,6 +57,19 @@ DEFAULT_TUNING = {
     "pow2_shift": True,  # div/mod by power-of-2 constant -> shr/and instead of
                          # div.s32/rem.s32 (ptxas expands those to MUFU
                          # float-reciprocal sequences; indices are non-negative)
+    "pow2_shift_softmax": False,
+                         # second pow2 gate for softmax-class kernels (body
+                         # contains exp: a01/a02 attention, f02 row_softmax).
+                         # The IR has no kernel-class tag; exp-presence is the
+                         # structural proxy. Evidence lineage: pow2_shift is a
+                         # verified ~9% isolated win on m01 (L4 200-rep
+                         # interleaved) but a +78% REGRESSION on a02 on sm_89
+                         # (L4 60-rep x2: 67.6->120.3us; hot-region reordering,
+                         # 406/378 instrs; sm_89 regs 56->48, sm_120 holds 56
+                         # both ways — sm_120 transfer unresolved, needs judge
+                         # timing). Default off for the softmax path so the
+                         # judge config can flip it without a rebuild.
+                         # See bench/PAIRED_BASELINE.md and bead emmy-712.
     "stage_column": False,  # stage sibling-loop-shared global columns (e.g. the
                          # attention kt[a2,a1] column) into per-thread smem once
                          # per outer iteration; in-loop loads become ld.shared
@@ -112,6 +125,7 @@ def clamp_tuning(t: dict) -> dict:
     out["sqrt"] = out.get("sqrt") if out.get("sqrt") in ("rn", "approx") else "rn"
     out["rcp"] = out.get("rcp") if out.get("rcp") in ("rn", "approx") else "rn"
     out["pow2_shift"] = bool(out.get("pow2_shift", True))
+    out["pow2_shift_softmax"] = bool(out.get("pow2_shift_softmax", False))
     out["stage_column"] = bool(out.get("stage_column", False))
     mr = out.get("maxnreg")
     out["maxnreg"] = int(mr) if isinstance(mr, (int, float)) and 24 <= int(mr) <= 255 else None
@@ -241,6 +255,24 @@ class Compiler:
                                       for s in op.body[0].body.iter())
         else:
             self._hoist_enabled = bool(mode)
+        # pow2 policy: softmax-class kernels (body contains exp — attention,
+        # row_softmax) are gated separately from the matmul/general path.
+        # pow2_shift is a verified ~9% win on m01 but a +78% regression on a02
+        # on sm_89 (bench/PAIRED_BASELINE.md); sm_120 transfer unresolved.
+        op = self.kernel_node().op
+        self._is_softmax = False
+        for s in op.body[0].body.iter():
+            o = getattr(s, "op", None)
+            if o is not None:
+                try:
+                    if op_name(o) == "exp":
+                        self._is_softmax = True
+                        break
+                except Exception:
+                    pass
+        self._pow2_shift = (self.tuning["pow2_shift"]
+                            and (not self._is_softmax
+                                 or self.tuning["pow2_shift_softmax"]))
         # unroll policy: "auto" = U=4; Loop-kind bodies (dot products) unroll
         # only in cp.async kernels — judge-runner measured a01 100->191us
         # otherwise. StridedLoop bodies (reductions) unroll always: r02
@@ -458,7 +490,7 @@ class Compiler:
             outermost = i == 0
             if inner == 1 and outermost:
                 e.emit(f"mov.u32 {r}, {gid};")
-            elif self.tuning["pow2_shift"] and inner > 1 and inner & (inner - 1) == 0 \
+            elif self._pow2_shift and inner > 1 and inner & (inner - 1) == 0 \
                     and extent & (extent - 1) == 0:
                 # same MUFU-avoidance as binary_expr, for the axis decode
                 e.emit(f"shr.u32 {r}, {gid}, {inner.bit_length() - 1};")
@@ -1327,7 +1359,7 @@ class Compiler:
             # `/`|`%` by a power-of-2 constant: ptxas expands div.s32/rem.s32
             # into float-reciprocal sequences (MUFU/I2F/F2I) per emission site.
             # Address math is non-negative, so unsigned shift/mask is exact.
-            if (self.tuning["pow2_shift"] and op in ("/", "%")
+            if (self._pow2_shift and op in ("/", "%")
                     and type(ex.right).__name__ == "Literal"):
                 c = int(ex.right.value)
                 if c > 0 and c & (c - 1) == 0:
