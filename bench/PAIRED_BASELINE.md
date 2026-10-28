@@ -35,16 +35,18 @@ Round consistency: alloff 16.57/16.44, allon 13.70/13.63 (≈0.4% spread).
 pow2_shift alone flips a02 120.3 → 67.5 µs (isolation run
 `a02_pow2off_only`, 60 reps: 67.52). Reproducible across both rounds.
 
-Mechanism NOT confirmed despite SASS-level investigation: sm_89 SASS is
-near-identical between the variants (446 vs 422 instrs; MUFU 11 vs 10,
-I2F/F2I 3/3 vs 2/2), no spills (0/0), the slower build uses FEWER registers
-(48 vs 56), and the affected div/rem sites are all linear prologue axis
-decodes — several degenerate (`rem x,1`, `div x,1`) that ptxas handles
-natively for unsigned pow2 either way. Suspect: second-order ptxas
-scheduling/pipe-balance effect triggered by the substitution. Bead filed;
-needs sm_120 evidence before touching shipped defaults — the platform's
-43,522 was scored with pow2 ON, so if the effect exists on the judge,
-disabling pow2 for a02 is worth ~4% geomean.
+Mechanism NOT confirmed, but refined after loop-body-level diff (aggregate
+histograms were misleading — totals are near-identical, the hot loop is not):
+the dominant loop body differs materially between variants (406 vs 378
+instructions in the main region) — FFMA/LDG interleaving shifts throughout,
+and the all-off variant carries I2F/F2I/MUFU div-expansion sequences inside
+the body that pow2_shift removed. On this latency-bound matmul+softmax loop,
+the reordering alone plausibly explains the swing. Cross-arch static check:
+sm_120 shows the same static pattern (416/392 instrs off/on, MUFU 11→10,
+IADD3 90→79) with one divergence — on sm_89 the slower (pow2-on) build drops
+to 48 registers (56 off), while sm_120 stays at 56 both ways.
+Decision still needs sm_120 TIMING evidence; static SASS cannot say whether
+the +78% transfers to the judge.
 
 ## The two documented regressions (not in the shipped config)
 
