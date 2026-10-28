@@ -1,0 +1,40 @@
+.version 8.8
+.target sm_120
+.visible .entry mx_tp2_ex2(.param .u64 pout)
+{
+ .reg .b32 %r<80>; .reg .b64 %rd<8>; .reg .f32 %f<80>; .reg .pred %p<8>; .reg .b64 %rq<8>;
+ ld.param.u64 %rd1, [pout];
+ cvta.to.global.u64 %rd2, %rd1;
+ mov.u32 %r1, %tid.x;
+ mov.u64 %rq1, %clock64;
+ mov.u32 %r3, %tid.x;
+ cvt.rn.f32.u32 %f1, %r3;
+ add.f32 %f1, %f1, 0f40000000;
+ mov.u32 %r4, 0;
+Ltp2_ex2:
+ ex2.approx.f32 %f21, %f1;
+ add.f32 %f1, %f21, 0f3F800000;
+ ex2.approx.f32 %f22, %f2;
+ add.f32 %f2, %f22, 0f3F800000;
+ ex2.approx.f32 %f23, %f3;
+ add.f32 %f3, %f23, 0f3F800000;
+ ex2.approx.f32 %f24, %f4;
+ add.f32 %f4, %f24, 0f3F800000;
+ ex2.approx.f32 %f25, %f5;
+ add.f32 %f5, %f25, 0f3F800000;
+ ex2.approx.f32 %f26, %f6;
+ add.f32 %f6, %f26, 0f3F800000;
+ ex2.approx.f32 %f27, %f7;
+ add.f32 %f7, %f27, 0f3F800000;
+ ex2.approx.f32 %f28, %f8;
+ add.f32 %f8, %f28, 0f3F800000;
+ add.u32 %r4, %r4, 1;
+ setp.lt.u32 %p1, %r4, 256;
+ @%p1 bra Ltp2_ex2;
+ mov.u64 %rq2, %clock64;
+ st.global.u64 [%rd2], %rq1;
+ st.global.u64 [%rd2+8], %rq2;
+ mov.b32 %r70, %f21;
+ st.global.u32 [%rd2+16], %r70;
+ ret;
+}
