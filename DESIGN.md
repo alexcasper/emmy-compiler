@@ -359,3 +359,16 @@ allocation costs occupancy (512 threads/SM) but the spills it avoids cost far
 more — a01 is compute/latency-limited in its 1368-instruction softmax-step body,
 not occupancy-limited. ptxas-13's sm_120 allocation stands; the knob ships
 default-off. (96 regs = the knee: 168 B spills already cost 38%.)
+
+## pow2_shift isolated (post-hoc attribution, emmy-diw follow-up)
+
+426aae8 shipped pow2_shift and hoist_invariants together with a joint 3.2x m01
+measurement, so pow2_shift's individual share was never separated. Measured now
+(L4, m01, 200 reps, interleaved 2x): pow2_shift **off** = 69.63/68.61 us,
+**on** = 63.49/63.49 us — an isolated **~9% win on m01**, still live today.
+
+Mechanism note: the div/rem sites sit in the outer tile-staging loop, not the
+innermost multiply loop (which is bit-identical on/off) — so sass_probe's
+"hot loop" metric missed the effect and the clock caught it. Lesson recorded:
+static innermost-loop screening has a blind spot for outer-loop overhead;
+the L4 lane is the decider.

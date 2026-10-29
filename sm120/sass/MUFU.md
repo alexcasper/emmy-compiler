@@ -4,6 +4,18 @@
 
 Notes: multi-function unit: rcp/rsqrt/sqrt/lg2/ex2/sin/cos/tanh approx (category: FP32)
 
+**Measured on silicon** (RTX PRO 6000, CC 12.0, 2026-10-28, in-kernel `%clock64`,
+deterministic min=p50=p90; see [../../bench/sm120_hypotheses/RESULTS.md](../../bench/sm120_hypotheses/RESULTS.md)):
+- dependent-chain latency `MUFU.RCP`/`MUFU.EX2` (**ftz forms, bare MUFU**): **~20 cycles**
+- ptxas 12.9 guards every **non-ftz** `rcp.approx`/`sqrt.approx` with a 5-instruction
+  denormal sequence (2×FSETP + 2×FSEL + FMUL/FFMA) even in straight-line code —
+  effective dependent cost ~44.6 cycles/op vs 24.6 for the ftz form
+- `div.rn.f32` (FCHK+MUFU+FFMA+CALL expansion): **73.2 cycles** on sm_120
+- 8-chain interleaved rcp showed no throughput overlap (24.1 cycles/op) — flagged
+  inconclusive, needs a wider sweep before claiming a throughput number
+- NAK models MUFU as pipe-class `Decoupled` with no numeric latency; these are the
+  first measured numbers in the KB
+
 Opcode cross-check vs Mesa NAK (open-source NVK compiler, mirror commit `837ab0e30740`): **agree**. NAK encodes 0x108 ([source](https://github.com/chaotic-cx/mesa-mirror/blob/837ab0e30740abb9ebb60bcd40a5114c68c673d9/src/nouveau/compiler/nak/sm70_encode.rs#L1168)); see [verify/NAK_CROSSCHECK.md](../verify/NAK_CROSSCHECK.md).
 
 Observed on sm_120: 11 instruction(s) across 9 probe(s).

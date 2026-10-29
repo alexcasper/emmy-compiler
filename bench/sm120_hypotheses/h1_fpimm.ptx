@@ -1,0 +1,59 @@
+.version 8.8
+.target sm_120
+.visible .entry mx_h1_fpimm(.param .u64 pout)
+{
+ .reg .b32 %r<80>; .reg .b64 %rd<8>; .reg .f32 %f<80>; .reg .pred %p<8>; .reg .b64 %rq<8>;
+
+ ld.param.u64 %rd1, [pout];
+ cvta.to.global.u64 %rd2, %rd1;
+ mov.u32 %r1, %tid.x;
+ mov.u64 %rq1, %clock64;
+ mov.u32 %r3, %tid.x;
+ add.u32 %r3, %r3, 1065353216;
+ mov.b32 %f1, %r3;
+ mov.u32 %r4, 0;
+Limma:
+ fma.rn.f32 %f1, %f1, 0f3f000000, %f1;
+ fma.rn.f32 %f1, %f1, 0f3f000001, %f1;
+ fma.rn.f32 %f1, %f1, 0f3f000002, %f1;
+ fma.rn.f32 %f1, %f1, 0f3f000003, %f1;
+ fma.rn.f32 %f1, %f1, 0f3f000004, %f1;
+ fma.rn.f32 %f1, %f1, 0f3f000005, %f1;
+ fma.rn.f32 %f1, %f1, 0f3f000006, %f1;
+ fma.rn.f32 %f1, %f1, 0f3f000007, %f1;
+ fma.rn.f32 %f1, %f1, 0f3f000008, %f1;
+ fma.rn.f32 %f1, %f1, 0f3f000009, %f1;
+ fma.rn.f32 %f1, %f1, 0f3f00000a, %f1;
+ fma.rn.f32 %f1, %f1, 0f3f00000b, %f1;
+ fma.rn.f32 %f1, %f1, 0f3f00000c, %f1;
+ fma.rn.f32 %f1, %f1, 0f3f00000d, %f1;
+ fma.rn.f32 %f1, %f1, 0f3f00000e, %f1;
+ fma.rn.f32 %f1, %f1, 0f3f00000f, %f1;
+ fma.rn.f32 %f1, %f1, 0f3f000010, %f1;
+ fma.rn.f32 %f1, %f1, 0f3f000011, %f1;
+ fma.rn.f32 %f1, %f1, 0f3f000012, %f1;
+ fma.rn.f32 %f1, %f1, 0f3f000013, %f1;
+ fma.rn.f32 %f1, %f1, 0f3f000014, %f1;
+ fma.rn.f32 %f1, %f1, 0f3f000015, %f1;
+ fma.rn.f32 %f1, %f1, 0f3f000016, %f1;
+ fma.rn.f32 %f1, %f1, 0f3f000017, %f1;
+ fma.rn.f32 %f1, %f1, 0f3f000018, %f1;
+ fma.rn.f32 %f1, %f1, 0f3f000019, %f1;
+ fma.rn.f32 %f1, %f1, 0f3f00001a, %f1;
+ fma.rn.f32 %f1, %f1, 0f3f00001b, %f1;
+ fma.rn.f32 %f1, %f1, 0f3f00001c, %f1;
+ fma.rn.f32 %f1, %f1, 0f3f00001d, %f1;
+ fma.rn.f32 %f1, %f1, 0f3f00001e, %f1;
+ fma.rn.f32 %f1, %f1, 0f3f00001f, %f1;
+ add.u32 %r4, %r4, 1;
+ setp.lt.u32 %p1, %r4, 64;
+ @%p1 bra Limma;
+ mov.b32 %r70, %f1;
+
+ mov.u64 %rq2, %clock64;
+ st.global.u64 [%rd2], %rq1;
+ st.global.u64 [%rd2+8], %rq2;
+ st.global.u32 [%rd2+16], %r70;
+
+ ret;
+}

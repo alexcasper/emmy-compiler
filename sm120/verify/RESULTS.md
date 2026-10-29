@@ -12,7 +12,7 @@ Curated findings, each established by a hypothesis-vs-observation mismatch while
 - **renamed:** IMNMX -> **VIMNMX** (integer min/max moved to the V-unit naming; SIMD forms take .U8x4 suffixes, e.g. `VIMNMX.U8x4`)
 - **renamed:** RED -> **REDG** (global reductions carry explicit memory-order + scope qualifiers: `REDG.E.ADD.STRONG.GPU`); STM -> **STSM.16** (stmatrix)
 - **removed:** **HADD2 / HMUL2 gone** as arithmetic ops: `add.f16x2`/`mul.f16x2` fold into `HFMA2` with constant multipliers (e.g. `HFMA2 R5, R0, 1, 1, R5`)
-- **removed:** **BMMA gone**: 1-bit `mma.sync` lowers to a CALL into an internal `__cuda_sm_10x_mma_bit_internal_*` routine built from `IMMA.16832.U8.U8` and the new `MOVM.U4TO8.M832`
+- **removed:** **BMMA gone**: 1-bit `mma.sync` lowers to a CALL into an internal `__cuda_sm_10x_mma_bit_internal_*` routine built from `IMMA.16832.U8.U8` and the new `MOVM.U4TO8.M832` — **silicon-quantified 2026-10-28** (RTX PRO 6000; [bench/sm120_hypotheses/RESULTS.md](../bench/sm120_hypotheses/RESULTS.md)): one CALL per mma.sync (not inlined; loop driven by `BRA.U`), **477 cycles per emulated m16n8k256 op**, and the emulation beats a scalar xor+popc equivalent by **18.6×** in bit-throughput — a genuine win from IMMA bit-parallelism, not a fast instruction (HW BMMA on Ada issues in single-digit cycles)
 - **removed:** **VABSDIFF4 gone**: `vabsdiff4` emulated via `VIMNMX.U8x4` + `VIADD.U8x4` + `IDP.4A.U8.U8`
 - **removed:** **ULDC gone**: uniform constant/param loads are **LDCU** (`LDCU.64 UR4, c[0x0][0x358]`); the sm_89 MOV+ULDC kernel prologue is gone -- params load via LDC/LDCU directly
 - **new:** **IADD.64**: 64-bit integer add is a single instruction (sm_89 used an IADD3 carry pair)
