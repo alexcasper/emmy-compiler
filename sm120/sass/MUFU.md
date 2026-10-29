@@ -10,6 +10,9 @@ deterministic min=p50=p90; see [../../bench/sm120_hypotheses/RESULTS.md](../../b
 - ptxas 12.9 guards every **non-ftz** `rcp.approx`/`sqrt.approx` with a 5-instruction
   denormal sequence (2×FSETP + 2×FSEL + FMUL/FFMA) even in straight-line code —
   effective dependent cost ~44.6 cycles/op vs 24.6 for the ftz form
+  (**re-measured on rental-3** with lg2 added, 2026-10-29: guard family is
+  rcp/lg2/sqrt at +20 cycles/op each; **ex2 is guard-free** in both forms —
+  bench/ftz_knob/RESULTS.md)
 - `div.rn.f32` (FCHK+MUFU+FFMA+CALL expansion): **73.2 cycles** on sm_120
 - 8-chain interleaved rcp showed no throughput overlap (24.1 cycles/op) — flagged
   inconclusive, needs a wider sweep before claiming a throughput number
